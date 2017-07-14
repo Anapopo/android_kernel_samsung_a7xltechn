@@ -550,14 +550,11 @@ config SPI_TLE62X0
 	  sysfs interface, with each line presented as a kind of GPIO
 	  exposing both switch control and diagnostic feedback.
 
-config SENSORS_FP_MASTER_ID
-	int "Fingerprint sensor master id"
+config SENSORS_FP_SPI_NUMBER
 	depends on SENSORS_FINGERPRINT
+	int "Fingerprint sensor master id"
 	default 0
-	help
-	  Master Id defined in fingerprint dtsi file.
-	  If master id is changed, you must set right master id number
-	  in defconfig.
+
 #
 # Add new SPI protocol masters in alphabetical order above this line
 #

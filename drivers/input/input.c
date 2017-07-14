@@ -463,7 +463,7 @@ DECLARE_STATE_FUNC(press)
 
 	if(input_booster_event == BOOSTER_OFF) {
 		pr_debug("[Input Booster] %s      State : Press  index : %d, time : %d\n", glGage, _this->index, _this->param[_this->index].time);
-		if(_this->multi_events <= 0) {
+		if(_this->multi_events <= 0 && _this->index < 2) {
 			if(delayed_work_pending(&_this->input_booster_timeout_work[(_this->index) ? _this->index-1 : 0]) || (_this->param[(_this->index) ? _this->index-1 : 0].time == 0)) {
 				if(_this->change_on_release || (_this->param[(_this->index) ? _this->index-1 : 0].time == 0)) {
 					pr_debug("[Input Booster] %s           cancel the pending workqueue\n", glGage);
@@ -573,7 +573,7 @@ void input_booster(struct input_dev *dev)
 		} else if (input_events[i].type == EV_ABS) {
 			if (input_events[i].code == ABS_MT_TRACKING_ID) {
 				iTouchID = i;
-				if(input_events[iTouchSlot].value < MAX_MULTI_TOUCH_EVENTS && input_events[iTouchSlot].value >= 0 && iTouchID < MAX_EVENTS && iTouchSlot <= MAX_EVENTS) {
+				if(input_events[iTouchSlot].value < MAX_MULTI_TOUCH_EVENTS && iTouchID < MAX_EVENTS && iTouchSlot <= MAX_EVENTS && input_events[iTouchSlot].value >= 0) {
 					if(TouchIDs[input_events[iTouchSlot].value] < 0 && input_events[iTouchID].value >= 0) {
 						TouchIDs[input_events[iTouchSlot].value] = input_events[iTouchID].value;
 						if(touch_booster.multi_events <= 0 || input_events[iTouchSlot].value == 0) {
@@ -593,7 +593,7 @@ void input_booster(struct input_dev *dev)
 								touch_booster.index = 1;
 								TIMEOUT_FUNC(touch)(NULL);
 								touch_booster.param[0].hmp_boost = temp_hmp_boost;
-								touch_booster.index = temp_index;
+								touch_booster.index = ( temp_index >= 2 ? 1 : temp_index );
 							}
 #endif
 						}

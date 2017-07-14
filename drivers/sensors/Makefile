@@ -18,7 +18,6 @@ obj-$(CONFIG_SENSORS_TCS3490)	    += tcs3490.o
 obj-$(CONFIG_SENSORS_CM3323)	    += cm3323.o
 obj-$(CONFIG_SENSORS_TMD3782S)	+= taos_tmd3782.o
 obj-$(CONFIG_SENSORS_STK3013)      += stk3013.o
-obj-$(CONFIG_SENSORS_CM36686)	+= cm36686.o
 # grip_sensor
 obj-$(CONFIG_SENSORS_SX9310)        +=sx9310.o
 obj-$(CONFIG_SENSORS_SX9500)        +=sx9500.o

@@ -88,11 +88,7 @@
 #define CTRL1_BDU_MASK                0x08
 
 /* CTRL2 */
-#define CTRL2_DFC_MASK                0x60
-#define CTRL2_DFC_50				  0x00
-#define CTRL2_DFC_100				  0x20
-#define CTRL2_DFC_9					  0x40
-#define CTRL2_DFC_400				  0x60
+#define CTRL2_IG1_INT1                0x08
 
 /* CTRL3 */
 #define CTRL3_IG1_INT1                0x08
@@ -134,12 +130,6 @@
 #define K2HH_ACC_BW_SCALE_ODR_DISABLE 0x00
 
 #define DYNAMIC_THRESHOLD             5000
-
-#define ENABLE_LPF_CUT_OFF_FREQ		  1
-#define ENABLE_LOG_ACCEL_MAX_OUT	  1
-#if defined(ENABLE_LOG_ACCEL_MAX_OUT)
-#define ACCEL_MAX_OUTPUT			  32760
-#endif
 
 enum {
 	OFF = 0,
@@ -216,10 +206,8 @@ struct k2hh_acc_odr {
 #define OUTPUT_ALWAYS_ANTI_ALIASED	/* Anti aliasing filter */
 
 const struct k2hh_acc_odr k2hh_acc_odr_table[] = {
-	{  2, ACC_ODR800},
-	{  3, ACC_ODR400},
-	{  5, ACC_ODR200},
-	{ 10, ACC_ODR100},
+	{  5, ACC_ODR800},
+	{ 10, ACC_ODR400},
 #ifndef OUTPUT_ALWAYS_ANTI_ALIASED
 	{ 20, ACC_ODR50},
 	{100, ACC_ODR10},
@@ -373,15 +361,6 @@ static int k2hh_set_odr(struct k2hh_p *data)
 	data->odr = new_odr;
 
 	SENSOR_INFO("change odr %d\n", i);
-
-#if defined(ENABLE_LPF_CUT_OFF_FREQ)
-	// To increase LPF cut-off frequency, ODR/DFC
-	k2hh_i2c_read(data, CTRL2_REG, &buf, 1);
-
-	buf = (CTRL2_DFC_MASK & CTRL2_DFC_9) | ((~CTRL2_DFC_MASK) & buf);
-	k2hh_i2c_write(data, CTRL2_REG, buf);
-	SENSOR_INFO("ctrl2:%x\n", buf);
-#endif
 	return ret;
 }
 
@@ -397,10 +376,8 @@ static int k2hh_set_bw(struct k2hh_p *data)
 
 	buf = (mask & new_range) | ((~mask) & temp);
 	ret += k2hh_i2c_write(data, CTRL4_REG, buf);
-	new_range = K2HH_ACC_BW_50;
-#else
-	new_range = K2HH_ACC_BW_400;
 #endif
+	new_range = K2HH_ACC_BW_400;
 	mask = K2HH_ACC_BW_MASK;
 	ret = k2hh_i2c_read(data, CTRL4_REG, &temp, 1);
 
@@ -630,34 +607,13 @@ static void k2hh_work_func(struct work_struct *work)
 	int ret;
 	struct k2hh_v acc;
 	struct k2hh_p *data = container_of(work, struct k2hh_p, work);
-	struct timespec ts;
-	u64 timestamp_new;
+	struct timespec ts = ktime_to_timespec(ktime_get_boottime());
+	u64 timestamp_new = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 	int time_hi, time_lo;
 
 	ret = k2hh_read_accel_xyz(data, &acc);
 	if (ret < 0)
 		goto exit;
-
-#if defined(ENABLE_LOG_ACCEL_MAX_OUT)
-	// For debugging if happened exceptional situation
-	if (acc.x > ACCEL_MAX_OUTPUT ||
-		acc.y > ACCEL_MAX_OUTPUT ||
-		acc.z > ACCEL_MAX_OUTPUT)
-	{
-		unsigned char buf[4], status;
-		k2hh_i2c_read(data, CTRL1_REG, buf, 4);	
-		k2hh_i2c_read(data, STATUS_REG, &status, 1);
-
-		SENSOR_INFO("MAX_OUTPUT x = %d, y = %d, z = %d\n",
-				acc.x, acc.y,acc.z);
-		SENSOR_INFO("CTRL(20~23) : %X, %X, %X, %X - STATUS(27h) : %X\n", 
-			buf[0],buf[1],buf[2],buf[3],status);
-	}
-#endif
-
-
-	ts = ktime_to_timespec(ktime_get_boottime());
-	timestamp_new = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 
 	data->accdata.x = acc.x - data->caldata.x;
 	data->accdata.y = acc.y - data->caldata.y;
@@ -714,7 +670,7 @@ static ssize_t k2hh_enable_store(struct device *dev,
 	u8 enable;
 	int ret, pre_enable;
 	struct k2hh_p *data = dev_get_drvdata(dev);
-	data->old_timestamp = 0LL;
+
 	ret = kstrtou8(buf, 2, &enable);
 	if (ret) {
 		SENSOR_ERR(" Invalid Argument\n");
@@ -768,7 +724,7 @@ static ssize_t k2hh_delay_store(struct device *dev,
 	int ret;
 	int64_t delay;
 	struct k2hh_p *data = dev_get_drvdata(dev);
-	data->old_timestamp = 0LL;
+
 	ret = kstrtoll(buf, 10, &delay);
 	if (ret) {
 		SENSOR_ERR(" Invalid Argument\n");

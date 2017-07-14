@@ -56,7 +56,6 @@ static void __iomem *virt_bases[N_BASES];
 #define GPLL1_USER_CTL					0x20010
 #define GPLL1_CONFIG_CTL				0x20014
 #define GPLL1_STATUS					0x2001C
-#define SNOC_QOSGEN					0x2601C
 #define GPLL2_MODE					0x4A000
 #define GPLL2_L_VAL					0x4A004
 #define GPLL2_M_VAL					0x4A008
@@ -1103,6 +1102,7 @@ static struct rcg_clk esc0_clk_src = {
 
 static struct clk_freq_tbl ftbl_gcc_mdss_mdp_clk[] = {
 	F(  50000000,	   gpll0,  16,	  0,	0),
+	F(  80000000,	   gpll0,  10,	  0,	0),
 	F( 100000000,	   gpll0,   8,	  0,	0),
 	F( 160000000,	   gpll0,   5,	  0,	0),
 	F( 177780000,	   gpll0, 4.5,	  0,	0),
@@ -1216,7 +1216,6 @@ static struct clk_freq_tbl ftbl_gcc_sdcc2_apps_clk[] = {
 	F(  25000000,	   gpll0,  16,	  1,	2),
 	F(  50000000,	   gpll0,  16,	  0,	0),
 	F( 100000000,	   gpll0,   8,	  0,	0),
-	F( 177770000,	   gpll0,   4.5,	  0,	0),
 	F( 200000000,	   gpll0,   4,	  0,	0),
 	F_END
 };

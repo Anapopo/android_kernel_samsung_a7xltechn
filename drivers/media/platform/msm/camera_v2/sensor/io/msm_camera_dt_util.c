@@ -18,7 +18,7 @@
 
 #define CAM_SENSOR_PINCTRL_STATE_SLEEP "cam_suspend"
 #define CAM_SENSOR_PINCTRL_STATE_DEFAULT "cam_default"
-//#define CONFIG_MSM_CAMERA_DT_DEBUG
+#define CONFIG_MSM_CAMERA_DT_DEBUG
 #undef CDBG
 #ifdef CONFIG_MSM_CAMERA_DT_DEBUG
 #define CDBG(fmt, args...) pr_err(fmt, ##args)
@@ -945,7 +945,7 @@ int msm_camera_init_gpio_pin_tbl(struct device_node *of_node,
 		rc = 0;
 
 #if defined(CONFIG_SEC_GTEL_PROJECT) || defined(CONFIG_SEC_GTES_PROJECT)\
-    || defined(CONFIG_SEC_XCOVER3_PROJECT) || defined(CONFIG_SEC_J1X_PROJECT)
+	|| defined(CONFIG_SEC_XCOVER3_PROJECT)
 
 	rc = of_property_read_u32(of_node, "qcom,gpio-ext-vana-power", &val);
 	if (rc != -EINVAL) {

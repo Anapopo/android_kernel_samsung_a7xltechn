@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -573,18 +573,13 @@ static int msm_ipc_router_ioctl(struct socket *sock,
 
 		ret = copy_to_user((void *)arg, &server_arg,
 				   sizeof(server_arg));
-
-		n = min(server_arg.num_entries_found,
-			server_arg.num_entries_in_array);
-
-		if (ret == 0 && n) {
+		if (srv_info_sz) {
 			ret = copy_to_user((void *)(arg + sizeof(server_arg)),
-					   srv_info, n * sizeof(*srv_info));
+					   srv_info, srv_info_sz);
+			if (ret)
+				ret = -EFAULT;
+			kfree(srv_info);
 		}
-
-		if (ret)
-			ret = -EFAULT;
-		kfree(srv_info);
 		break;
 
 	case IPC_ROUTER_IOCTL_BIND_CONTROL_PORT:
@@ -609,11 +604,11 @@ static int msm_ipc_router_ioctl(struct socket *sock,
 			ret = -EFAULT;
 			break;
 		}
-		
+
 		if (subsys_req.request_id == SUBSYS_RES_REQ)
-			subsys_force_stop((const char *)(subsys_req.name), true);
+			ret = subsystem_restart_request((const char *)(subsys_req.name));
 		else if (subsys_req.request_id == SUBSYS_CR_REQ)
-			subsys_force_stop((const char *)(subsys_req.name), false);
+			ret = subsystem_restart((const char *)(subsys_req.name));
 		else
 			ret = -EINVAL;
 		break;
@@ -653,13 +648,9 @@ static unsigned int msm_ipc_router_poll(struct file *file,
 static int msm_ipc_router_close(struct socket *sock)
 {
 	struct sock *sk = sock->sk;
-	struct msm_ipc_port *port_ptr;
+	struct msm_ipc_port *port_ptr = msm_ipc_sk_port(sk);
 	int ret;
 
-	if (!sk)
-		return -EINVAL;
-
-	port_ptr = msm_ipc_sk_port(sk);
 	lock_sock(sk);
 	ret = msm_ipc_router_close_port(port_ptr);
 	msm_ipc_unload_default_node(msm_ipc_sk(sk)->default_node_vote_info);

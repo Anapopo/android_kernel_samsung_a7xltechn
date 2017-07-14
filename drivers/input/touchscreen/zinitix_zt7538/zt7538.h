@@ -40,7 +40,6 @@
 #include <linux/async.h>
 #include <linux/firmware.h>
 
-#include "zinitix_o7_ref.h"
 #include <linux/pinctrl/consumer.h>
 #include <linux/muic/muic.h>
 #include <linux/muic/muic_notifier.h>
@@ -48,6 +47,16 @@
 #ifdef CONFIG_INPUT_BOOSTER
 #include <linux/input/input_booster.h>
 #endif
+
+#ifdef CONFIG_SECURE_TOUCH
+#include <linux/completion.h>
+#include <linux/pm_runtime.h>
+#include <linux/clk.h>
+#include <linux/atomic.h>
+#endif
+
+#include <linux/wakelock.h>
+#include <linux/completion.h>
 
 #define ZT7548_IC_CHIP_CODE	0xE548
 #define ZT7538_IC_CHIP_CODE	0xE538
@@ -81,7 +90,7 @@ enum data_type {
 #define TS_DRVIER_VERSION		"1.0.18_1"
 #define ZT7538_TS_DEVICE		"zt7538"
 
-#define TOUCH_POINT_MODE		0
+#define TOUCH_POINT_MODE		1
 #define ZINITIX_MISC_DEBUG		1
 #define CHECK_HWID			0
 #define ZINITIX_DEBUG			0
@@ -120,27 +129,8 @@ enum data_type {
 #define	SEC_MUTUAL_AMP_V_SEL	0x0232
 
 #define	CHIP_ON_DELAY			200	/*ms*/
-#define FIRMWARE_ON_DELAY		150	/*ms*/
-#define	SEC_DND_N_COUNT			15
-#define	SEC_DND_U_COUNT			18
-#define	SEC_DND_FREQUENCY		169
-
-#define	SEC_HFDND_N_COUNT		15
-#define	SEC_HFDND_U_COUNT		18
-#define	SEC_HFDND_FREQUENCY		112
-#define	SEC_SX_AMP_V_SEL		0x0434
-#define	SEC_SX_SUB_V_SEL		0x0055
-#define	SEC_SY_AMP_V_SEL		0x0232
-#define	SEC_SY_SUB_V_SEL		0x0022
-#define	SEC_SHORT_N_COUNT		2
-#define	SEC_SHORT_U_COUNT		1
-
-//DND
-#define SEC_DND_CP_CTRL_L			0x1fb3
-#define SEC_DND_V_FORCE				0
-#define SEC_DND_AMP_V_SEL			0x0141
-
-#define MAX_RAW_DATA_SZ				36*22
+#define FIRMWARE_ON_DELAY		110	/*ms*/
+#define MAX_RAW_DATA_SZ				24*14
 #define MAX_TRAW_DATA_SZ	\
 	(MAX_RAW_DATA_SZ + 4*MAX_SUPPORTED_FINGER_NUM + 2)
 
@@ -149,10 +139,10 @@ enum data_type {
 #define TOUCH_REF_MODE				10
 #define TOUCH_NORMAL_MODE			5
 #define TOUCH_DELTA_MODE			3
-#define TOUCH_REFERENCE_MODE			8
+#define TOUCH_REFERENCE_MODE		8
 #define TOUCH_DND_MODE				11
-#define TOUCH_RXSHORT_MODE			12
-#define TOUCH_TXSHORT_MODE			13
+#define TOUCH_HF_DND_MODE			12
+#define TOUCH_SHORT_MODE			13
 
 #define	PALM_REPORT_WIDTH	200
 #define	PALM_REJECT_WIDTH	255
@@ -224,14 +214,8 @@ enum data_type {
 #define ZT7538_POINT_STATUS_REG				0x0080
 #define ZT7538_ICON_STATUS_REG				0x00AA
 
-#define ZT7538_MUTUAL_AMP_V_SEL				0x02F9
-#define ZT7538_DND_SHIFT_VALUE				0x012B
+
 #define ZT7538_AFE_FREQUENCY				0x0100
-#define ZT7538_DND_N_COUNT				0x0122
-#define ZT7538_DND_U_COUNT				0x0135
-#define ZT7538_DND_V_FORCE				0x02F1
-#define ZT7538_DND_AMP_V_SEL				0x02F9
-#define ZT7538_DND_CP_CTRL_L				0x02bd
 #define ZT7538_RAWDATA_REG				0x0200
 #define ZT7538_EEPROM_INFO_REG				0x0018
 #define ZT7538_INT_ENABLE_FLAG				0x00f0
@@ -244,11 +228,9 @@ enum data_type {
 #define ZINITIX_INTERNAL_FLAG_02			0x011e
 #define ZT7538_DEBUG_REGSITER				0x0115
 #define ZT7538_OPTIONAL_SETTING				0x0116
-#define ZT75XX_SX_AMP_V_SEL				0x02DF
-#define ZT75XX_SX_SUB_V_SEL				0x02E0
-#define ZT75XX_SY_AMP_V_SEL				0x02EC
-#define ZT75XX_SY_SUB_V_SEL				0x02ED
+
 #define ZT75XX_RESOLUTION_EXPANDER			0x0186
+#define ZT75XX_CHECKSUM					0x03DF
 
 /* Interrupt & status register flag bit
 -------------------------------------------------
@@ -259,7 +241,7 @@ enum data_type {
 #define BIT_UP			3
 #define BIT_PALM		4
 #define BIT_PALM_REJECT		5
-#define RESERVED_0		6
+#define BIT_GESTURE		6
 #define RESERVED_1		7
 #define BIT_WEIGHT_CHANGE	8
 #define BIT_PT_NO_CHANGE	9
@@ -307,13 +289,18 @@ enum data_type {
 #define TSP_CMD_STR_LEN		32
 #define TSP_CMD_RESULT_STR_LEN	4096
 #define TSP_CMD_PARAM_NUM	8
-#define TSP_CMD_Y_NUM		18
-#define TSP_CMD_X_NUM		30
+#define TSP_CMD_Y_NUM		14
+#define TSP_CMD_X_NUM		24
 #define TSP_CMD_NODE_NUM	(TSP_CMD_Y_NUM * TSP_CMD_X_NUM)
 #define REG_EDGE_XF_OFFSET      0xEC
 #define REG_EDGE_XL_OFFSET      0xED
 #define REG_EDGE_YF_OFFSET      0xEE
 #define REG_EDGE_YL_OFFSET      0xEF
+
+#ifdef CONFIG_SECURE_TOUCH
+#define SECURE_TOUCH_ENABLED	1
+#define SECURE_TOUCH_DISABLED	0
+#endif
 
 enum {
 	WAITING = 0,
@@ -363,6 +350,21 @@ enum {
 	FFU,
 };
 
+enum zinitix_cover_id {
+	FLIP_WALLET = 0,
+	VIEW_COVER,
+	COVER_NOTHING1,
+	VIEW_WIRELESS,
+	COVER_NOTHING2,
+	CHARGER_COVER,
+	VIEW_WALLET,
+	LED_COVER,
+	CLEAR_FLIP_COVER,
+	QWERTY_KEYBOARD_EUR,
+	QWERTY_KEYBOARD_KOR,
+	MONTBLANC_COVER = 100,
+};
+
 struct raw_ioctl {
 	u32 sz;
 	u32 buf;
@@ -383,7 +385,10 @@ struct coord {
 struct point_info {
 	u16	status;
 #if TOUCH_POINT_MODE
-	u16 event_flag;
+	u8	event_flag;
+#ifdef DEF_OPTIONAL_STATE_CHECK
+	u8	reg_debug;
+#endif
 #else
 	u8	finger_cnt;
 	u8	time_stamp;
@@ -457,10 +462,13 @@ struct zt7538_ts_info {
 	u16					prev_icon_event;
 	u16					chip_code;
 	int					irq;
+	u8					cover_type;
 	u8					button[MAX_SUPPORTED_BUTTON_NUM];
 	u8					work_state;
 	struct semaphore			work_lock;
+	struct wake_lock wakelock;
 	struct mutex				set_reg_lock;
+	struct delayed_work reset_work;
 #if ESD_TIMER_INTERVAL
 	struct work_struct			tmr_work;
 	struct timer_list			esd_timeout_tmr;
@@ -496,10 +504,26 @@ struct zt7538_ts_info {
 #ifdef SUPPORTED_KEY_LED
 	struct regulator			*led_ldo;
 #endif
+#ifdef CONFIG_SECURE_TOUCH
+	atomic_t secure_enabled;
+	atomic_t secure_pending_irqs;
+	struct completion secure_powerdown;
+	struct completion secure_interrupt;
+	struct clk *core_clk;
+	struct clk *iface_clk;
+#endif
 #ifdef TSP_MUIC_NOTIFICATION
 	struct notifier_block charger_nb;
 #endif
+	struct completion resume_done;
+	unsigned int scrub_id;
+	unsigned int scrub_x;
+	unsigned int scrub_y;
 	bool					device_enabled;
+	bool					flip_enable;
+	bool					flip_state;
+	bool					spay_mode;
+	bool					is_lpm_suspend;
 };
 
 #ifdef SEC_FACTORY_TEST
@@ -543,19 +567,24 @@ static struct workqueue_struct *esd_tmr_workqueue;
 #define DEF_OPTIONAL_MODE_EDGE_SELECT			3
 #define	DEF_OPTIONAL_MODE_DUO_TOUCH			4
 
+typedef union {
+	u16 optional_mode;
+	struct select_mode {
+		u8 state;
+		u8 cover_type;
+	} select_mode;
+} zt7538_setting;
+
+zt7538_setting m_optional_mode;
+zt7538_setting m_prev_optional_mode;
+
 static bool ta_connected;
-static u16 m_optional_mode;
-static u16 m_prev_optional_mode;
-#ifdef DEF_OPTIONAL_STATE_CHECK
-static u16 m_debug_register;
-#endif
+
 static int m_ts_debug_mode = ZINITIX_DEBUG;
 
 #ifdef SEC_FACTORY_TEST
 #define COVER_OPEN 0
 #define COVER_CLOSED 3
-
-static int g_cover_state;
 #endif
 
 extern struct class *sec_class;
@@ -571,6 +600,7 @@ static bool init_touch(struct zt7538_ts_info *info, bool forced);
 static bool mini_init_touch(struct zt7538_ts_info *info);
 static void clear_report_data(struct zt7538_ts_info *info);
 static int zt7538_pinctrl_configure(struct zt7538_ts_info *info, bool active);
+static void zt7538_reset_work(struct work_struct *work);
 #if ESD_TIMER_INTERVAL
 static void esd_timer_start(u16 sec, struct zt7538_ts_info *info);
 static void esd_timer_stop(struct zt7538_ts_info *info);
@@ -597,21 +627,15 @@ static void run_dnd_v_gap_read(void *device_data);
 static void get_dnd_v_gap(void * device_data);
 static void run_dnd_h_gap_read(void *device_data);
 static void get_dnd_h_gap(void * device_data);
-static void run_hfdnd_read(void *device_data);
-static void get_hfdnd(void * device_data);
-static void get_hfdnd_all_data(void *device_data);
-static void run_hfdnd_v_gap_read(void *device_data);
-static void get_hfdnd_v_gap(void * device_data);
-static void run_hfdnd_h_gap_read(void *device_data);
-static void get_hfdnd_h_gap(void * device_data);
 static void run_delta_read(void *device_data);
 static void get_delta(void *device_data);
 static void get_delta_all_data(void *device_data);
 static void dead_zone_enable(void *device_data);
+static void spay_enable(void *device_data);
 static void clear_cover_mode(void *device_data);
 static void clear_reference_data(void *device_data);
 static void run_ref_calibration(void *device_data);
-static void hfdnd_spec_adjust(void *device_data);
+static void get_checksum_data(void *device_data);
 #endif
 
 static int ts_upgrade_sequence(const u8 *firmware_data);

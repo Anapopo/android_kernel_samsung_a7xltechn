@@ -22,6 +22,14 @@
 #include <linux/completion.h>
 #include <linux/wakelock.h>
 #include <linux/input/sec_cmd.h>
+#ifdef CONFIG_SECURE_TOUCH
+#include <linux/pm_runtime.h>
+#include <linux/clk.h>
+#include <linux/atomic.h>
+
+#define SECURE_TOUCH_ENABLE	1
+#define SECURE_TOUCH_DISABLE	0
+#endif
 
 #define SEC_TS_I2C_NAME "sec_ts"
 #define SEC_TS_DEVICE_NAME "SEC_TS"
@@ -63,10 +71,9 @@
 #endif
 
 #define USE_OPEN_CLOSE
+#define USE_RESET_EXIT_LPM
+#define TOUCH_RESET_DWORK_TIME 10
 
-#ifdef USE_OPEN_DWORK
-#define TOUCH_OPEN_DWORK_TIME		10
-#endif
 
 #define MASK_1_BITS					0x0001
 #define MASK_2_BITS					0x0003
@@ -78,9 +85,9 @@
 #define MASK_8_BITS					0x00FF
 
 /* support feature */
-#undef SEC_TS_SUPPORT_HOVERING
-#undef SEC_TS_SUPPORT_TA_MODE
+#undef SEC_TS_SUPPORT_HOVERING	// NA7
 #define SEC_TS_SUPPORT_STRINGLIB
+#undef SEC_TS_SUPPORT_TA_MODE
 
 #define TYPE_STATUS_EVENT_ACK		1
 #define TYPE_STATUS_EVENT_ERR		2
@@ -118,9 +125,11 @@
 #define SEC_TS_FW_CHUNK_SIGN		0x53434654
 
 #define SEC_TS_FW_UPDATE_ON_PROBE
+#define CALIBRATION_BY_FACTORY
 
 #define AMBIENT_CAL			0
-#define OFFSET_CAL			1
+#define OFFSET_CAL_SDC		1
+#define OFFSET_CAL_SEC		2
 
 /* SEC_TS READ REGISTER ADDRESS */
 #define SEC_TS_READ_FW_STATUS		0x51
@@ -152,7 +161,8 @@
 #define SEC_TS_CMD_CALIBRATION_AMBIENT	0x43
 #define SEC_TS_CMD_ERASE_FLASH		0x45
 #define SEC_TS_CMD_STATEMANAGE_ON	0x48
-#define SEC_TS_CMD_CALIBRATION_OFFSET	0x4C
+#define SEC_TS_CMD_CALIBRATION_OFFSET_SDC	0x4C
+#define SEC_TS_CMD_CALIBRATION_OFFSET_SEC	0x4F
 #define SEC_TS_CMD_WRITE_FW_BLK		0x53
 #define SEC_TS_CMD_WRITE_FW_SHORT	0x54
 #define SEC_TS_CMD_ENTER_FW_MODE	0x57
@@ -162,6 +172,8 @@
 #define SEC_TS_CMD_SET_POWER_MODE	0x65
 #define SEC_TS_CMD_STATUS_EVENT_TYPE	0x6B
 #define SEC_TS_CMD_GESTURE_MODE		0x6C
+#define SEC_TS_CMD_EDGE_DEADZONE        0x6E
+#define SEC_TS_CMD_SET_COVERTYPE 	0x6F
 #define SEC_TS_CMD_NOISE_MODE		0x77
 #define SEC_TS_CMD_GET_CHECKSUM		0xA6
 #define SEC_TS_CMD_CHG_SYSMODE		0xD7
@@ -223,16 +235,16 @@
 #define SEC_TS_BIT_SETFUNC_TOUCH	(1 << 0)
 #define SEC_TS_BIT_SETFUNC_MUTUAL	(1 << 0)
 #define SEC_TS_BIT_SETFUNC_HOVER	(1 << 1)
-#define SEC_TS_BIT_SETFUNC_CLEARCOVER	(1 << 2)
+#define SEC_TS_BIT_SETFUNC_COVER	(1 << 2)
 #define SEC_TS_BIT_SETFUNC_GLOVE	(1 << 3)
 #define SEC_TS_BIT_SETFUNC_CHARGER	(1 << 4)
 #define SEC_TS_BIT_SETFUNC_STYLUS	(1 << 5)
-#define SEC_TS_BIT_SETFUNC_QWERTY_KEYBOARD	(1 << 7)
 
 #define STATE_MANAGE_ON			1
 #define STATE_MANAGE_OFF		0
 
-#define SEC_TS_STATUS_CALIBRATION	0xA1
+#define SEC_TS_STATUS_CALIBRATION_SDC	0xA1
+#define SEC_TS_STATUS_CALIBRATION_SEC	0xA2
 #define SEC_TS_STATUS_NOT_CALIBRATION	0x50
 
 typedef enum {
@@ -427,7 +439,9 @@ struct sec_ts_coordinate {
 	u8 action;
 	u16 x;
 	u16 y;
-	u8 touch_width;
+	u16 lx;
+	u16 ly;
+	u8 z;
 	u8 hover_flag;
 	u8 glove_flag;
 	u8 touch_height;
@@ -451,9 +465,7 @@ struct sec_ts_data {
 	struct sec_ts_plat_data *plat_data;
 	struct sec_ts_coordinate coord[MAX_SUPPORT_TOUCH_COUNT + MAX_SUPPORT_HOVER_COUNT];
 
-	uint32_t flags;
-	unsigned char lowpower_flag;
-	bool lowpower_mode;
+	char lowpower_mode;
 
 	int touch_count;
 	int tx_count;
@@ -463,14 +475,14 @@ struct sec_ts_data {
 	int power_status;
 	int raw_status;
 	int touchkey_glove_mode_status;
-	u8 glove_enables;
+	u8 touch_functions;
 #ifdef SEC_TS_SUPPORT_HOVERING
 	u8 hover_enables;
 #endif
 	struct sec_ts_event_coordinate touchtype;
 	bool touched[11];
 	u8 gesture_status[6];
-
+	u8 cal_status;
 #ifdef SEC_TS_SUPPORT_TA_MODE
 	struct sec_ts_callbacks callbacks;
 #endif
@@ -478,10 +490,16 @@ struct sec_ts_data {
 	struct mutex device_mutex;
 	struct mutex i2c_mutex;
 
-#ifdef USE_OPEN_DWORK
-	struct delayed_work open_work;
-#endif
+	struct delayed_work reset_work;
 
+#ifdef CONFIG_SECURE_TOUCH
+	atomic_t secure_enabled;
+	atomic_t secure_pending_irqs;
+	struct completion secure_powerdown;
+	struct completion secure_interrupt;
+	struct clk *core_clk;
+	struct clk *iface_clk;
+#endif
 	struct completion resume_done;
 	struct wake_lock wakelock;
 
@@ -490,7 +508,9 @@ struct sec_ts_data {
 
 	bool reinit_done;
 	bool flip_enable;
-	unsigned int cover_type;
+	int cover_type;
+	u8 cover_cmd;
+	bool probe_done;
 
 #ifdef FTS_SUPPORT_2NDSCREEN
 	u8 SIDE_Flag;
@@ -511,6 +531,11 @@ struct sec_ts_data {
 	unsigned int scrub_x;
 	unsigned int scrub_y;
 	unsigned short string_addr;
+#endif
+
+#ifdef CONFIG_TOUCHSCREEN_DUMP_MODE
+	struct delayed_work ghost_check;
+	u8 tsp_dump_lock;
 #endif
 
 	int temp;
@@ -574,6 +599,9 @@ int sec_ts_function(int (*func_init)(void *device_data), void (*func_remove)(voi
 int sec_ts_fn_init(struct sec_ts_data *ts);
 int sec_ts_read_calibration_report(struct sec_ts_data *ts);
 int sec_ts_execute_force_calibration(struct sec_ts_data *ts, int cal_mode);
+int sec_ts_fix_tmode(struct sec_ts_data *ts, u8 mode, u8 state);
+int sec_ts_release_tmode(struct sec_ts_data *ts);
+
 void sec_ts_delay(unsigned int ms);
 
 extern struct class *sec_class;

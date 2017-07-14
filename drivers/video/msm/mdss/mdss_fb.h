@@ -1,4 +1,4 @@
-/* Copyright (c) 2008-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2008-2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -292,7 +292,6 @@ struct msm_fb_data_type {
 	int doze_mode;
 
 	int fb_mmap_type;
-	struct led_trigger *boot_notification_led;
 };
 
 static inline void mdss_fb_update_notify_update(struct msm_fb_data_type *mfd)
@@ -308,7 +307,7 @@ static inline void mdss_fb_update_notify_update(struct msm_fb_data_type *mfd)
 		if (mfd->no_update.timer.function)
 			del_timer(&(mfd->no_update.timer));
 
-		mfd->no_update.timer.expires = jiffies + ((1 * HZ) / 10);
+		mfd->no_update.timer.expires = jiffies + (2 * HZ);
 		add_timer(&mfd->no_update.timer);
 		mutex_unlock(&mfd->no_update.lock);
 	}
@@ -374,6 +373,5 @@ int mdss_fb_compat_ioctl(struct fb_info *info, unsigned int cmd,
 #if defined(CONFIG_FB_MSM_MDSS_SAMSUNG)
 extern u8 csc_update;
 extern u8 csc_change;
-void mdss_samsung_update_brightness_value(void);
 #endif
 #endif /* MDSS_FB_H */

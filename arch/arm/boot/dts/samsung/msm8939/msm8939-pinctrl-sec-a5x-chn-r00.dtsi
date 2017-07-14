@@ -160,40 +160,6 @@
 			};
 		};
 
-		gpio_expander_nfcen {
-			qcom,pins = <&gp 0>;
-			qcom,pin-func = <0>;
-			qcom,num-grp-pins = <1>;
-			label = "gpio_expander_nfcen";
-
-			expander_nfcen_active: active {
-				drive-strength = <2>;
-				bias-disable;
-			};
-
-			expander_nfcen_suspend: suspend {
-				drive-strength = <2>;
-				bias-disable;
-			};
-		};
-
-		gpio_expander_nfcfirm {
-			qcom,pins = <&gp 3>;
-			qcom,pin-func = <0>;
-			qcom,num-grp-pins = <1>;
-			label = "gpio_expander_nfcfirm";
-
-			expander_nfcfirm_active: active {
-				drive-strength = <2>;
-				bias-pull-down; /* PULL DOWN */
-			};
-
-			expander_nfcfirm_suspend: suspend {
-				drive-strength = <2>;
-				bias-pull-down; /* PULL DOWN */
-			};
-		};
-
 		/* input device gpio control */
 	    pmx_i2c_1 {
 			qcom,pins = <&gp 2>, <&gp 3>;
@@ -1773,7 +1739,7 @@
 			label = "etspi_drdypin";
 			etspi_drdypin_active: etspi_drdypin_active {
 				drive-strength = <2>;
-				bias-pull-none;
+				bias-pull-up;
 			};
 			etspi_drdypin_suspend: etspi_drdypin_suspend {
 				drive-strength = <2>;

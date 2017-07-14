@@ -910,14 +910,8 @@ static int pp_vig_pipe_setup(struct mdss_mdp_pipe *pipe, u32 *op)
 			 * is a previously configured pipe need to re-configure
 			 * CSC matrix
 			 */
-#if defined(CONFIG_FB_MSM_MDSS_SAMSUNG)
-		if ((pipe->play_cnt == 0))
 			mdss_mdp_csc_setup(MDSS_MDP_BLOCK_SSPP, pipe->num,
-					   MDSS_MDP_CSC_YUV2RGB);
-#else
-			mdss_mdp_csc_setup(MDSS_MDP_BLOCK_SSPP, pipe->num,
-					   MDSS_MDP_CSC_YUV2RGB);
-#endif
+								MDSS_MDP_CSC_YUV2RGB);
 		}
 	}
 
@@ -1794,6 +1788,7 @@ static int pp_dspp_setup(u32 disp_num, struct mdss_mdp_mixer *mixer)
 			pp_sts->pgc_sts |= PP_STS_ENABLE;
 		pp_sts_set_split_bits(&pp_sts->pgc_sts, pgc_config->flags);
 	}
+
 opmode_config:
 	pp_dspp_opmode_config(ctl, dspp_num, pp_sts, mdata->mdp_rev, &opmode);
 
@@ -2259,16 +2254,12 @@ static int pp_ad_calc_bl(struct msm_fb_data_type *mfd, int bl_in, int *bl_out,
 	}
 	*bl_out = temp;
 
-	if (!mfd->ad_bl_level)
-		mfd->ad_bl_level = bl_in;
-
 	if (ad_bl_out != mfd->ad_bl_level) {
 		mfd->ad_bl_level = ad_bl_out;
 		*bl_out_notify = true;
 	}
 
-	if (*bl_out_notify)
-		pp_ad_invalidate_input(mfd);
+	pp_ad_invalidate_input(mfd);
 	mutex_unlock(&ad->lock);
 	return 0;
 }

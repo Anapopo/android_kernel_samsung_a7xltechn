@@ -187,10 +187,8 @@ struct sdhci_host {
  * the bounce buffer logic when preparing data
  */
 #define SDHCI_QUIRK2_ADMA_SKIP_DATA_ALIGNMENT             (1<<13)
-/* Some controllers doesn't have have any LED control */
-#define SDHCI_QUIRK2_BROKEN_LED_CONTROL	(1 << 14)
 /* Use reset workaround in case sdhci reset timeouts */
-#define SDHCI_QUIRK2_USE_RESET_WORKAROUND (1 << 15)
+#define SDHCI_QUIRK2_USE_RESET_WORKAROUND (1 << 14)
 
 	int irq;		/* Device IRQ */
 	void __iomem *ioaddr;	/* Mapped address */
@@ -284,8 +282,8 @@ struct sdhci_host {
 	enum sdhci_host_qos_policy last_qos_policy;
 
 	bool host_use_default_qos;
-	unsigned int pm_qos_timeout_us;         /* timeout for PM QoS request */
-	struct device_attribute pm_qos_tout;
+	unsigned int pm_qos_dbg_tracer;         /* dbg tracer for PM QoS request */
+	struct device_attribute pm_qos_dbg;
 	struct delayed_work pm_qos_work;
 
 	struct sdhci_next next_data;

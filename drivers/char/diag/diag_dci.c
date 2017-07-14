@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2015, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -1105,12 +1105,8 @@ void extract_dci_events(unsigned char *buf, int len, int data_source, int token)
 	/* Move directly to the start of the event series. 1 byte for
 	 * event code and 2 bytes for the length field.
 	 */
-	/* The length field indicates the total length removing the cmd_code
-	 * and the lenght field. The event parsing in that case should happen
-	 * till the end.
-	 */
 	temp_len = 3;
-	while (temp_len < length) {
+	while (temp_len < (length - 1)) {
 		event_id_packet = *(uint16_t *)(buf + temp_len);
 		event_id = event_id_packet & 0x0FFF; /* extract 12 bits */
 		if (event_id_packet & 0x8000) {
@@ -1682,10 +1678,6 @@ static int diag_dci_process_apps_pkt(struct diag_pkt_header_t *pkt_header,
 			write_len = sizeof(struct diag_pkt_header_t);
 			*(uint16_t *)(payload_ptr + write_len) = wrap_count;
 			write_len += sizeof(uint16_t);
-		} else if (ss_cmd_code == DIAG_EXT_MOBILE_ID) {
-			write_len = diag_cmd_get_mobile_id(req_buf, req_len,
-						   payload_ptr,
-						   APPS_BUF_SIZE - header_len);
 		}
 	}
 
@@ -2099,13 +2091,13 @@ struct diag_dci_client_tbl *diag_dci_get_client_entry(int client_id)
 	return NULL;
 }
 
-struct diag_dci_client_tbl *dci_lookup_client_entry_pid(int tgid)
+struct diag_dci_client_tbl *dci_lookup_client_entry_pid(int pid)
 {
 	struct list_head *start, *temp;
 	struct diag_dci_client_tbl *entry = NULL;
 	list_for_each_safe(start, temp, &driver->dci_client_list) {
 		entry = list_entry(start, struct diag_dci_client_tbl, track);
-		if (entry->client->tgid == tgid)
+		if (entry->client->tgid == pid)
 			return entry;
 	}
 	return NULL;

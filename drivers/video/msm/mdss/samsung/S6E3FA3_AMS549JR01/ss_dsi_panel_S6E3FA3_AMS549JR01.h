@@ -36,4 +36,5 @@ Copyright (C) 2012, Samsung Electronics. All rights reserved.
 #include "../ss_dsi_panel_common.h"
 
 struct smartdim_conf *smart_get_conf_S6E3FA3_AMS549JR01(void);
+struct smartdim_conf *smart_get_conf_S6E3FA3_AMS549JR01_hmt(void);
 #endif

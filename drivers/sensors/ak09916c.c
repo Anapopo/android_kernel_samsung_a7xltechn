@@ -55,6 +55,9 @@
 #define AK09916C_BOTTOM_UPPER_LEFT       6
 #define AK09916C_BOTTOM_UPPER_RIGHT      7
 
+#define AK09916C_MAX_DELAY		200000000LL
+#define AK09916C_MIN_DELAY		10000000LL
+
 struct ak09916c_v {
 	union {
 		s16 v[3];
@@ -72,10 +75,14 @@ struct ak09916c_p {
 	struct device *factory_device;
 	struct ak09916c_v magdata;
 	struct mutex lock;
+	struct mutex enable_lock;
 	struct delayed_work work;
 
 	atomic_t delay;
 	atomic_t enable;
+#if defined(CONFIG_SENSORS_SW_RESET)
+	int reset_state;
+#endif
 
 	u8 asa[3];
 	u32 chip_pos;
@@ -88,6 +95,13 @@ static int ak09916c_i2c_read(struct i2c_client *client,
 {
 	int ret;
 	struct i2c_msg msg[2];
+#if defined(CONFIG_SENSORS_SW_RESET)
+	struct ak09916c_p *data =
+			(struct ak09916c_p *)i2c_get_clientdata(client);
+
+	if (data->reset_state)
+		return -1;
+#endif
 
 	msg[0].addr = client->addr;
 	msg[0].flags = I2C_M_WR;
@@ -116,6 +130,16 @@ static int ak09916c_i2c_write(struct i2c_client *client,
 	struct i2c_msg msg;
 	unsigned char w_buf[2];
 
+#if defined(CONFIG_SENSORS_SW_RESET)
+	struct ak09916c_p *data =
+			(struct ak09916c_p *)i2c_get_clientdata(client);
+
+	if (data->reset_state) {
+		pr_info("[SENSOR]: %s - reset_state %d start!!!\n", __func__,data->reset_state);
+		return -1;
+	}
+#endif
+
 	w_buf[0] = reg_addr;
 	w_buf[1] = buf;
 
@@ -140,6 +164,14 @@ static int ak09916c_i2c_read_block(struct i2c_client *client,
 #if 1
 	int ret;
 	struct i2c_msg msg[2];
+
+#if defined(CONFIG_SENSORS_SW_RESET)
+	struct ak09916c_p *data =
+			(struct ak09916c_p *)i2c_get_clientdata(client);
+
+	if (data->reset_state)
+		return -1;
+#endif
 
 	msg[0].addr = client->addr;
 	msg[0].flags = I2C_M_WR;
@@ -272,6 +304,14 @@ static void ak09916c_work_func(struct work_struct *work)
 	unsigned long delay = nsecs_to_jiffies(atomic_read(&data->delay));
 	unsigned long pdelay = atomic_read(&data->delay);
 
+#ifdef CONFIG_SENSORS_SW_RESET
+	if(data->reset_state)
+	{
+		pr_err("[SENSOR]:ak09916c_work_func: reset state\n");
+		return;
+	}
+#endif	
+
 	ts = ktime_to_timespec(ktime_get_boottime());
 	data->timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 
@@ -356,10 +396,19 @@ static ssize_t ak09916c_enable_store(struct device *dev,
 		pr_err("[SENSOR]: %s - Invalid Argument\n", __func__);
 		return ret;
 	}
-
 	pr_info("[SENSOR]: %s - new_value = %u\n", __func__, enable);
+#if defined(CONFIG_SENSORS_SW_RESET)
+	if (data->reset_state) {
+		pr_info("[SENSOR]: %s - sw reset come enable is = %u\n", __func__, enable);
+		atomic_set(&data->enable, enable);
+		return size;
+	}
+#endif
+	mutex_lock(&data->enable_lock);
 	if ((enable == 0) || (enable == 1))
 		ak09916c_set_enable(data, (int)enable);
+
+	mutex_unlock(&data->enable_lock);
 
 	return size;
 }
@@ -386,8 +435,18 @@ static ssize_t ak09916c_delay_store(struct device *dev,
 		return ret;
 	}
 
+	if (delay > AK09916C_MAX_DELAY) {
+		pr_info("[SENSOR]: %s - %lld > AK09916C_MAX_DELAY\n", __func__, delay);
+		delay = AK09916C_MAX_DELAY;
+	} else if (delay < AK09916C_MIN_DELAY) {
+		pr_info("[SENSOR]: %s - %lld < AK09916C_MAX_DELAY\n", __func__, delay);
+		delay = AK09916C_MIN_DELAY;
+	}
+
+	mutex_lock(&data->enable_lock);
 	atomic_set(&data->delay, (int64_t)delay);
 	pr_info("[SENSOR]: %s - poll_delay = %lld\n", __func__, delay);
+	mutex_unlock(&data->enable_lock);
 
 	return size;
 }
@@ -668,29 +727,6 @@ exit:
 	return snprintf(buf, PAGE_SIZE, "%d,%d,%d\n", mag.x, mag.y, mag.z);
 }
 
-static DEVICE_ATTR(name, S_IRUGO, ak09916c_name_show, NULL);
-static DEVICE_ATTR(vendor, S_IRUGO, ak09916c_vendor_show, NULL);
-static DEVICE_ATTR(raw_data, S_IRUGO, ak09916c_raw_data_read, NULL);
-static DEVICE_ATTR(adc, S_IRUGO, ak09916c_adc, NULL);
-static DEVICE_ATTR(dac, S_IRUGO, ak09916c_check_cntl, NULL);
-static DEVICE_ATTR(chk_registers, S_IRUGO, ak09916c_check_registers, NULL);
-static DEVICE_ATTR(selftest, S_IRUGO, ak09916c_get_selftest, NULL);
-static DEVICE_ATTR(asa, S_IRUGO, ak09916c_get_asa, NULL);
-static DEVICE_ATTR(status, S_IRUGO, ak09916c_get_status, NULL);
-
-static struct device_attribute *sensor_attrs[] = {
-	&dev_attr_name,
-	&dev_attr_vendor,
-	&dev_attr_raw_data,
-	&dev_attr_adc,
-	&dev_attr_dac,
-	&dev_attr_chk_registers,
-	&dev_attr_selftest,
-	&dev_attr_asa,
-	&dev_attr_status,
-	NULL,
-};
-
 static int ak09916c_check_device(struct ak09916c_p *data)
 {
 	unsigned char reg, buf[2];
@@ -721,6 +757,91 @@ static int ak09916c_check_device(struct ak09916c_p *data)
 	return 0;
 }
 
+#ifdef CONFIG_SENSORS_SW_RESET
+static ssize_t ak09916c_power_reset_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct ak09916c_p *data = dev_get_drvdata(dev);
+	int enabled = atomic_read(&data->enable);
+
+	pr_info("[SENSOR]: %s - magnetic power reset start!!!\n", __func__);
+
+	data->reset_state = 1;
+	mutex_lock(&data->enable_lock);
+
+	if (enabled) {
+		cancel_delayed_work_sync(&data->work);
+		pr_info("[SENSOR]: %s - cancel_delayed_work_sync done!!!\n", __func__);
+	}
+
+	mutex_unlock(&data->enable_lock);
+
+	pr_info("[SENSOR]: %s - magnetic power reset end!!!\n", __func__);
+
+	return snprintf(buf, PAGE_SIZE, "%d\n", enabled);
+	}
+
+
+static ssize_t ak09916c_sw_reset_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct ak09916c_p *data = dev_get_drvdata(dev);
+	int enabled = atomic_read(&data->enable);
+
+	pr_info("[SENSOR]: %s - magnetic sw reset start!!!\n", __func__);
+
+	mutex_lock(&data->enable_lock);
+	data->reset_state = 0;
+	data->old_timestamp = 0;
+	if (enabled == 1) {
+		pr_info("[SENSOR]: %s - magnetic was enabled so make enable!!!\n", __func__);
+		ak09916c_ecs_set_mode(data, AK09916C_MODE_SNG_MEASURE);
+		schedule_delayed_work(&data->work,
+			nsecs_to_jiffies(atomic_read(&data->delay)));
+	}
+	else {
+		pr_info("[SENSOR]: %s - magnetic was disabled so make disable!!!\n", __func__);
+		ak09916c_ecs_set_mode(data, AK09916C_MODE_POWERDOWN);
+	}
+
+	mutex_unlock(&data->enable_lock);
+
+	pr_info("[SENSOR]: %s - magnetic sw reset end!!!\n", __func__);
+
+	return snprintf(buf, PAGE_SIZE, "%d\n", enabled);
+}
+#endif
+
+static DEVICE_ATTR(name, S_IRUGO, ak09916c_name_show, NULL);
+static DEVICE_ATTR(vendor, S_IRUGO, ak09916c_vendor_show, NULL);
+static DEVICE_ATTR(raw_data, S_IRUGO, ak09916c_raw_data_read, NULL);
+static DEVICE_ATTR(adc, S_IRUGO, ak09916c_adc, NULL);
+static DEVICE_ATTR(dac, S_IRUGO, ak09916c_check_cntl, NULL);
+static DEVICE_ATTR(chk_registers, S_IRUGO, ak09916c_check_registers, NULL);
+static DEVICE_ATTR(selftest, S_IRUGO, ak09916c_get_selftest, NULL);
+static DEVICE_ATTR(asa, S_IRUGO, ak09916c_get_asa, NULL);
+static DEVICE_ATTR(status, S_IRUGO, ak09916c_get_status, NULL);
+#ifdef CONFIG_SENSORS_SW_RESET
+static DEVICE_ATTR(power_reset, S_IRUSR | S_IRGRP, ak09916c_power_reset_show, NULL);
+static DEVICE_ATTR(sw_reset, S_IRUSR | S_IRGRP, ak09916c_sw_reset_show, NULL);
+#endif
+
+static struct device_attribute *sensor_attrs[] = {
+	&dev_attr_name,
+	&dev_attr_vendor,
+	&dev_attr_raw_data,
+	&dev_attr_adc,
+	&dev_attr_dac,
+	&dev_attr_chk_registers,
+	&dev_attr_selftest,
+	&dev_attr_asa,
+	&dev_attr_status,
+#ifdef CONFIG_SENSORS_SW_RESET
+	&dev_attr_power_reset,
+	&dev_attr_sw_reset,
+#endif
+	NULL,
+};
 
 static int ak09916c_input_init(struct ak09916c_p *data)
 {
@@ -827,6 +948,10 @@ static int ak09916c_probe(struct i2c_client *client,
 	/* workqueue init */
 	INIT_DELAYED_WORK(&data->work, ak09916c_work_func);
 	mutex_init(&data->lock);
+#ifdef CONFIG_SENSORS_SW_RESET
+	data->reset_state = 0;
+#endif
+	mutex_init(&data->enable_lock);
 
 	atomic_set(&data->delay, AK09916C_DEFAULT_DELAY);
 	atomic_set(&data->enable, 0);
@@ -870,6 +995,7 @@ static int ak09916c_remove(struct i2c_client *client)
 	if (atomic_read(&data->enable) == 1)
 		ak09916c_set_enable(data, 0);
 	mutex_destroy(&data->lock);
+	mutex_destroy(&data->enable_lock);
 
 	sensors_unregister(data->factory_device, sensor_attrs);
 	sensors_remove_symlink(&data->input->dev.kobj, data->input->name);

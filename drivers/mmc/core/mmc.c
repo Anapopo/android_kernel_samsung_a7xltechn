@@ -10,7 +10,6 @@
  * published by the Free Software Foundation.
  */
 
-#include <linux/bitops.h>
 #include <linux/err.h>
 #include <linux/slab.h>
 #include <linux/stat.h>
@@ -361,17 +360,13 @@ static int mmc_read_ext_csd(struct mmc_card *card, u8 *ext_csd)
 		}
 	}
 
-	/*
-	 * The EXT_CSD format is meant to be forward compatible. As long
-	 * as CSD_STRUCTURE does not change, all values for EXT_CSD_REV
-	 * are authorized, see JEDEC JESD84-B50 section B.8.
-	 */
 	card->ext_csd.rev = ext_csd[EXT_CSD_REV];
-
-        /* Support beyond EXT_CSD revision device of JESD84-B50 */
-        if (card->ext_csd.rev > 7)
-                pr_err("%s: EXT_CSD revision is over than 7 (%d)\n",
-                        mmc_hostname(card->host), card->ext_csd.rev);
+	if (card->ext_csd.rev > 7) {
+		pr_err("%s: unrecognised EXT_CSD revision %d\n",
+			mmc_hostname(card->host), card->ext_csd.rev);
+		err = -EINVAL;
+		goto out;
+	}
 
 	/* fixup device after ext_csd revision field is updated */
 	mmc_fixup_device(card, mmc_fixups);
@@ -575,19 +570,15 @@ static int mmc_read_ext_csd(struct mmc_card *card, u8 *ext_csd)
 			card->ext_csd.bkops_en = ext_csd[EXT_CSD_BKOPS_EN];
 			card->ext_csd.raw_bkops_status =
 				ext_csd[EXT_CSD_BKOPS_STATUS];
-			if (!(mmc_card_get_bkops_en_manual(card)) &&
+			if (!card->ext_csd.bkops_en &&
 				card->host->caps2 & MMC_CAP2_INIT_BKOPS) {
-				mmc_card_set_bkops_en_manual(card);
-				err = mmc_switch(card,
-					EXT_CSD_CMD_SET_NORMAL,
-					EXT_CSD_BKOPS_EN,
-					card->ext_csd.bkops_en , 0);
-				if (err) {
+				err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
+					EXT_CSD_BKOPS_EN, 1, 0);
+				if (err)
 					pr_warn("%s: Enabling BKOPS failed\n",
 						mmc_hostname(card->host));
-					mmc_card_clr_bkops_en_manual(card);
-				}
-
+				else
+					card->ext_csd.bkops_en = 1;
 			}
 		}
 
@@ -1780,7 +1771,8 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
 				goto free_card;
 			}
 		}
-		if (mmc_card_get_bkops_en_manual(card)) {
+
+		if (card->ext_csd.bkops_en) {
 			INIT_DELAYED_WORK(&card->bkops_info.dw,
 					  mmc_start_idle_time_bkops);
 
@@ -1947,8 +1939,7 @@ static int mmc_suspend(struct mmc_host *host)
 	 * Disable clock scaling before suspend and enable it after resume so
 	 * as to avoid clock scaling decisions kicking in during this window.
 	 */
-	if (mmc_can_scale_clk(host))
-		mmc_disable_clk_scaling(host);
+	mmc_disable_clk_scaling(host);
 
 	err = mmc_cache_ctrl(host, 0);
 	if (err)

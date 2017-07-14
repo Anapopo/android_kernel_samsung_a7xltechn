@@ -2773,7 +2773,7 @@ void tcp_get_info(const struct sock *sk, struct tcp_info *info)
 	if (sk->sk_socket) {
 		struct file *filep = sk->sk_socket->file;
 		if (filep)
-			info->tcpi_count = file_count(filep);
+			info->tcpi_count = atomic_read(&filep->f_count);
 	}
 }
 EXPORT_SYMBOL_GPL(tcp_get_info);
@@ -3585,20 +3585,14 @@ restart:
 			sock_hold(sk);
 			spin_unlock_bh(lock);
 
-			lock_sock(sk);
 			local_bh_disable();
 			bh_lock_sock(sk);
+			sk->sk_err = ETIMEDOUT;
+			sk->sk_error_report(sk);
 
-			if (!sock_flag(sk, SOCK_DEAD)) {
-				smp_wmb();  /* be consistent with tcp_reset */
-				sk->sk_err = ETIMEDOUT;
-				sk->sk_error_report(sk);
-				tcp_done(sk);
-			}
-
+			tcp_done(sk);
 			bh_unlock_sock(sk);
 			local_bh_enable();
-			release_sock(sk);
 			sock_put(sk);
 
 			goto restart;

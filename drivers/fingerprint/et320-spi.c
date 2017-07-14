@@ -42,15 +42,6 @@ static DECLARE_BITMAP(minors, N_SPI_MINORS);
 static LIST_HEAD(device_list);
 static DEFINE_MUTEX(device_list_lock);
 
-/* using for awake the samsung FP daemon */
-extern bool fp_lockscreen_mode;
-#ifdef ENABLE_SENSORS_FPRINT_SECURE
-#ifdef CONFIG_SENSORS_FP_LOCKSCREEN_MODE
-/* input/Keyboard/gpio_keys.c */
-extern bool wakeup_by_key(void);
-#endif
-#endif
-
 static int gpio_irq;
 static struct etspi_data *g_data;
 static DECLARE_WAIT_QUEUE_HEAD(interrupt_waitq);
@@ -151,7 +142,6 @@ unsigned int etspi_fps_interrupt_poll(
 	}
 	return mask;
 }
-
 /*-------------------------------------------------------------------------*/
 
 static void etspi_reset(struct etspi_data *etspi)
@@ -189,7 +179,7 @@ static void etspi_power_control(struct etspi_data *etspi, int status)
 
 		if (etspi->ldo_pin2)
 			gpio_set_value(etspi->ldo_pin2, 1);
-		usleep_range(5000, 5050);
+		msleep(20);
 	} else if (status == 0) {
 		if (etspi->ldo_pin)
 			gpio_set_value(etspi->ldo_pin, 0);
@@ -200,8 +190,6 @@ static void etspi_power_control(struct etspi_data *etspi, int status)
 			usleep_range(2950, 3000);
 			gpio_set_value(etspi->ocp_en, 0);
 		}
-	} else {
-		pr_err("%s can't support this value. %d\n", __func__, status);
 	}
 }
 
@@ -224,55 +212,6 @@ static ssize_t etspi_write(struct file *filp,
 }
 
 #ifdef ENABLE_SENSORS_FPRINT_SECURE
-#ifdef CONFIG_SENSORS_FP_LOCKSCREEN_MODE
-static int etspi_send_wake_up_signal(struct etspi_data *etspi)
-{
-	int ret = 0;
-
-	pr_info("%s\n", __func__);
-
-	if (etspi->t) {
-		/* notify wake up signal to user process */
-		ret = send_sig_info(etspi->signal_id,
-				    (struct siginfo *)1, etspi->t);
-		if (ret < 0)
-			pr_err("%s Error sending signal\n", __func__);
-
-	} else
-		pr_err("%s task_struct is not received yet\n", __func__);
-
-	return ret;
-}
-#endif
-
-static int etspi_register_wake_up_signal(struct etspi_data *etspi,
-				       u8 *arg)
-{
-	struct etspi_ioctl_register_signal usr_signal;
-	if (copy_from_user(&usr_signal, (void *)arg, sizeof(usr_signal)) != 0) {
-		pr_err("%s Failed copy from user.\n", __func__);
-		return -EFAULT;
-	} else {
-		etspi->user_pid = usr_signal.user_pid;
-		etspi->signal_id = usr_signal.signal_id;
-                pr_info("%s, user_pid: %d, signal_id : %d\n"
-                        , __func__, usr_signal.user_pid, usr_signal.signal_id);
-		rcu_read_lock();
-		/* find the task_struct associated with userpid */
-		etspi->t = pid_task(find_pid_ns(etspi->user_pid, &init_pid_ns),
-			     PIDTYPE_PID);
-		if (etspi->t == NULL) {
-			pr_debug("%s No such pid\n", __func__);
-			rcu_read_unlock();
-			return -ENODEV;
-		}
-		rcu_read_unlock();
-		pr_info("%s Searching task with PID=%08x, t = %p\n",
-			__func__, etspi->user_pid, etspi->t);
-	}
-	return 0;
-}
-
 static int etspi_ioctl_config_spi_gpio(struct etspi_data *etspi)
 {
 	struct spi_device *spidev = NULL;
@@ -303,12 +242,10 @@ static long etspi_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	u32 tmp;
 	struct egis_ioc_transfer *ioc = NULL;
 	u8 *buf, *address, *result, *image_buf;
-#ifdef ENABLE_SENSORS_FPRINT_SECURE
-	unsigned int lockscreen_mode = 0;
-#endif
+
 	/* Check type and command number */
 	if (_IOC_TYPE(cmd) != EGIS_IOC_MAGIC) {
-		pr_err("%s _IOC_TYPE(cmd) != EGIS_IOC_MAGIC", __func__);
+		pr_err("%s _IOC_TYPE(cmd) != EGIS_IOC_MAGIC\n", __func__);
 		return -ENOTTY;
 	}
 
@@ -325,7 +262,7 @@ static long etspi_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						(void __user *)arg,
 						_IOC_SIZE(cmd));
 	if (err) {
-		pr_err("%s err", __func__);
+		pr_err("%s err\n", __func__);
 		return -EFAULT;
 	}
 
@@ -338,7 +275,7 @@ static long etspi_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	spin_unlock_irq(&etspi->spi_lock);
 
 	if (spi == NULL) {
-		pr_err("%s spi == NULL", __func__);
+		pr_err("%s spi == NULL\n", __func__);
 		return -ESHUTDOWN;
 	}
 
@@ -356,6 +293,7 @@ static long etspi_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		retval = -EINVAL;
 		goto out;
 	}
+
 	/* copy into scratch area */
 	ioc = kmalloc(tmp, GFP_KERNEL);
 	if (ioc == NULL) {
@@ -453,6 +391,7 @@ static long etspi_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				etspi->enabled_clk = false;
 			}
 		}
+
 		spi->max_speed_hz = ioc->speed_hz;
 		retval = fp_spi_clock_enable(spi);
 		if (retval < 0)
@@ -563,23 +502,21 @@ static long etspi_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		break;
 	case FP_CPU_SPEEDUP:
 		pr_info("%s FP_CPU_SPEEDUP\n", __func__);
-		if (ioc->len) {
+		if (ioc->len == 1) {
 			u8 retry_cnt = 0;
 			pr_info("%s FP_CPU_SPEEDUP ON:%d, retry: %d\n",
 					__func__, ioc->len, retry_cnt);
-			if (etspi->min_cpufreq_limit) {
-				do {
-					retval = set_freq_limit(DVFS_FINGER_ID, etspi->min_cpufreq_limit);
-					retry_cnt++;
-					if (retval) {
-						pr_err("%s: booster start failed. (%d) retry: %d\n"
-							, __func__, retval, retry_cnt);
-						if (retry_cnt < 7)
-							usleep_range(500, 510);
-					}
-				} while (retval && retry_cnt < 7);
-			}
-		} else {
+			do {
+				retval = set_freq_limit(DVFS_FINGER_ID, MIN_FINGER_LIMIT);
+				retry_cnt++;
+				if (retval) {
+					pr_err("%s: booster start failed. (%d) retry: %d\n"
+						, __func__, retval, retry_cnt);
+					if (retry_cnt < 7)
+						usleep_range(500, 510);
+				}
+			} while (retval && retry_cnt < 7);
+		} else if (ioc->len == 0) {
 			pr_info("%s FP_CPU_SPEEDUP OFF\n", __func__);
 			retval = set_freq_limit(DVFS_FINGER_ID, -1);
 			if (retval)
@@ -588,28 +525,10 @@ static long etspi_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		}
 		break;
 	case FP_SET_SENSOR_TYPE:
-		if ((int)ioc->len >= SENSOR_UNKNOWN && (int)ioc->len < (SENSOR_STATUS_SIZE - 1)) {
-			etspi->sensortype = (int)ioc->len;
-			pr_info("%s FP_SET_SENSOR_TYPE :%s\n", __func__,
-				sensor_status[g_data->sensortype + 1]);
-		} else {
-			pr_err("%s FP_SET_SENSOR_TYPE invalid value %d\n",
-					__func__, (int)ioc->len);
-			etspi->sensortype = SENSOR_UNKNOWN;
-		}
+		etspi->sensortype = ioc->len;
+		pr_info("%s FP_SET_SENSOR_TYPE :%d \n"
+			, __func__, etspi->sensortype);
 		break;
-	case FP_SET_LOCKSCREEN:
-		lockscreen_mode = (unsigned int)ioc->len;
-
-		lockscreen_mode?(fp_lockscreen_mode=true):(fp_lockscreen_mode=false);
-		pr_info("%s FP_SET_LOCKSCREEN :%s \n",
-				__func__, fp_lockscreen_mode?"ON":"OFF");
-		break;
-	case FP_SET_WAKE_UP_SIGNAL:
-		pr_info("%s FP_SET_WAKE_UP_SIGNAL, TX_BUF(%p)\n", __func__, ioc->tx_buf);
-		retval = etspi_register_wake_up_signal(etspi, ioc->tx_buf);
-		break;
-
 #endif
 	default:
 		retval = -EFAULT;
@@ -656,9 +575,6 @@ static int etspi_open(struct inode *inode, struct file *filp)
 		}
 	}
 	if (status == 0) {
-#ifdef ENABLE_SENSORS_FPRINT_SECURE
-		etspi->user_pid = 0;
-#endif
 		if (etspi->buffer == NULL) {
 			etspi->buffer = kmalloc(bufsiz, GFP_KERNEL);
 			if (etspi->buffer == NULL) {
@@ -896,10 +812,6 @@ static int etspi_parse_dt(struct device *dev,
 		}
 	}
 
-	if (of_property_read_u32(np, "etspi-min_cpufeq_limit",
-		&data->min_cpufreq_limit))
-		data->min_cpufreq_limit = 0;
-
 	pr_info("%s is successful\n", __func__);
 	return errorno;
 dt_exit:
@@ -1040,30 +952,6 @@ static int etspi_set_timer(struct etspi_data *etspi)
 	INIT_WORK(&etspi->work_debug, etspi_work_func_debug);
 	return status;
 }
-
-
-#ifdef ENABLE_SENSORS_FPRINT_SECURE
-static int etspi_wakeup_daemon(struct etspi_data *etspi)
-{
-#ifdef CONFIG_SENSORS_FP_LOCKSCREEN_MODE
-	if (fp_lockscreen_mode) {
-		if (etspi->signal_id) {
-			if (wakeup_by_key() == true && 
-				etspi->drdy_irq_flag == DRDY_IRQ_DISABLE) {
-				etspi_send_wake_up_signal(etspi);
-				pr_info("%s send signal done!\n", __func__);
-			} else {
-				pr_err("%s send signal failed by wakeup(%d)\n",
-					__func__, wakeup_by_key());
-			}
-		} else {
-			pr_err("%s fingerprint has no signal_id\n", __func__);
-		}
-	}
-#endif
-	return 0;
-}
-#endif
 
 /*-------------------------------------------------------------------------*/
 
@@ -1249,9 +1137,6 @@ static int etspi_pm_resume(struct device *dev)
 	pr_info("%s\n", __func__);
 
 	if (g_data != NULL) {
-#ifdef ENABLE_SENSORS_FPRINT_SECURE
-		etspi_wakeup_daemon(g_data);
-#endif
 		etspi_power_control(g_data, 1);
 		etspi_enable_debug_timer();
 	}
@@ -1340,4 +1225,3 @@ module_exit(etspi_exit);
 MODULE_AUTHOR("Wang YuWei, <robert.wang@egistec.com>");
 MODULE_DESCRIPTION("SPI Interface for ET320");
 MODULE_LICENSE("GPL");
-

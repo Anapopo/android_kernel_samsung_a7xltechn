@@ -173,8 +173,6 @@ static ssize_t front_camera_type_show(struct device *dev,
 	char cam_type[] = "SLSI_S5K6A3YX\n";
 #elif defined(CONFIG_S5K5E3YX)
 	char cam_type[] = "SLSI_S5K5E3YX\n";
-#elif defined(CONFIG_SR552)
-	char cam_type[] = "SLSI_SR522\n";
 #elif defined(CONFIG_SR200PC20)
 	char cam_type[] = "SILICONFILE_SR200PC20\n";
 #elif defined(CONFIG_SR130PC20)
@@ -193,7 +191,7 @@ static ssize_t back_camera_firmware_show(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
 #if defined(CONFIG_S5K4ECGX)
-	char cam_fw[] = "S5K4ECGA N\n";
+	char cam_fw[] = "S5K4ECGX N\n";
 	return snprintf(buf, sizeof(cam_fw), "%s", cam_fw);
 #elif defined(CONFIG_SR352)
 	char cam_fw[] = "SR352 N\n";
@@ -234,7 +232,7 @@ char cam_cal[40] = "NULL NULL NULL\n";//cam map
 static ssize_t back_cal_data_check_show(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
-	CDBG("[FW_DBG] cam_cal : %s\n", cam_cal);
+	CDBG("[FW_DBG] cal_crc : %s\n", cal_crc);
 	return snprintf(buf, sizeof(cam_cal), "%s", cam_cal);
 }
 
@@ -350,19 +348,17 @@ static ssize_t front_camera_firmware_factory_store(struct device *dev,
 
 
 #if defined(CONFIG_S5K5E3YX) && !defined(CONFIG_MSM_FRONT_EEPROM)
-	char front_cam_fw_ver[25] = "S5K5E3YX N\n";
-#elif defined(CONFIG_SR552)
-	char front_cam_fw_ver[25] = "SR552 N\n";
+char front_cam_fw_ver[25] = "S5K5E3YX N\n";
 #elif defined(CONFIG_S5K6A3YX)
-	char front_cam_fw_ver[25] = "S5K6A3YX N\n";
+char front_cam_fw_ver[25] = "S5K6A3YX N\n";
 #elif defined(CONFIG_SR200PC20)
 	char front_cam_fw_ver[25] = "SR200PC20M N\n";
 #elif defined(CONFIG_SR130PC20)
 	char front_cam_fw_ver[25] = "SR130PC20 N\n";
 #elif defined(CONFIG_DB8221A)
-	char front_cam_fw_ver[25] = "DB8221A N\n";
+char front_cam_fw_ver[25] = "DB8221A N\n";
 #else
-	char front_cam_fw_ver[25] = "NULL NULL\n";
+char front_cam_fw_ver[25] = "NULL NULL\n";
 #endif
 static ssize_t front_camera_firmware_show(struct device *dev,
 			struct device_attribute *attr, char *buf)

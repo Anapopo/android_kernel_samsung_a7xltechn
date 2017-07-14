@@ -448,7 +448,7 @@ int msm_sensor_power_down(struct msm_sensor_ctrl_t *s_ctrl)
 	sensor_i2c_client = s_ctrl->sensor_i2c_client;
 
 #if defined(CONFIG_FLED_KTD2692)
-	if((s_ctrl->sensordata->slave_info->sensor_id == 0x5e30) || (s_ctrl->sensordata->slave_info->sensor_id == 0x0552)){
+	if(s_ctrl->sensordata->slave_info->sensor_id == 0x5e30){
 		pr_err("%s : Front LED turn off\n", __func__);
 		ktd2692_flash_on(0);
 	}

@@ -177,3 +177,8 @@ config SWITCH_DUAL_MODEM
         help
           If you using separated chip AP and CP, Set Y.
 
+config UART3
+        bool "UART3"
+        default n
+        help
+          If you say yes, you can use xo shutdown

@@ -314,7 +314,6 @@ endif
 endif
 zImage-dtb: vmlinux scripts dtbs
 	$(Q)$(MAKE) $(build)=$(boot) MACHINE=$(MACHINE) $(boot)/$@
-	
 
 # We use MRPROPER_FILES and CLEAN_FILES now
 archclean:

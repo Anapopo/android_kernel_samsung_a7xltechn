@@ -220,6 +220,7 @@ struct sec_battery_info {
 
 	bool charging_block;
 	bool skip_chg_temp_check;
+
 #if defined(CONFIG_BATTERY_SWELLING)
 	int swelling_temp_high_threshold;
 	int swelling_temp_high_recovery;

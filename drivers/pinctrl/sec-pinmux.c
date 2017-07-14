@@ -25,6 +25,10 @@
 #include <linux/pinctrl/pinconf-generic.h>
 #endif
 
+#ifdef CONFIG_SEC_FACTORY
+#undef CONFIG_ESE_SECURE
+#endif
+
 #ifdef CONFIG_SEC_PM_DEBUG
 static DEFINE_SPINLOCK(gpiomux_lock);
 #endif
@@ -95,8 +99,8 @@ static void msm8916_check_gpio_status(unsigned char phonestate)
 			continue;
 #endif
 #if (defined (CONFIG_SEC_A8_PROJECT) && defined (CONFIG_ESE_P61)) \
-	|| (defined (CONFIG_SEC_A7X_PROJECT) && defined (CONFIG_ESE_P3)) \
-	|| (defined (CONFIG_SEC_A5X_PROJECT) && defined (CONFIG_ESE_P3))
+	|| (defined (CONFIG_SEC_A7X_PROJECT) && defined (CONFIG_ESE_SECURE)) \
+	|| (defined (CONFIG_SEC_A5X_PROJECT) && defined (CONFIG_ESE_SECURE))
 		if (i >= 0 && i <= 3)
 			continue;
 #endif
@@ -353,8 +357,8 @@ static void gpiomux_debug_print(struct seq_file *m)
 			continue;
 #endif
 #if (defined (CONFIG_SEC_A8_PROJECT) && defined (CONFIG_ESE_P61)) \
-	|| (defined (CONFIG_SEC_A7X_PROJECT) && defined (CONFIG_ESE_P3)) \
-	|| (defined (CONFIG_SEC_A5X_PROJECT) && defined (CONFIG_ESE_P3))
+	|| (defined (CONFIG_SEC_A7X_PROJECT) && defined (CONFIG_ESE_SECURE)) \
+	|| (defined (CONFIG_SEC_A5X_PROJECT) && defined (CONFIG_ESE_SECURE))
 		if (gpio >= 0 && gpio <= 3)
 			continue;
 #endif

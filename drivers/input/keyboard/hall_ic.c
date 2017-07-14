@@ -225,6 +225,9 @@ static int hall_open(struct input_dev *input)
 	struct hall_drvdata *ddata = input_get_drvdata(input);
 	/* update the current status */
 	schedule_delayed_work(&ddata->flip_cover_dwork, HZ / 2);
+#if defined(CONFIG_SENSORS_HALL_REAR)
+	schedule_delayed_work(&ddata->flip_cover_rear_dwork, HZ / 2);
+#endif
 	/* Report current state of buttons that are connected to GPIOs */
 	input_sync(input);
 

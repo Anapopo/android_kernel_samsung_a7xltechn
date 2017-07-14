@@ -526,12 +526,6 @@ config SIOP_CHARGING_LIMIT_CURRENT
 	help
 	  set SIOP charging limit current.
 
-config DISABLE_MINIMUM_SIOP_CHARGING
-	bool "Minimum siop charging current limit"
-	default n
-	help
-	  set minimum value of siop charging current limit to usb"
-
 config EN_OOPS
 	bool "enable oops filter"
 	default n

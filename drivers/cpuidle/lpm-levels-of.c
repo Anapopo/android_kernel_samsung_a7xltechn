@@ -58,7 +58,7 @@ static void *get_avail_val(struct kobject *kobj, struct kobj_attribute *attr)
 	return arg;
 }
 
-#if defined(CONFIG_ARCH_MSM8939) || defined (CONFIG_ARCH_MSM8929)
+#if defined(CONFIG_ARCH_MSM8939)
 static struct lpm_cluster *performance_cluster;
 static struct lpm_cluster *power_cluster;
 #if defined(CONFIG_SW_SELF_DISCHARGING)
@@ -358,7 +358,7 @@ int create_cluster_lvl_nodes(struct lpm_cluster *p, struct kobject *kobj)
 	if (!p)
 		return -ENODEV;
 
-#if defined(CONFIG_ARCH_MSM8939) || defined (CONFIG_ARCH_MSM8929)
+#if defined(CONFIG_ARCH_MSM8939)
 	printk("[LPM] %s create\n",p->cluster_name);
 	if (!strncmp(p->cluster_name, "power", 5))
 		power_cluster = p;

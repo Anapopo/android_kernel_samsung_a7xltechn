@@ -48,7 +48,7 @@
 
 #define EN_FLED_IRQ 0
 
-#if defined(CONFIG_SEC_XCOVER3_PROJECT) || defined(CONFIG_MACH_J3LTE_CHN_CTC) || defined( CONFIG_MACH_J3LTE_KOR_OPEN )
+#if defined(CONFIG_SEC_XCOVER3_PROJECT) || defined(CONFIG_MACH_J3LTE_CHN_CTC) || defined(CONFIG_MACH_J3LTE_CHN_TW)
 #define CONFIG_ACTIVE_FLASH
 #endif
 
@@ -227,13 +227,13 @@ static int sm5703_fled_init(struct sm_fled_info *fled_info)
 			SM5703_IMLED_MASK, info->pdata->fled_movie_current);
 
 	sm5703_reg_write(info->i2c_client, SM5703_FLEDCNTL1,0x1C);//ENABSTMR:Enable | ABSTMR:1.6sec | FLEDEN:Disable
-#if defined(CONFIG_SEC_O7_PROJECT) || defined(CONFIG_MACH_J3LTE_USA_SPR)  || defined(CONFIG_MACH_J3LTE_USA_VZW) || defined(CONFIG_MACH_J3LTE_USA_USC)
+#if defined(CONFIG_SEC_O7_PROJECT) || defined(CONFIG_MACH_J3LTE_USA_SPR)  || defined(CONFIG_MACH_J3LTE_USA_VZW)
 	sm5703_reg_write(info->i2c_client, SM5703_FLEDCNTL2,0x84);//nENSAFET:Disable | SAFET:400us | nONESHOT:Enable | ONETIMER:500ms
 #else
 	sm5703_reg_write(info->i2c_client, SM5703_FLEDCNTL2,0x94);//nENSAFET:Disable | SAFET:400us | nONESHOT:Disable | ONETIMER:500ms
 #endif
 
-#if defined(CONFIG_SEC_XCOVER3_PROJECT) || defined(CONFIG_MACH_J3LTE_CHN_CTC) || defined( CONFIG_MACH_J3LTE_KOR_OPEN )
+#if defined(CONFIG_SEC_XCOVER3_PROJECT) || defined(CONFIG_MACH_J3LTE_CHN_CTC) || defined(CONFIG_MACH_J3LTE_CHN_TW)
 	sm5703_reg_write(info->i2c_client, SM5703_Q3LIMITCNTL, 0x80);
 #endif
 
@@ -563,7 +563,7 @@ int32_t sm5703_fled_notification(struct sm_fled_info *fled_info)
 }
 EXPORT_SYMBOL(sm5703_fled_notification);
 
-#if defined(CONFIG_SEC_XCOVER3_PROJECT) || defined(CONFIG_MACH_J3LTE_CHN_CTC)|| defined(CONFIG_MACH_J3LTE_KOR_OPEN)
+#if defined(CONFIG_SEC_XCOVER3_PROJECT) || defined(CONFIG_MACH_J3LTE_CHN_CTC)|| defined(CONFIG_MACH_J3LTE_CHN_TW)
 int preflash = 0;
 int32_t sm5703_fled_set_preflash(struct sm_fled_info *fled_info)
 {
@@ -644,9 +644,7 @@ static int sm5703_fled_flash(struct sm_fled_info *fled_info, int turn_way)
 {
 	int ret = 0;
 	sm5703_fled_info_t *info = (sm5703_fled_info_t *)fled_info;
-#if (defined(CONFIG_SEC_J5_PROJECT) || defined(CONFIG_SEC_J5N_PROJECT)) && !defined(CONFIG_MACH_J5LTE_CHN_CMCC)  /* only for J5 LDO1 noise */
-	int limit_current;
-#endif
+
 	SM5703_FLED_INFO("Start : E\n");
 
 	SM5703_FLED_INFO("%s, info->boost = %d\n",__FUNCTION__,info->boost);
@@ -660,7 +658,7 @@ static int sm5703_fled_flash(struct sm_fled_info *fled_info, int turn_way)
 	 */
 	SM5703_FLED_INFO("%s, turn_way = %d, info->base.flashlight_dev->props.mode = %d\n",__FUNCTION__,turn_way,info->base.flashlight_dev->props.mode);
 
-#if defined(CONFIG_SEC_XCOVER3_PROJECT) || defined(CONFIG_MACH_J3LTE_CHN_CTC) || defined( CONFIG_MACH_J3LTE_KOR_OPEN )
+#if defined(CONFIG_SEC_XCOVER3_PROJECT) || defined(CONFIG_MACH_J3LTE_CHN_CTC) || defined(CONFIG_MACH_J3LTE_CHN_TW)
 	if(!assistive_light && !factory_light){
 		if(preflash){
 			// set the preflash value: 200mA
@@ -684,18 +682,6 @@ static int sm5703_fled_flash(struct sm_fled_info *fled_info, int turn_way)
 				sm5703_assign_bits(info->i2c_client,SM5703_FLEDCNTL1,SM5703_FLEDEN_MASK,SM5703_FLEDEN_FLASH_MODE);
 				break;
 			case FLASHLIGHT_MODE_TORCH:
-#if (defined(CONFIG_SEC_J5_PROJECT) || defined(CONFIG_SEC_J5N_PROJECT)) && !defined(CONFIG_MACH_J5LTE_CHN_CMCC)  /* only for J5 LDO1 noise */
-				limit_current = sm5703_reg_read(info->i2c_client,SM5703_VBUSCNTL);
-				SM5703_FLED_INFO("%s, change limit_current %d\n",__FUNCTION__,limit_current);
-
-				if(0x6 >= limit_current && limit_current >= 0x0)/* 100mA ~ 400mA : Topoff(Max 200mA) + Torch(170mA) current at present*/
-				{
-					sm5703_reg_write(info->i2c_client,SM5703_VBUSCNTL,0x08); /* change limit current to 500mA for topoff current */
-					SM5703_FLED_INFO("%s, change vbuslimit to 500mA\n",__FUNCTION__);
-				}
-				else
-					SM5703_FLED_INFO("%s, non change vbuslimit \n",__FUNCTION__);
-#endif
 				sm5703_assign_bits(info->i2c_client,SM5703_FLEDCNTL1,SM5703_FLEDEN_MASK,SM5703_FLEDEN_MOVIE_MODE);
 				test = sm5703_reg_read(info->i2c_client,SM5703_FLEDCNTL4);
 				SM5703_FLED_ERR("<sm5703_fled_flash>Torch mode Register Settings  0x%x \n",test);
@@ -716,18 +702,6 @@ static int sm5703_fled_flash(struct sm_fled_info *fled_info, int turn_way)
 				sm5703_assign_bits(info->i2c_client,SM5703_FLEDCNTL1,SM5703_FLEDEN_MASK,SM5703_FLEDEN_EXTERNAL);
 				break;
 			case FLASHLIGHT_MODE_TORCH:
-#if (defined(CONFIG_SEC_J5_PROJECT) || defined(CONFIG_SEC_J5N_PROJECT)) && !defined(CONFIG_MACH_J5LTE_CHN_CMCC)  /* only for J5 LDO1 noise */
-				limit_current = sm5703_reg_read(info->i2c_client,SM5703_VBUSCNTL);
-				SM5703_FLED_INFO("%s, change limit_current %d\n",__FUNCTION__,limit_current);
-
-				if(0x6 >= limit_current && limit_current >= 0x0)/* 100mA ~ 400mA : Topoff(Max 200mA) + Torch(170mA) current at present, Don't set this range over 500mA */
-				{
-					sm5703_reg_write(info->i2c_client,SM5703_VBUSCNTL,0x08); /* change limit current to 500mA for topoff current */
-					SM5703_FLED_INFO("%s, change vbuslimit to 500mA\n",__FUNCTION__);
-				}
-				else
-					SM5703_FLED_INFO("%s, non change vbuslimit \n",__FUNCTION__);
-#endif
 				sm5703_assign_bits(info->i2c_client,SM5703_FLEDCNTL1,SM5703_FLEDEN_MASK,SM5703_FLEDEN_EXTERNAL);
 				test = sm5703_reg_read(info->i2c_client,SM5703_FLEDCNTL4);
 				SM5703_FLED_ERR("Torch mode Register Settings  0x%x \n",test);

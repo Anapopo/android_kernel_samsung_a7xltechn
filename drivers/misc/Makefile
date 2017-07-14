@@ -54,7 +54,6 @@ obj-$(CONFIG_USB_SWITCH_FSA9480) += fsa9480.o
 obj-$(CONFIG_SM5502_MUIC) += sm5502.o
 obj-$(CONFIG_SM5504_MUIC) += sm5504.o
 obj-$(CONFIG_SM5703_MUIC) += sm5703-muic.o
-obj-$(CONFIG_MUIC_NOTI)		+= muic_notifier.o
 obj-$(CONFIG_ALTERA_STAPL)	+=altera-stapl/
 obj-$(CONFIG_INTEL_MEI)		+= mei/
 obj-$(CONFIG_VMWARE_VMCI)	+= vmw_vmci/
@@ -75,7 +74,6 @@ obj-$(CONFIG_QCOM_LIQUID_DOCK)	+= qcom_liquid_dock.o
 obj-$(CONFIG_SEC_MISC)	+= sec_param.o sec_misc.o
 obj-$(CONFIG_SEC_GPIO_SETTINGS) += gpio_settings.o
 obj-y				+= qcom/
-obj-$(CONFIG_UID_CPUTIME) 	+= uid_cputime.o
 obj-$(CONFIG_CHECK_SIMSLOT_COUNT) += sim_slot.o
 obj-$(CONFIG_DM_VERITY) += dmverity_query.o
 ifeq ($(TIMA_ENABLED),1)

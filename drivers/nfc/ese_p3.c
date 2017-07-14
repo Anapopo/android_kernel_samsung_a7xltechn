@@ -34,667 +34,566 @@
 #include <linux/spi/spidev.h>
 #include <asm/uaccess.h>
 
-#define P3_SPI_MAJOR                    121
-#define P3_SPI_MINORS                    31
+#ifdef CONFIG_SEC_FACTORY
+#undef CONFIG_ESE_SECURE
+#endif
 
-#define P3_MAGIC 0xED
-/*To prepare clock spi clock */
-#define P3_ENABLE_SPI_CLK _IO(P3_MAGIC, 0x05)
-/* To unprepare spi clock */
-#define P3_DISABLE_SPI_CLK _IO(P3_MAGIC, 0x06)
-/* only nonTZ +++++*/
-/* Transmit data to the device and retrieve data from it simultaneously.*/
-#define P3_RW_SPI_DATA _IOWR(P3_MAGIC, 0x07, unsigned long)
-/* only nonTZ -----*/
-/* To change SPI clock */
-#define P3_SET_SPI_CLK _IOW(P3_MAGIC, 0x08, unsigned long)
-/* To enable spi cs pin (make low) */
-#define P3_ENABLE_SPI_CS _IO(P3_MAGIC, 0x09)
-/* To disable spi cs pin  */
-#define P3_DISABLE_SPI_CS _IO(P3_MAGIC, 0x0A)
-/* To enable spi clock & cs */
-#define P3_ENABLE_CLK_CS _IO(P3_MAGIC, 0x0B)
-/* To disable spi clock & cs */
-#define P3_DISABLE_CLK_CS _IO(P3_MAGIC, 0x0C)
+#define SPI_DEFAULT_SPEED 6500000L
 
-#define P3_SWING_CS _IOW(P3_MAGIC, 0x0D, unsigned long)
-#define SPI_DEFAULT_SPEED 1000000L
-#define MAX_SPI_TX_BUF 512
+/* size of maximum read/write buffer supported by driver */
+#define MAX_BUFFER_SIZE   259U
 
-#define SPI_MODE_MASK           ( SPI_CPHA | SPI_CPOL \
-                                  )
-static struct spip3_data *g_spip3;
-struct spip3_data {
-	dev_t                 devt;
-	spinlock_t            spi_lock;
-	struct spi_device     *spi;
-	struct list_head      device_entry;
-	/* buffer is NULL unless this device is open (users > 0) */
-	struct mutex          buf_lock;
-	unsigned              users;
-	u8                    *tx_buffer;
-	u8                    *rx_buffer;
-	unsigned int			nfc_ese_pwr_req;
-	/* unsigned int			cspin;*/
-	struct miscdevice		p3_device;
-	struct wake_lock		ese_lock;
-	bool					enable_clock;
+/* Different driver debug lever */
+enum P3_DEBUG_LEVEL {
+	P3_DEBUG_OFF,
+	P3_FULL_DEBUG
 };
 
-struct spip3_transfer {
-	u8                      *rx_buffer;
-	u8                      *tx_buffer;
-	size_t                  len;
+/* Variable to store current debug level request by ioctl */
+static unsigned char debug_level = P3_FULL_DEBUG;
+
+#define P3_DBG_MSG(msg...) do { \
+		switch (debug_level) { \
+		case P3_DEBUG_OFF: \
+			break; \
+		case P3_FULL_DEBUG: \
+			pr_info("[ESE-P3] :  " msg); \
+			break; \
+		default: \
+			pr_err("[ESE-P3] : debug level %d", debug_level);\
+			break; \
+		}; \
+	} while (0);
+
+#define P3_ERR_MSG(msg...) pr_err("[ESE-P3] : " msg);
+#define P3_INFO_MSG(msg...) pr_info("[ESE-P3] : " msg);
+
+#ifdef CONFIG_ESE_SECURE
+#define TO_STR2(s) #s
+#define TO_STR(s) TO_STR2(s)
+/* SPI_CLK(s) produces "spi3-sclk" */
+#define SPI_CLK(x) "spi" TO_STR(CONFIG_ESE_SECURE_SPI_PORT) "-" #x "clk"
+#endif
+
+/* Device specific macro and structure */
+struct p3_data {
+	wait_queue_head_t read_wq; /* wait queue for read interrupt */
+	struct mutex buffer_mutex; /* buffer mutex */
+	struct spi_device *spi;  /* spi device structure */
+	struct miscdevice p3_device; /* char device as misc driver */
+
+	bool device_opened;
+#ifdef FEATURE_ESE_WAKELOCK
+	struct wake_lock ese_lock;
+#endif
+	unsigned long speed;
+	unsigned int nfc_ese_pwr_req;
 };
 
-static inline ssize_t
-spip3_sync_transceive(struct spip3_data *spip3, size_t len,u8 bpw);
-
-
-static LIST_HEAD(device_list);
-static DEFINE_MUTEX(device_list_lock);
-static int bufsiz = 512;
-module_param(bufsiz, uint, S_IRUGO);
-MODULE_PARM_DESC(bufsiz, "data bytes in biggest supported SPI message");
-
-static struct spip3_transfer p3trnsfr = {
-	.rx_buffer  = 0x00,
-	.tx_buffer  = 0x00,
-	.len        = 1,
-};
-
-static void spip3_complete(void *arg)
+#ifdef CONFIG_ESE_SECURE
+static int p3_suspend(void)
 {
-	complete(arg);
+#if 0
+	u64 r0 = 0, r1 = 0, r2 = 0, r3 = 0;
+	int ret = 0;
+
+	r0 = (0x83000032);
+	ret = exynos_smc(r0, r1, r2, r3);
+
+	if (ret)
+		P3_ERR_MSG("P3 check suspend status! 0x%X\n", ret);
+#endif
+
+	return 0;
 }
 
-static ssize_t
-spip3_sync(struct spip3_data *spip3, struct spi_message *message)
+static int p3_resume(void)
 {
-	DECLARE_COMPLETION_ONSTACK(done);
-	int status;
+#if 0
+	u64 r0 = 0, r1 = 0, r2 = 0, r3 = 0;
+	int ret = 0;
 
-	message->complete = spip3_complete;
-	message->context = &done;
+	r0 = (0x83000033);
+	ret = exynos_smc(r0, r1, r2, r3);
 
-	spin_lock_irq(&spip3->spi_lock);
-	if (spip3->spi == NULL)
-		status = -ESHUTDOWN;
-	else
-		status = spi_async(spip3->spi, message);
-	spin_unlock_irq(&spip3->spi_lock);
-
-	if (status == 0) {
-		wait_for_completion(&done);
-		status = message->status;
-		if (status == 0) {
-			status = message->actual_length;
-		}
-	}
-	return status;
+	if (ret)
+		P3_ERR_MSG("P3 check resume status! 0x%X\n", ret);
+#endif
+	return 0;
 }
 
-	static inline ssize_t
-spip3_sync_transceive(struct spip3_data *spip3, size_t len,u8 bpw)
-{
-	struct spi_transfer     t = {
-		.rx_buf         = spip3->rx_buffer,
-		.tx_buf         = spip3->tx_buffer,
-		.len            = len,
-		.speed_hz		= SPI_DEFAULT_SPEED,
-		.bits_per_word = bpw,
-	};
-	struct spi_message      m;
-
-	spi_message_init(&m);
-	spi_message_add_tail(&t, &m);
-	return spip3_sync(spip3, &m);
-}
-
-/*-------------------------------------------------------------------------*/
-
-static inline ssize_t spip3_readSync(struct spip3_data *spip3,
-		size_t len)
-{
-	int    status = 0;
-	struct spi_message m;
-	struct spi_transfer t;
-
-	pr_debug("%s\n", __func__);
-
-	spi_message_init(&m);
-	memset(&t, 0x0, sizeof(t));
-
-	memset(spip3->tx_buffer, 0x0, len);
-	t.tx_buf = spip3->tx_buffer;
-	t.rx_buf = spip3->rx_buffer;
-	t.len = len;
-	t.speed_hz = SPI_DEFAULT_SPEED;
-
-	spi_message_add_tail(&t, &m);
-
-	status = spi_sync(spip3->spi, &m);
-
-	if (status == 0)
-		status = len;
-
-	pr_debug("%s spip3,length=%d\n", __func__, (int)len);
-
-	return status;
-}
-
-static inline ssize_t spip3_writeSync(struct spip3_data *spip3,
-		size_t len)
-{
-	int    status = 0;
-	struct spi_message m;
-	struct spi_transfer t;
-
-	pr_debug("%s\n", __func__);
-
-	spi_message_init(&m);
-	memset(&t, 0, sizeof(t));
-
-	t.rx_buf = spip3->rx_buffer;
-	t.tx_buf = spip3->tx_buffer;
-	t.len = len;
-	t.speed_hz = SPI_DEFAULT_SPEED;
-
-	spi_message_add_tail(&t, &m);
-
-	status = spi_sync(spip3->spi, &m);
-
-	if (status == 0)
-		status = m.actual_length;
-	pr_debug("%s spip3,length=%d\n", __func__, m.actual_length);
-	return status;
-}
-
-	static ssize_t
-spip3_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
-{
-	struct spip3_data *spip3;
-	ssize_t status = 0;
-
-	if (count > MAX_SPI_TX_BUF)
-		return -EMSGSIZE;
-
-	spip3 = filp->private_data;
-
-	mutex_lock(&spip3->buf_lock);
-	status  = spip3_readSync(spip3, count);
-	if (status > 0) {
-		unsigned long   missing = 0;
-		/* data read. Copy to user buffer.*/
-		missing = copy_to_user(buf, spip3->rx_buffer, status);
-		if (missing == status)
-			status = -EFAULT;
-		else
-			status = status - missing;
-	}
-	mutex_unlock(&spip3->buf_lock);
-	return status;
-}
-
-static ssize_t spip3_write(struct file *filp, const char *buf, size_t count,
-		loff_t *f_pos)
-{
-	struct spip3_data *spip3;
-	ssize_t               status = 0;
-
-	pr_debug("spip3_dev_write -Enter count %zu\n", count);
-
-	if (count > MAX_SPI_TX_BUF)
-		return -EMSGSIZE;
-
-	spip3 = filp->private_data;
-
-	mutex_lock(&spip3->buf_lock);
-
-	if (spip3->tx_buffer) {
-		unsigned long missing = 0;
-		missing = copy_from_user(spip3->tx_buffer, buf, count);
-		if (missing == 0)
-			status = spip3_writeSync(spip3, count);
-		else
-			status = -EFAULT;
-	}
-	mutex_unlock(&spip3->buf_lock);
-	return status;
-}
-
-static int spip3_rdwr_transfer(struct spip3_data *spip3,struct spip3_transfer *u_xfers)
-{
-	struct spi_message      msg;
-	char tempbuf[8];
-	struct spip3_transfer   *u_tmp;
-	unsigned	n =1, total;
-	int  status = -EFAULT;
-	unsigned n_xfers =1;
-
-	spi_message_init(&msg);
-
-	total = 0;
-	n = n_xfers, u_tmp = u_xfers;
-	total += 1;
-
-	if (total > MAX_SPI_TX_BUF) {
-		status = -EMSGSIZE;
-		return status;
-	}
-
-	if (u_tmp->rx_buffer) {
-		if (!access_ok(VERIFY_WRITE, (u8 __user *)
-			(uintptr_t) u_tmp->rx_buffer,
-			u_tmp->len)) {
-			return status;
-		}
-	}
-
-	if (u_tmp->tx_buffer) {
-		status = copy_from_user(spip3->tx_buffer, (const u8 __user *)
-				(uintptr_t)u_tmp->tx_buffer, u_xfers->len);
-		if (status !=0) {
-			goto done;
-		}
-	}
-
-	status = spip3_sync_transceive(spip3,u_xfers->len, 8);
-	u_tmp = u_xfers;
-
-	memset(tempbuf, 0, 8);
-	memcpy(tempbuf, spip3->rx_buffer, 8);
-	printk("spip3_rdwr_transfer 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n",
-	tempbuf[0], tempbuf[1], tempbuf[2], tempbuf[3],
-	tempbuf[4], tempbuf[5], tempbuf[6], tempbuf[7]);
-
-	if (u_tmp->rx_buffer) {
-		status = __copy_to_user((u8 __user *) (uintptr_t) u_tmp->rx_buffer, spip3->rx_buffer, u_xfers->len);
-		if(status!=0) {
-			status = -EFAULT;
-			goto done;
-		}
-	}
-
-	done:
-	return status;
-}
-
-
-static int p3_enable_clk(struct spip3_data *spip3)
+static int p3_clk_prepare(struct p3_data *data)
 {
 	int ret_val = 0;
 	struct spi_device *spidev = NULL;
 
-	spidev = spi_dev_get(spip3->spi);
+	spidev = spi_dev_get(data->spi);
 
-
-	if (!wake_lock_active(&spip3->ese_lock)) {
-		pr_info("%s: [NFC-ESE] wake lock.\n", __func__);
-		wake_lock(&spip3->ese_lock);
-	}
-
+#ifndef CONFIG_ESE_SECURE
 	/* Qcom spi active pinctrl */
 	ret_val = ese_spi_request_gpios(spidev);
 	if (ret_val < 0)
 		pr_err("%s: couldn't config spi gpio\n", __func__);
+#endif
 	usleep_range(200, 230);
 
 	spidev->max_speed_hz = SPI_DEFAULT_SPEED;
 	ret_val = ese_spi_clock_enable(spidev);
 	if (ret_val < 0)
 		pr_err("%s: Unable to enable spi clk\n",
-			__func__);
+				__func__);
 	else {
 		ret_val = ese_spi_clock_set_rate(spidev);
 		if (ret_val < 0)
 			pr_err("%s: Unable to set spi clk rate\n",
-				__func__);
-	}
-
-	spip3->enable_clock = true;
+					__func__);
+}
 
 	return 0;
 }
 
-static int p3_disable_clk(struct spip3_data *spip3)
+static int p3_clk_unprepare(struct p3_data *data)
 {
 	int ret_val = 0;
 	struct spi_device *spidev = NULL;
 
-	spidev = spi_dev_get(spip3->spi);
-
-	if (wake_lock_active(&spip3->ese_lock)) {
-		pr_info("%s: [NFC-ESE] wake unlock.\n", __func__);
-		wake_unlock(&spip3->ese_lock);
-	}
+	spidev = spi_dev_get(data->spi);
 
 	ret_val = ese_spi_clock_disable(spidev);
 	if (ret_val < 0)
 		pr_err("%s: couldn't disable spi clks\n", __func__);
 
-	spip3->enable_clock = false;
+	return 0;
+}
+#endif
+
+static int p3_power_onoff(struct p3_data *data, int onoff)
+{
+	gpio_direction_output(data->nfc_ese_pwr_req, onoff);
 
 	return 0;
 }
 
-
-static long
-spip3_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+#ifndef CONFIG_ESE_SECURE
+static int p3_xfer(struct p3_data *p3_device, struct p3_ioctl_transfer *tr)
 {
-	int err = 0, speed;
-	int retval = -EFAULT;
-	struct spip3_data *spip3;
-	struct spi_device *spi;
+        int    status = 0;
+        struct spi_message m;
+        struct spi_transfer t;
+	unsigned char tx_buffer[MAX_BUFFER_SIZE] = {0x0, };
+	unsigned char rx_buffer[MAX_BUFFER_SIZE] = {0x0, };
 
-	int status = -1;
+	P3_DBG_MSG("%s\n", __func__);
 
-	if (_IOC_TYPE(cmd) != SPI_IOC_MAGIC && _IOC_TYPE(cmd) != P3_MAGIC)
-		return -ENOTTY;
-
-	if (_IOC_DIR(cmd) & _IOC_READ)
-		err = !access_ok(VERIFY_WRITE,
-						(void __user *)arg, _IOC_SIZE(cmd));
-
-	if (err == 0 && _IOC_DIR(cmd) & _IOC_WRITE)
-		err = !access_ok(VERIFY_READ,
-						(void __user *)arg, _IOC_SIZE(cmd));
-
-	if (err)
+	if (p3_device == NULL || tr == NULL)
 		return -EFAULT;
 
-	spip3 = filp->private_data;
-	spin_lock_irq(&spip3->spi_lock);
-	spi = spi_dev_get(spip3->spi);
-	spin_unlock_irq(&spip3->spi_lock);
+	if (tr->len > DEFAULT_BUFFER_SIZE || !tr->len)
+		return -EMSGSIZE;
 
-	if (spi == NULL) {
-		return -ESHUTDOWN;
-	}
+	if (copy_from_user(tx_buffer,
+			tr->tx_buffer, tr->len) != 0)
+		return -EFAULT;
 
-	mutex_lock(&spip3->buf_lock);
+        spi_message_init(&m);
+        memset(&t, 0, sizeof(t));
 
-	switch (cmd) {
-		case  P3_ENABLE_SPI_CLK:
-			pr_info("** %s P3_ENABLE_SPI_CLK\n", __func__);
-			retval = p3_enable_clk(spip3);
-			break;
+	t.tx_buf = tx_buffer;
+	t.rx_buf = rx_buffer;
+	t.len = tr->len;
 
-		case P3_DISABLE_SPI_CLK :
-			pr_info("** %s P3_DISABLE_SPI_CLK\n", __func__);
-			retval = p3_disable_clk(spip3);
-			break;
+        spi_message_add_tail(&t, &m);
 
-		case P3_RW_SPI_DATA :
-			pr_info("** %s P3_RW_SPI_DATA\n", __func__);
-			status = __copy_from_user(&p3trnsfr, (void __user *)arg, sizeof(p3trnsfr));
-			if( status ==0){
-				status = spip3_rdwr_transfer(spip3,&p3trnsfr);
-				if (status ==0) {
-					retval= 0;
-				}
-			}
-			break;
+	status = spi_sync(p3_device->spi, &m);
 
-		case P3_SET_SPI_CLK :
-			speed = (int) arg;
-			/*speed below 4Mhz doesnt work on APQ8064 - 4000000 value sets the clock to 1Mhz*/
-			if(speed < 4000000 )
-				speed = 4000000;
-
-			spi->max_speed_hz = speed;
-			retval = 0;
-			pr_info("** %s P3 P3_SET_SPI_CLK %d\n", __func__, speed);
-			break;
-
-		/* To enable spi cs pin (make low) */
-		case P3_ENABLE_SPI_CS :
-			pr_info("** %s P3_ENABLE_SPI_CS!!!\n", __func__);
-			/*gpio_set_value(spip3->cspin, 0);*/
-			retval = 0;
-			break;
-
-		/* To disable spi cs pin  */
-		case P3_DISABLE_SPI_CS :
-			pr_info("** %s P3_DISABLE_SPI_CS!!!\n", __func__);
-			/*gpio_set_value(spip3->cspin, 1);*/
-			retval = 0;
-			break;
-
-		/* To enable spi clock & cs */
-		case P3_ENABLE_CLK_CS :
-			pr_info("** %s P3_ENABLE_CLK_CS\n", __func__);
-			retval= 0;
-			break;
-
-		/* To disable spi clock & cs */
-		case  P3_DISABLE_CLK_CS:
-			pr_info("** %s P3 P3_DISABLE_CLK_CS\n", __func__);
-			retval= 0;
-			break;
-
-		case P3_SWING_CS :
-			printk("** %s P3_SWING_CS\n", __func__);
-			spip3->tx_buffer[0] = 0;
-			status = spip3_sync_transceive(spip3,1,arg);
-			retval=0;
-			break;
-
-		default:
-			break;
-	}
-
-	mutex_unlock(&spip3->buf_lock);
-	spi_dev_put(spi);
-
-	return retval;
+	if (copy_to_user(tr->rx_buffer, rx_buffer, tr->len)) {
+		P3_ERR_MSG("%s : failed to copy to user space\n", __func__);
+		return -EFAULT;
 }
+
+	P3_DBG_MSG("%s p3_xfer,length=%d\n", __func__, tr->len);
+
+	return status;
+}
+
+static int p3_rw_spi_message(struct p3_data *p3_device, unsigned long arg)
+{
+	struct p3_ioctl_transfer dup;
+	int err = 0;
+
+	if (copy_from_user(&dup, (void *)arg,
+			   sizeof(struct p3_ioctl_transfer)) != 0) {
+			P3_ERR_MSG("%s copy_from_user fail!\n", __func__);
+		return -EFAULT;
+	} else {
+		err = p3_xfer(p3_device, &dup);
+		if (err != 0) {
+			P3_ERR_MSG("%s xfer failed!\n", __func__);
+			return err;
+        }
+}
+
+	return 0;
+	}
+
+#endif
 
 static int spip3_open(struct inode *inode, struct file *filp)
 {
-	int	status = -ENXIO;
-	struct spip3_data *spip3 = container_of(filp->private_data, struct spip3_data, p3_device);
-	struct spi_device *spi;
+	struct p3_data *p3_dev = container_of(filp->private_data,
+			struct p3_data, p3_device);
+	int ret = 0;
 
-	pr_info("%s start.\n", __func__);
-
-	if (!spip3->tx_buffer) {
-		spip3->tx_buffer = kmalloc(MAX_SPI_TX_BUF, GFP_KERNEL);
-		if (!spip3->tx_buffer) {
-			dev_dbg(&spip3->spi->dev, "open/ENOMEM\n");
-			status = -ENOMEM;
-		}
+	/* for defence MULTI-OPEN */
+	if (p3_dev->device_opened) {
+		P3_ERR_MSG("%s - ALREADY opened!\n", __func__);
+		return -EBUSY;
 	}
-	if (!spip3->rx_buffer) {
-		spip3->rx_buffer = kmalloc(MAX_SPI_TX_BUF, GFP_KERNEL);
-		if (!spip3->rx_buffer) {
-			dev_dbg(&spip3->spi->dev, "open/ENOMEM\n");
-			status = -ENOMEM;
-		}
-	}
-	spip3->users++;
-	filp->private_data = spip3;
-	nonseekable_open(inode, filp);
-	spi = spi_dev_get(g_spip3->spi);
+	p3_dev->device_opened = true;
+	P3_INFO_MSG("open\n");
 
-	pr_info("%s : open and ese_pwr=%d\n", __func__,
-			gpio_get_value(g_spip3->nfc_ese_pwr_req));
+#ifdef FEATURE_ESE_WAKELOCK
+	wake_lock(&p3_dev->ese_lock);
+#endif
+	ret = p3_power_onoff(p3_dev, 1);
+	if (ret < 0)
+		P3_ERR_MSG(" test: failed to turn on LDO()\n");
+	usleep_range(5000, 5500);
+
+#ifdef CONFIG_ESE_SECURE
+	p3_clk_prepare(p3_dev);
+	p3_resume();
+#endif
+
+	filp->private_data = p3_dev;
 
 	return 0;
 }
 
 static int spip3_release(struct inode *inode, struct file *filp)
 {
-	struct spip3_data      *spip3;
-	int                     status = 0;
-	struct spi_device *spidev = NULL;
+	struct p3_data *p3_dev = filp->private_data;
+	int ret = 0;
 
-	mutex_lock(&device_list_lock);
-	spip3 = filp->private_data;
-	filp->private_data = NULL;
+	P3_INFO_MSG("release\n");
 
-	pr_info("%s: [NFC-ESE]\n", __func__);
+	ret = p3_power_onoff(p3_dev, 0);
+	if (ret < 0)
+		P3_ERR_MSG(" test: failed to turn off LDO()\n");
 
-	spidev = spi_dev_get(spip3->spi);
-
-	if (spip3->enable_clock) {
-		pr_info("%s: [NFC-ESE] disable clock.\n", __func__);
-		p3_disable_clk(spip3);
+#ifdef CONFIG_ESE_SECURE
+	p3_clk_unprepare(p3_dev);
+	p3_suspend();
+#endif
+#ifdef FEATURE_ESE_WAKELOCK
+	if (wake_lock_active(&p3_dev->ese_lock)) {
+		P3_DBG_MSG("%s: wake unlock at release!!\n", __func__);
+		wake_unlock(&p3_dev->ese_lock);
 	}
+#endif
 
-	/* last close? */
-	spip3->users--;
-	if (!spip3->users) {
-		int dofree;
-
-		kfree(spip3->tx_buffer);
-		spip3->tx_buffer = NULL;
-		kfree(spip3->rx_buffer);
-		spip3->rx_buffer = NULL;
-
-		dofree = (spip3->spi == NULL);
-
-		if (dofree)
-			kfree(spip3);
-	}
-	mutex_unlock(&device_list_lock);
-
-	return status;
+	p3_dev->device_opened = false;
+	P3_DBG_MSG("%s : Major No: %d, Minor No: %d\n", __func__,
+			imajor(inode), iminor(inode));
+	return 0;
 }
 
-static struct file_operations spip3_fops = {
+static long spip3_ioctl(struct file *filp, unsigned int cmd,
+		unsigned long arg)
+{
+	int ret = 0;
+	struct p3_data *data = NULL;
+
+	if (_IOC_TYPE(cmd) != P3_MAGIC) {
+		P3_ERR_MSG("%s invalid magic. cmd=0x%X Received=0x%X \
+		 Expected=0x%X\n", __func__, cmd, _IOC_TYPE(cmd), P3_MAGIC);
+		return -ENOTTY;
+	}
+
+	data = filp->private_data;
+
+	mutex_lock(&data->buffer_mutex);
+	switch (cmd) {
+		case P3_SET_DBG:
+			debug_level = (unsigned char)arg;
+			P3_DBG_MSG(KERN_INFO"[NXP-P3] -  Debug level %d", debug_level);
+			break;
+		case  P3_ENABLE_SPI_CLK:
+		P3_DBG_MSG("%s P3_ENABLE_SPI_CLK\n", __func__);
+#ifdef CONFIG_ESE_SECURE
+		ret = p3_clk_prepare(data);
+#endif
+			break;
+		case P3_DISABLE_SPI_CLK :
+			P3_DBG_MSG("%s P3_DISABLE_SPI_CLK\n", __func__);
+#ifdef CONFIG_ESE_SECURE
+			ret = p3_clk_unprepare(data);
+#endif
+			break;
+	/*non TZ */
+#ifndef CONFIG_ESE_SECURE
+		case P3_RW_SPI_DATA :
+			ret = p3_rw_spi_message(data, arg);
+			if (ret < 0)
+				P3_ERR_MSG("%s P3_RW_SPI_DATA failed [%d].\n",
+					__func__, ret);
+			break;
+#endif
+		case P3_SET_PWR:
+		case P3_SET_POLL:
+		case P3_SET_SPI_CONFIG:
+		case P3_ENABLE_SPI_CS :
+		case P3_DISABLE_SPI_CS :
+		case P3_ENABLE_CLK_CS :
+		case  P3_DISABLE_CLK_CS:
+		case P3_SWING_CS :
+		case P3_SET_SPI_CLK :
+			P3_ERR_MSG("%s deprecated IOCTL:0x%X\n", __func__, cmd);
+			break;
+
+		default:
+		P3_DBG_MSG("%s no matching ioctl! 0x%X\n", __func__, cmd);
+		ret = -EINVAL;
+	}
+	mutex_unlock(&data->buffer_mutex);
+
+	return ret;
+}
+
+#ifndef CONFIG_ESE_SECURE
+static ssize_t spip3_write(struct file *filp, const char *buf, size_t count,
+		loff_t *offset)
+{
+	int ret = -1;
+	struct p3_data *p3_dev;
+	unsigned char tx_buffer[MAX_BUFFER_SIZE] = {0x0, };
+
+	P3_DBG_MSG("spip3_write -Enter count %zu\n", count);
+
+	p3_dev = filp->private_data;
+
+	mutex_lock(&p3_dev->buffer_mutex);
+	if (count > MAX_BUFFER_SIZE)
+		count = MAX_BUFFER_SIZE;
+
+	if (copy_from_user(&tx_buffer[0], &buf[0], count)) {
+		P3_ERR_MSG("%s : failed to copy from user space\n", __func__);
+		mutex_unlock(&p3_dev->buffer_mutex);
+		return -EFAULT;
+	}
+
+	/* Write data */
+	ret = spi_write(p3_dev->spi, &tx_buffer[0], count);
+	if (ret < 0)
+		ret = -EIO;
+	else
+		ret = count;
+
+	mutex_unlock(&p3_dev->buffer_mutex);
+	P3_DBG_MSG(KERN_ALERT "spip3_write ret %d- Exit\n", ret);
+
+	return ret;
+}
+
+static ssize_t spip3_read(struct file *filp, char *buf, size_t count,
+		loff_t *offset)
+{
+	int ret = -EIO;
+	struct p3_data *p3_dev = filp->private_data;
+	unsigned char rx_buffer[MAX_BUFFER_SIZE] = {0x0, };
+
+	P3_DBG_MSG("spip3_read count %zu - Enter\n", count);
+
+	mutex_lock(&p3_dev->buffer_mutex);
+
+	/* Read the availabe data along with one byte LRC */
+	ret = spi_read(p3_dev->spi, (void *)rx_buffer, count);
+	if (ret < 0) {
+		P3_ERR_MSG("spi_read failed\n");
+		ret = -EIO;
+		goto fail;
+	}
+
+	if (copy_to_user(buf, &rx_buffer[0], count)) {
+		P3_ERR_MSG("%s : failed to copy to user space\n", __func__);
+		ret = -EFAULT;
+		goto fail;
+	}
+	ret = count;
+
+fail:
+	P3_DBG_MSG("%s ret %d Exit\n", __func__, ret);
+	mutex_unlock(&p3_dev->buffer_mutex);
+
+	return ret;
+}
+#endif
+
+/* possible fops on the p3 device */
+static const struct file_operations spip3_dev_fops = {
 	.owner =        THIS_MODULE,
+#ifndef CONFIG_ESE_SECURE
 	.read =         spip3_read,
-	.write =         spip3_write,
-	.unlocked_ioctl = spip3_ioctl,
+	.write =        spip3_write,
+#endif
 	.open =         spip3_open,
 	.release =      spip3_release,
+	.unlocked_ioctl = spip3_ioctl,
 };
 
-#ifdef CONFIG_OF
-static int p3_parse_dt(struct device *dev,
-	struct spip3_data *data)
+static int p3_parse_dt(struct device *dev, struct p3_data *data)
 {
-struct device_node *np = dev->of_node;
-enum of_gpio_flags flags;
-int ret = -1;
+	struct device_node *np = dev->of_node;
+	int ret = -1;
 
-	data->nfc_ese_pwr_req = of_get_named_gpio_flags(np,
-		"p3-ese_pwr_req", 0, &flags);
+	data->nfc_ese_pwr_req = of_get_named_gpio(np, "p3-ese_pwr_req", 0);
 
 	if (data->nfc_ese_pwr_req < 0) {
-		pr_info("%s - fail get nfc_ese_pwr_req\n", __func__);
+		P3_ERR_MSG("%s - fail get nfc_ese_pwr_req\n", __func__);
 		return -1;
 	}
 
 	ret = gpio_request(data->nfc_ese_pwr_req, "ese_pwr_req");
 	if (ret) {
-		pr_info("%s - failed to request ese_pwr_req\n", __func__);
+		P3_ERR_MSG("%s - failed to request ese_pwr_req\n", __func__);
+		return -1;
 	}
 
-	gpio_direction_output(data->nfc_ese_pwr_req, 0);
+	P3_DBG_MSG("%s: nfc_ese_pwr_req=%d\n", __func__, data->nfc_ese_pwr_req);
+
 	return ret;
 }
-#endif
 
 static int spip3_probe(struct spi_device *spi)
 {
-	struct spip3_data      *spip3 = NULL;
+	int ret = -1;
+	struct p3_data *data = NULL;
 
-	int                    ret;
-	spip3 = kzalloc(sizeof(*spip3), GFP_KERNEL);
-	if (!spip3)
-		return -ENOMEM;
+	P3_INFO_MSG("%s chip select : %d , bus number = %d\n",
+		__func__, spi->chip_select, spi->master->bus_num);
 
-	spip3->spi = spi;
-
-	ret = p3_parse_dt(&spi->dev, spip3);
-	if (ret) {
-		pr_info("%s - Failed to parse DT\n", __func__);
+	data = kzalloc(sizeof(*data), GFP_KERNEL);
+	if (data == NULL) {
+		P3_ERR_MSG("failed to allocate memory for module data\n");
+		ret = -ENOMEM;
+		goto err_exit;
 	}
 
+	ret = p3_parse_dt(&spi->dev, data);
+	if (ret) {
+		P3_ERR_MSG("%s - Failed to parse DT\n", __func__);
+		goto p3_parse_dt_failed;
+	}
+
+#ifndef CONFIG_ESE_SECURE
 	spi->bits_per_word = 8;
-	spi->mode = SPI_MODE_0; /*SPI_MODE_3*/
+	spi->mode = SPI_MODE_0;
 	spi->max_speed_hz = SPI_DEFAULT_SPEED;
 	ret = spi_setup(spi);
 	if (ret < 0) {
-		pr_info("%s failed to do spi_setup()\n",__func__);
+		P3_ERR_MSG("failed to do spi_setup()\n");
+		goto p3_parse_dt_failed;
 	}
+#endif
+	data->speed = SPI_DEFAULT_SPEED;
+	data->spi = spi;
+	data->p3_device.minor = MISC_DYNAMIC_MINOR;
+	data->p3_device.name = "p3";
+	data->p3_device.fops = &spip3_dev_fops;
+	data->p3_device.parent = &spi->dev;
 
-	spip3->spi = spi;
-	spip3->p3_device.minor = MISC_DYNAMIC_MINOR;
-	spip3->p3_device.name = "p3";
-	spip3->p3_device.fops = &spip3_fops;
-	spip3->p3_device.parent = &spi->dev;
+	dev_set_drvdata(&spi->dev, data);
 
-	dev_set_drvdata(&spi->dev, spip3);
-	ret = misc_register(&spip3->p3_device);
+	/* init mutex and queues */
+	init_waitqueue_head(&data->read_wq);
+	mutex_init(&data->buffer_mutex);
+#ifdef FEATURE_ESE_WAKELOCK
+	wake_lock_init(&data->ese_lock,
+		WAKE_LOCK_SUSPEND, "ese_wake_lock");
+#endif
+
+	data->device_opened = false;
+
+	ret = misc_register(&data->p3_device);
 	if (ret < 0) {
-		pr_info("misc_register failed! %d\n", ret);
+		P3_ERR_MSG("misc_register failed! %d\n", ret);
+		goto err_misc_regi;
 	}
-	spin_lock_init(&spip3->spi_lock);
-	mutex_init(&spip3->buf_lock);
 
-	INIT_LIST_HEAD(&spip3->device_entry);
+	P3_INFO_MSG("%s finished...\n", __func__);
 
-	list_add(&spip3->device_entry, &device_list);
-	g_spip3 = dev_get_drvdata(&spi->dev);
+	return ret;
 
-	/*wake lock for spi communication*/
-	wake_lock_init(&spip3->ese_lock, WAKE_LOCK_SUSPEND, "ese_wake_lock");
-
-	gpio_set_value(spip3->nfc_ese_pwr_req, 1);
-
-	spip3->enable_clock = 0;
-	pr_info("spip3_probe success\n");
-
-	return 0;
+err_misc_regi:
+#ifdef FEATURE_ESE_WAKELOCK
+	wake_lock_destroy(&data->ese_lock);
+#endif
+	mutex_destroy(&data->buffer_mutex);
+p3_parse_dt_failed:
+	kfree(data);
+err_exit:
+	P3_DBG_MSG("ERROR: Exit : %s ret %d\n", __func__, ret);
+	return ret;
 }
 
 static int spip3_remove(struct spi_device *spi)
 {
-	struct spip3_data *spip3 = dev_get_drvdata(&spi->dev);
+	struct p3_data *p3_dev = dev_get_drvdata(&spi->dev);
 
-	wake_lock_destroy(&spip3->ese_lock);
-
+	P3_DBG_MSG("Entry : %s\n", __func__);
+	if (p3_dev == NULL) {
+		P3_ERR_MSG("%s p3_dev is null!\n", __func__);
 	return 0;
 }
 
-static struct of_device_id p3_match_table[] = {
-	 { .compatible = "p3",},
-	 {},
-};
-
-struct spi_driver spip3_spi = {
-		.driver = {
-			.name =         "p3",
-			.owner =        THIS_MODULE,
-			.bus = &spi_bus_type,
-#ifdef CONFIG_OF
-			.of_match_table = p3_match_table,
+#ifdef FEATURE_ESE_WAKELOCK
+	wake_lock_destroy(&p3_dev->ese_lock);
 #endif
-		},
-		.probe =        spip3_probe,
-		.remove =        spip3_remove,
+	mutex_destroy(&p3_dev->buffer_mutex);
+	misc_deregister(&p3_dev->p3_device);
+
+	kfree(p3_dev);
+	P3_DBG_MSG("Exit : %s\n", __func__);
+	return 0;
+}
+
+#ifdef CONFIG_OF
+static struct of_device_id p3_match_table[] = {
+	{ .compatible = "ese_p3",},
+	{},
+};
+#else
+#define ese_match_table NULL
+#endif
+
+static struct spi_driver spip3_driver = {
+	.driver = {
+		.name =         "p3",
+		.bus = &spi_bus_type,
+		.owner =        THIS_MODULE,
+#ifdef CONFIG_OF
+		.of_match_table = p3_match_table,
+#endif
+	},
+	.probe =        spip3_probe,
+	.remove =        spip3_remove,
 };
 
-static int __init spip3_init(void)
+static int __init spip3_dev_init(void)
 {
-	pr_info("***spip3_init\n");
-	spi_register_driver(&spip3_spi);
+	P3_INFO_MSG("Entry : %s\n", __func__);
+	return spi_register_driver(&spip3_driver);
+	}
 
-	return 1;
+static void __exit spip3_dev_exit(void)
+{
+	P3_INFO_MSG("Entry : %s\n", __func__);
+	spi_unregister_driver(&spip3_driver);
 }
 
-static void __exit spip3_exit(void)
-{
-	spi_unregister_driver(&spip3_spi);
-}
-
-
-module_init(spip3_init);
-module_exit(spip3_exit);
+module_init(spip3_dev_init);
+module_exit(spip3_dev_exit);
 
 MODULE_AUTHOR("Sec");
-MODULE_DESCRIPTION("User mode SPI device interface");
+MODULE_DESCRIPTION("ese SPI driver");
 MODULE_LICENSE("GPL");

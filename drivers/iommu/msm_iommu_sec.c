@@ -141,12 +141,14 @@ static int msm_iommu_dump_fault_regs(int smmu_id, int cb_num,
 	desc.arginfo = SCM_ARGS(4, SCM_VAL, SCM_VAL, SCM_RW, SCM_VAL);
 
 	dmac_clean_range(regs, regs + 1);
+	
 	if (!is_scm_armv8())
-		ret = scm_call(SCM_SVC_UTIL, IOMMU_DUMP_SMMU_FAULT_REGS,
-			&req_info, sizeof(req_info), &resp, 1);
+	ret = scm_call(SCM_SVC_UTIL, IOMMU_DUMP_SMMU_FAULT_REGS,
+		&req_info, sizeof(req_info), &resp, 1);
 	else
 		ret = scm_call2(SCM_SIP_FNID(SCM_SVC_UTIL,
 			IOMMU_DUMP_SMMU_FAULT_REGS), &desc);
+
 	dmac_inv_range(regs, regs + 1);
 
 	return ret;
@@ -286,11 +288,12 @@ irqreturn_t msm_iommu_secure_fault_handler_v2(int irq, void *dev_id)
 	iommu_access_ops->iommu_clk_on(drvdata);
 	tmp = msm_iommu_dump_fault_regs(drvdata->sec_id,
 					ctx_drvdata->num, regs);
+	iommu_access_ops->iommu_clk_off(drvdata);
 
 	if (tmp) {
 		pr_err("%s: Couldn't dump fault registers (%d) %s, ctx: %d\n",
 			__func__, tmp, drvdata->name, ctx_drvdata->num);
-		goto clock_off;
+		goto free_regs;
 	} else {
 		struct msm_iommu_context_reg ctx_regs[MAX_DUMP_REGS];
 		memset(ctx_regs, 0, sizeof(ctx_regs));
@@ -299,7 +302,7 @@ irqreturn_t msm_iommu_secure_fault_handler_v2(int irq, void *dev_id)
 		if (tmp < 0) {
 			ret = IRQ_NONE;
 			pr_err("Incorrect response from secure environment\n");
-			goto clock_off;
+			goto free_regs;
 		}
 
 		if (ctx_regs[DUMP_REG_FSR].val) {
@@ -331,8 +334,6 @@ irqreturn_t msm_iommu_secure_fault_handler_v2(int irq, void *dev_id)
 			ret = IRQ_NONE;
 		}
 	}
-clock_off:
-	iommu_access_ops->iommu_clk_off(drvdata);
 free_regs:
 	kfree(regs);
 lock_release:
@@ -491,7 +492,11 @@ static int msm_iommu_sec_map2(struct msm_scm_map2_req *map)
 	desc.args[4] = map->info.ctx_id;
 	desc.args[5] = map->info.va;
 	desc.args[6] = map->info.size;
+#ifdef CONFIG_MSM_IOMMU_TLBINVAL_ON_MAP
+	desc.args[7] = map->flags = IOMMU_TLBINVAL_FLAG;
+#else
 	desc.args[7] = map->flags = 0;
+#endif
 	desc.arginfo = SCM_ARGS(8, SCM_RW, SCM_VAL, SCM_VAL, SCM_VAL, SCM_VAL,
 				SCM_VAL, SCM_VAL, SCM_VAL);
 	if (!is_scm_armv8()) {

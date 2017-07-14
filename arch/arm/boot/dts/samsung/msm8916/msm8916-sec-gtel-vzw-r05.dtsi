@@ -154,7 +154,7 @@
 				chg_autostop = <0>;
 				chg_autoset = <1>;
 				chg_aiclen = <1>;
-				chg_aiclth = <4300>;
+				chg_aiclth = <4500>;
 				fg_vol_val = <4350>;
 				fg_soc_val = <95>;
 				fg_curr_avr_val = <150>;

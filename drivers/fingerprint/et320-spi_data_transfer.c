@@ -56,7 +56,7 @@ int etspi_mass_read(struct etspi_data *etspi, u8 addr, u8 *buf, int read_len)
 	t_set_addr.tx_buf = write_addr;
 	t_read_data.tx_buf = t_read_data.rx_buf = read_data;
 
-	pr_debug("%s read_len = %d\n", __func__, read_len);
+	pr_info("%s read_len = %d\n", __func__, read_len);
 
 	read_data[0] = ET320_READ_DATA;
 
@@ -71,12 +71,11 @@ int etspi_mass_read(struct etspi_data *etspi, u8 addr, u8 *buf, int read_len)
 
 	kfree(write_addr);
 
-	if (status == 0) {
+	if (status == 0)
 		memcpy(buf, read_data + 3, read_len);
-	} else {
-		pr_err(KERN_ERR "%s read data error status = %d\n", __func__, status);
-	}
-
+	else
+		pr_err(KERN_ERR "%s read data error status = %d\n"
+				, __func__, status);
 	kfree(read_data);
 
 	return status;
@@ -135,6 +134,7 @@ int etspi_io_read_register(struct etspi_data *etspi, u8 *addr, u8 *buf)
 	}
 
 	val = result[1];
+
 
 #ifdef ET320_SPI_DEBUG
 	DEBUG_PRINT("%s address = %x buf = %x", __func__, addr, val);
@@ -251,12 +251,12 @@ int etspi_io_get_one_image(struct etspi_data *etspi, u8 *buf, u8 *image_buf)
 #ifdef ENABLE_SENSORS_FPRINT_SECURE
 	return 0;
 #else
-	uint8_t /* read_val */
+	uint8_t /*read_val,*/
 		*tx_buf = (uint8_t *)buf,
 		*work_buf = NULL,
 		*val = kzalloc(6, GFP_KERNEL);
 	int status;
-	uint32_t read_count;
+	uint32_t /*frame_not_ready_count = 0,*/ read_count;
 
 	pr_debug("%s\n", __func__);
 
@@ -268,7 +268,25 @@ int etspi_io_get_one_image(struct etspi_data *etspi, u8 *buf, u8 *image_buf)
 		goto end;
 	}
 	read_count = val[0] * val[1];          /* total pixel , width * hight */
+#if 0
+	while (1) {
+		status = etspi_read_register
+				(etspi, FSTATUS_ET320_ADDR, &read_val);
+		if (status < 0)
+			goto end;
 
+		if (read_val & FRAME_READY_MASK)
+			break;
+
+		if (frame_not_ready_count >= 250) {
+			pr_err(KERN_ERR "frame_not_ready_count = %d",
+					frame_not_ready_count);
+			status = -ETIME;
+			goto end;
+		}
+		frame_not_ready_count++;
+	}
+#endif
 	work_buf = kzalloc(read_count, GFP_KERNEL);
 	if (work_buf == NULL) {
 		status = -ENOMEM;

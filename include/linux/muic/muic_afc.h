@@ -25,6 +25,7 @@
 struct muic_data_t;
 
 /* SM5705 AFC CTRL register */
+#define AFCCTRL_DIS_AFC		5
 #define AFCCTRL_VBUS_READ    3
 #define AFCCTRL_DM_RESET     2
 #define AFCCTRL_DP_RESET     1

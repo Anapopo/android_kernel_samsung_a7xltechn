@@ -1,4 +1,4 @@
-#if defined(CONFIG_MACH_J5XLTE_CHN_CMCC)
+#if defined(CONFIG_MACH_J5LTE_CHN_CMCC)
 #define CAPACITY_MAX			970
 #else
 #define CAPACITY_MAX			1000
@@ -7,29 +7,29 @@
 #define CAPACITY_MIN			0
 
 static sec_bat_adc_table_data_t temp_table[] = {
-  {26127, 900},
-  {26347, 850},
-  {26567, 800},
-  {26920, 750},
-  {27285, 700},
-  {27689, 650},
-  {28167, 600},
-  {28757, 550},
-  {29413, 500},
-  {30187, 450},
-  {31006, 400},
-  {31943, 350},
-  {32925, 300},
-  {33983, 250},
-  {35005, 200},
-  {36044, 150},
-  {37119, 100},
-  {38115, 50},
-  {38980, 0},
-  {39818, -50},
-  {40345, -100},
-  {41087, -150},
-  {41507, -200},
+  {25950, 900},
+  {26173, 850},
+  {26506, 800},
+  {26843, 750},
+  {27157, 700},
+  {27569, 650},
+  {28152, 600},
+  {28623, 550},
+  {29235, 500},
+  {29968, 450},
+  {30817, 400},
+  {31748, 350},
+  {32732, 300},
+  {33807, 250},
+  {34888, 200},
+  {35980, 150},
+  {37043, 100},
+  {37980, 50},
+  {38910, 0},
+  {39680, -50},
+  {40400, -100},
+  {41067, -150},
+  {41479, -200},
 };
 
 
@@ -40,16 +40,16 @@ static sec_bat_adc_table_data_t temp_table[] = {
 #define TEMP_HIGHLIMIT_THRESHOLD_LPM		800
 #define TEMP_HIGHLIMIT_RECOVERY_LPM		750
 
-#define TEMP_HIGH_THRESHOLD_EVENT  550
-#define TEMP_HIGH_RECOVERY_EVENT   500
+#define TEMP_HIGH_THRESHOLD_EVENT  580
+#define TEMP_HIGH_RECOVERY_EVENT   530
 #define TEMP_LOW_THRESHOLD_EVENT   (-50)
 #define TEMP_LOW_RECOVERY_EVENT    0
-#define TEMP_HIGH_THRESHOLD_NORMAL 550
-#define TEMP_HIGH_RECOVERY_NORMAL  500
+#define TEMP_HIGH_THRESHOLD_NORMAL 580
+#define TEMP_HIGH_RECOVERY_NORMAL  530
 #define TEMP_LOW_THRESHOLD_NORMAL  (-50)
 #define TEMP_LOW_RECOVERY_NORMAL   0
-#define TEMP_HIGH_THRESHOLD_LPM    550
-#define TEMP_HIGH_RECOVERY_LPM     500
+#define TEMP_HIGH_THRESHOLD_LPM    580
+#define TEMP_HIGH_RECOVERY_LPM     530
 #define TEMP_LOW_THRESHOLD_LPM     (-50)
 #define TEMP_LOW_RECOVERY_LPM      0
 

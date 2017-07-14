@@ -69,7 +69,7 @@
 #define CM36655_CANCELATION
 #ifdef CM36655_CANCELATION
 #define CANCELATION_FILE_PATH	"/efs/FactoryApp/prox_cal"
-#define CAL_SKIP_ADC	8
+#define CAL_SKIP_ADC	11
 #define CAL_FAIL_ADC	18
 #endif
 
@@ -108,8 +108,13 @@ enum {
 	CMD,
 };
 
+enum {
+	OFF = 0,
+	ON = 1
+};
+
 static u16 ps_reg_init_setting[PS_REG_NUM][2] = {
-	{REG_PS_CONF1, 0x7348},	/* REG_PS_CONF1 */ ///
+	{REG_PS_CONF1, 0x6768},	/* REG_PS_CONF1 */ ///
 	{REG_PS_CONF3, 0x0000},	/* REG_PS_CONF3 */
 	{REG_PS_THD, 0x110D},	/* REG_PS_THD */
 	{REG_PS_CANC, DEFAULT_TRIM},	/* REG_PS_CANC */
@@ -136,6 +141,9 @@ struct cm36655_data {
 	ktime_t prox_poll_delay;
 	int irq;
 	u8 power_state;
+#if defined(CONFIG_SENSORS_SW_RESET)
+	u8 reset_state;
+#endif
 	int avg[3];
 	u16 als_data;
 	u16 als_red_data;
@@ -156,6 +164,12 @@ int cm36655_i2c_read_word(struct cm36655_data *cm36655, u8 command, u16 *val)
 	struct i2c_msg msg[2];
 	unsigned char data[2] = {0,};
 	u16 value = 0;
+
+#if defined(CONFIG_SENSORS_SW_RESET)
+	if (cm36655->reset_state) {
+		return -1;
+	}
+#endif
 
 	if ((client == NULL) || (!client->adapter))
 		return -ENODEV;
@@ -191,6 +205,12 @@ int cm36655_i2c_write_word(struct cm36655_data *cm36655, u8 command,
 	int err = 0;
 	struct i2c_client *client = cm36655->i2c_client;
 	int retry = 3;
+
+#if defined(CONFIG_SENSORS_SW_RESET)
+	if (cm36655->reset_state) {
+		return -1;
+	}
+#endif
 
 	if ((client == NULL) || (!client->adapter))
 		return -ENODEV;
@@ -244,13 +264,20 @@ static ssize_t cm36655_poll_delay_store(struct device *dev,
 
 	mutex_lock(&cm36655->power_lock);
 	if (new_delay != ktime_to_ns(cm36655->light_poll_delay)) {
+		pr_info("[SENSOR] %s, poll_delay = %lld\n",
+			__func__, new_delay);
 		cm36655->light_poll_delay = ns_to_ktime(new_delay);
+#if defined(CONFIG_SENSORS_SW_RESET)
+		if (cm36655->reset_state == ON) {
+			mutex_unlock(&cm36655->power_lock);
+			return size;
+		}
+#endif
 		if (cm36655->power_state & LIGHT_ENABLED) {
 			cm36655_light_disable(cm36655);
 			cm36655_light_enable(cm36655);
 		}
-		pr_info("[SENSOR] %s, poll_delay = %lld\n",
-			__func__, new_delay);
+
 	}
 	mutex_unlock(&cm36655->power_lock);
 
@@ -274,6 +301,17 @@ static ssize_t light_enable_store(struct device *dev,
 
 	mutex_lock(&cm36655->power_lock);
 	pr_info("[SENSOR] %s,new_value=%d\n", __func__, new_value);
+#if defined(CONFIG_SENSORS_SW_RESET)
+	if (cm36655->reset_state == ON) {
+		if (new_value && !(cm36655->power_state & LIGHT_ENABLED))
+			cm36655->power_state |= LIGHT_ENABLED;
+		else if (!new_value && (cm36655->power_state & LIGHT_ENABLED))
+			cm36655->power_state &= ~LIGHT_ENABLED;
+		mutex_unlock(&cm36655->power_lock);
+		return size;
+	}
+#endif
+
 	if (new_value && !(cm36655->power_state & LIGHT_ENABLED)) {
 		cm36655->power_state |= LIGHT_ENABLED;
 		cm36655_light_enable(cm36655);
@@ -546,9 +584,20 @@ static ssize_t proximity_enable_store(struct device *dev,
 		pr_err("[SENSOR] %s: invalid value %d\n", __func__, *buf);
 		return -EINVAL;
 	}
+	pr_info("%s, new_value = %d\n", __func__, new_value);
 
 	mutex_lock(&cm36655->power_lock);
-	pr_info("%s, new_value = %d\n", __func__, new_value);
+#if defined(CONFIG_SENSORS_SW_RESET)
+	if (cm36655->reset_state == ON) {
+		if (new_value && !(cm36655->power_state & PROXIMITY_ENABLED))
+			cm36655->power_state |= PROXIMITY_ENABLED;
+		else if (!new_value
+				&& (cm36655->power_state & PROXIMITY_ENABLED))
+			cm36655->power_state &= ~PROXIMITY_ENABLED;
+		mutex_unlock(&cm36655->power_lock);
+		return size;
+	}
+#endif
 	if (new_value && !(cm36655->power_state & PROXIMITY_ENABLED)) {
 		u8 val = 1;
 		int i;
@@ -696,7 +745,6 @@ static ssize_t proximity_avg_store(struct device *dev,
 	}
 
 	pr_info("[SENSOR] %s, average enable = %d\n", __func__, new_value);
-	mutex_lock(&cm36655->power_lock);
 	if (new_value) {
 		if (!(cm36655->power_state & PROXIMITY_ENABLED)) {
 #if defined(CONFIG_SENSORS_CM36655_LEDA_EN_GPIO)
@@ -726,7 +774,6 @@ static ssize_t proximity_avg_store(struct device *dev,
 #endif
 		}
 	}
-	mutex_unlock(&cm36655->power_lock);
 
 	return size;
 }
@@ -853,102 +900,6 @@ static ssize_t proximity_thresh_low_store(struct device *dev,
 	return size;
 }
 
-#ifdef CM36655_CANCELATION
-static DEVICE_ATTR(prox_cal, S_IRUGO | S_IWUSR | S_IWGRP,
-	proximity_cancel_show, proximity_cancel_store);
-static DEVICE_ATTR(prox_offset_pass, S_IRUGO, proximity_cancel_pass_show, NULL);
-#endif
-static DEVICE_ATTR(prox_avg, S_IRUGO | S_IWUSR | S_IWGRP,
-	proximity_avg_show, proximity_avg_store);
-static DEVICE_ATTR(state, S_IRUGO, proximity_state_show, NULL);
-static struct device_attribute dev_attr_prox_raw = __ATTR(raw_data,
-	S_IRUGO, proximity_state_show, NULL);
-static DEVICE_ATTR(thresh_high, S_IRUGO | S_IWUSR | S_IWGRP,
-	proximity_thresh_high_show, proximity_thresh_high_store);
-static DEVICE_ATTR(thresh_low, S_IRUGO | S_IWUSR | S_IWGRP,
-	proximity_thresh_low_show, proximity_thresh_low_store);
-static DEVICE_ATTR(prox_trim, S_IRUSR | S_IRGRP,
-	proximity_trim_show, NULL);
-
-static struct device_attribute *prox_sensor_attrs[] = {
-	&dev_attr_prox_sensor_vendor,
-	&dev_attr_prox_sensor_name,
-	&dev_attr_prox_cal,
-	&dev_attr_prox_offset_pass,
-	&dev_attr_prox_avg,
-	&dev_attr_state,
-	&dev_attr_thresh_high,
-	&dev_attr_thresh_low,
-	&dev_attr_prox_raw,
-	&dev_attr_prox_trim,
-	NULL,
-};
-
-/* light sysfs */
-static ssize_t light_lux_show(struct device *dev,
-	struct device_attribute *attr, char *buf)
-{
-	struct cm36655_data *cm36655 = dev_get_drvdata(dev);
-
-	return snprintf(buf, PAGE_SIZE, "%u,%u\n", cm36655->als_data,
-		cm36655->white_data);
-}
-
-static ssize_t light_data_show(struct device *dev,
-	struct device_attribute *attr, char *buf)
-{
-	struct cm36655_data *cm36655 = dev_get_drvdata(dev);
-#ifdef cm36655_DEBUG
-	pr_info("%s = %u,%u,%u,%u\n", __func__, cm36655->als_red_data,
-		cm36655->als_green_data, cm36655->als_blue_data, cm36655->white_data);
-#endif
-	return snprintf(buf, PAGE_SIZE, "%u,%u,%u,%u\n", cm36655->als_red_data,
-		cm36655->als_green_data, cm36655->als_blue_data, cm36655->white_data);
-}
-
-static DEVICE_ATTR(lux, S_IRUGO, light_lux_show, NULL);
-static DEVICE_ATTR(raw_data, S_IRUGO, light_data_show, NULL);
-
-static struct device_attribute *light_sensor_attrs[] = {
-	&dev_attr_light_sensor_vendor,
-	&dev_attr_light_sensor_name,
-	&dev_attr_lux,
-	&dev_attr_raw_data,
-	NULL,
-};
-
-/* interrupt happened due to transition/change of near/far proximity state */
-irqreturn_t cm36655_irq_thread_fn(int irq, void *data)
-{
-	struct cm36655_data *cm36655 = data;
-	u8 val = 1;
-	u16 ps_data = 0;
-#ifdef cm36655_DEBUG
-	static int count;
-	pr_info("%s\n", __func__);
-#endif
-
-	val = gpio_get_value(cm36655->pdata->irq);
-	cm36655_i2c_read_word(cm36655, REG_PS_DATA, &ps_data);
-#ifdef cm36655_DEBUG
-	pr_info("[SENSOR] %s: count = %d\n", __func__, count++);
-#endif
-
-	if (cm36655->power_state & PROXIMITY_ENABLED) {
-		/* 0 is close, 1 is far */
-		input_report_abs(cm36655->proximity_input_dev, ABS_DISTANCE,
-			val);
-		input_sync(cm36655->proximity_input_dev);
-	}
-
-	wake_lock_timeout(&cm36655->prx_wake_lock, 3 * HZ);
-
-	pr_info("%s: val = %u, ps_data = %u (close:0, far:1)\n",
-		__func__, val, ps_data);
-
-	return IRQ_HANDLED;
-}
-
 static int cm36655_setup_reg(struct cm36655_data *cm36655)
 {
 	int err = 0, i = 0;
@@ -994,6 +945,226 @@ static int cm36655_setup_reg(struct cm36655_data *cm36655)
 
 	pr_info("[SENSOR] %s is success.", __func__);
 	return err;
+}
+
+
+#ifdef CM36655_CANCELATION
+static DEVICE_ATTR(prox_cal, S_IRUGO | S_IWUSR | S_IWGRP,
+	proximity_cancel_show, proximity_cancel_store);
+static DEVICE_ATTR(prox_offset_pass, S_IRUGO, proximity_cancel_pass_show, NULL);
+#endif
+static DEVICE_ATTR(prox_avg, S_IRUGO | S_IWUSR | S_IWGRP,
+	proximity_avg_show, proximity_avg_store);
+static DEVICE_ATTR(state, S_IRUGO, proximity_state_show, NULL);
+static struct device_attribute dev_attr_prox_raw = __ATTR(raw_data,
+	S_IRUGO, proximity_state_show, NULL);
+static DEVICE_ATTR(thresh_high, S_IRUGO | S_IWUSR | S_IWGRP,
+	proximity_thresh_high_show, proximity_thresh_high_store);
+static DEVICE_ATTR(thresh_low, S_IRUGO | S_IWUSR | S_IWGRP,
+	proximity_thresh_low_show, proximity_thresh_low_store);
+static DEVICE_ATTR(prox_trim, S_IRUSR | S_IRGRP,
+	proximity_trim_show, NULL);
+
+static struct device_attribute *prox_sensor_attrs[] = {
+	&dev_attr_prox_sensor_vendor,
+	&dev_attr_prox_sensor_name,
+	&dev_attr_prox_cal,
+	&dev_attr_prox_offset_pass,
+	&dev_attr_prox_avg,
+	&dev_attr_state,
+	&dev_attr_thresh_high,
+	&dev_attr_thresh_low,
+	&dev_attr_prox_raw,
+	&dev_attr_prox_trim,
+	NULL,
+};
+
+/* light sysfs */
+#ifdef CONFIG_SENSORS_SW_RESET
+static ssize_t light_power_reset_show(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	struct cm36655_data *cm36655 = dev_get_drvdata(dev);
+
+	pr_info("[SENSOR]: %s -  start!!!\n", __func__);
+	cm36655->reset_state = ON;
+
+	mutex_lock(&cm36655->power_lock);
+
+	if (cm36655->power_state & LIGHT_ENABLED) {
+		hrtimer_cancel(&cm36655->light_timer);
+		cancel_work_sync(&cm36655->work_light);
+	}
+	if (cm36655->power_state & PROXIMITY_ENABLED) {
+		disable_irq_wake(cm36655->irq);
+		disable_irq(cm36655->irq);
+	}
+	pr_info("[SENSOR]: %s - compleate!!!\n",
+		__func__);
+	mutex_unlock(&cm36655->power_lock);
+
+	pr_info("[SENSOR]: %s - proximity&light power reset end!!!\n", __func__);
+
+	return snprintf(buf, PAGE_SIZE, "%d\n",
+		(cm36655->power_state & PROXIMITY_ENABLED) ? 1 : 0);
+}
+
+static ssize_t light_vdd_reset_show(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	struct cm36655_data *cm36655 = dev_get_drvdata(dev);
+
+	pr_info("[SENSOR]: %s -  start!!!\n", __func__);
+
+	mutex_lock(&cm36655->power_lock);
+	prox_regulator_onoff(&cm36655->i2c_client->dev, OFF);
+	msleep(20);
+	prox_regulator_onoff(&cm36655->i2c_client->dev, ON);
+	mutex_unlock(&cm36655->power_lock);
+
+	pr_info("[SENSOR]: %s -  end!!!\n", __func__);
+
+	return snprintf(buf, PAGE_SIZE, "%d\n",
+		(cm36655->power_state & PROXIMITY_ENABLED) ? 1 : 0);
+}
+
+
+static ssize_t light_sw_reset_show(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	struct cm36655_data *cm36655 = dev_get_drvdata(dev);
+	int ret;
+
+	pr_info("[SENSOR]: %s -  start!!!\n", __func__);
+	cm36655->reset_state = OFF;
+
+	mutex_lock(&cm36655->power_lock);
+
+	/* setup initial registers */
+	ret = cm36655_setup_reg(cm36655);
+	if (ret < 0) {
+		pr_err("[SENSOR] %s: could not setup regs\n", __func__);
+		mutex_unlock(&cm36655->power_lock);
+		return ret;
+	}
+
+	if (cm36655->power_state & LIGHT_ENABLED) {
+		pr_info("[SENSOR]: %s - light sensor was enabled so make enable!!!\n", __func__);
+		cm36655_light_enable(cm36655);
+	}
+	if (cm36655->power_state & PROXIMITY_ENABLED) {
+		u8 val = 1;
+		int i;
+		int err = 0;
+
+		pr_info("[SENSOR]: %s - proximity sensor was enabled so make enable!!!\n", __func__);
+
+#ifdef CM36655_CANCELATION
+		/* open cancelation data */
+		err = proximity_open_cancelation(cm36655);
+		if (err < 0 && err != -ENOENT)
+			pr_err("[SENSOR] %s: proximity_open_cancelation() failed\n",
+				__func__);
+#endif
+		/* enable settings */
+		for (i = 0; i < PS_REG_NUM; i++) {
+			cm36655_i2c_write_word(cm36655,
+				ps_reg_init_setting[i][REG_ADDR],
+				ps_reg_init_setting[i][CMD]);
+		}
+		/*send	the far for input update*/
+		input_report_abs(cm36655->proximity_input_dev, ABS_DISTANCE,val);
+		val = gpio_get_value(cm36655->pdata->irq);
+		/* 0 is close, 1 is far */
+		input_report_abs(cm36655->proximity_input_dev, ABS_DISTANCE,val);
+		input_sync(cm36655->proximity_input_dev);
+
+		enable_irq(cm36655->irq);
+		enable_irq_wake(cm36655->irq);
+	}
+	mutex_unlock(&cm36655->power_lock);
+
+	pr_info("[SENSOR]: %s - proximity & light sw reset end!!!\n", __func__);
+
+	return snprintf(buf, PAGE_SIZE, "%d\n",
+		(cm36655->power_state & PROXIMITY_ENABLED) ? 1 : 0);
+}
+
+#endif//CONFIG_SENSORS_SW_RESET
+static ssize_t light_lux_show(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	struct cm36655_data *cm36655 = dev_get_drvdata(dev);
+
+	return snprintf(buf, PAGE_SIZE, "%u,%u\n", cm36655->als_data,
+		cm36655->white_data);
+}
+
+static ssize_t light_data_show(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	struct cm36655_data *cm36655 = dev_get_drvdata(dev);
+#ifdef cm36655_DEBUG
+	pr_info("%s = %u,%u,%u,%u\n", __func__, cm36655->als_red_data,
+		cm36655->als_green_data, cm36655->als_blue_data, cm36655->white_data);
+#endif
+	return snprintf(buf, PAGE_SIZE, "%u,%u,%u,%u\n", cm36655->als_red_data,
+		cm36655->als_green_data, cm36655->als_blue_data, cm36655->white_data);
+}
+
+static DEVICE_ATTR(lux, S_IRUGO, light_lux_show, NULL);
+static DEVICE_ATTR(raw_data, S_IRUGO, light_data_show, NULL);
+#ifdef CONFIG_SENSORS_SW_RESET
+static DEVICE_ATTR(power_reset, S_IRUSR | S_IRGRP,
+	light_power_reset_show, NULL);
+static DEVICE_ATTR(vdd_reset, S_IRUSR | S_IRGRP,
+	light_vdd_reset_show, NULL);
+static DEVICE_ATTR(sw_reset, S_IRUSR | S_IRGRP,
+	light_sw_reset_show, NULL);
+#endif
+static struct device_attribute *light_sensor_attrs[] = {
+	&dev_attr_light_sensor_vendor,
+	&dev_attr_light_sensor_name,
+	&dev_attr_lux,
+	&dev_attr_raw_data,
+#ifdef CONFIG_SENSORS_SW_RESET
+	&dev_attr_power_reset,
+	&dev_attr_vdd_reset,
+	&dev_attr_sw_reset,
+#endif
+	NULL,
+};
+
+/* interrupt happened due to transition/change of near/far proximity state */
+irqreturn_t cm36655_irq_thread_fn(int irq, void *data)
+{
+	struct cm36655_data *cm36655 = data;
+	u8 val = 1;
+	u16 ps_data = 0;
+#ifdef cm36655_DEBUG
+	static int count;
+	pr_info("%s\n", __func__);
+#endif
+
+	val = gpio_get_value(cm36655->pdata->irq);
+	cm36655_i2c_read_word(cm36655, REG_PS_DATA, &ps_data);
+#ifdef cm36655_DEBUG
+	pr_info("[SENSOR] %s: count = %d\n", __func__, count++);
+#endif
+
+	if (cm36655->power_state & PROXIMITY_ENABLED) {
+		/* 0 is close, 1 is far */
+		input_report_abs(cm36655->proximity_input_dev, ABS_DISTANCE,
+			val);
+		input_sync(cm36655->proximity_input_dev);
+	}
+
+	wake_lock_timeout(&cm36655->prx_wake_lock, 3 * HZ);
+
+	pr_info("%s: val = %u, ps_data = %u (close:0, far:1)\n",
+		__func__, val, ps_data);
+
+	return IRQ_HANDLED;
 }
 
 static int cm36655_setup_irq(struct cm36655_data *cm36655)
@@ -1056,6 +1227,13 @@ static void cm36655_work_func_light(struct work_struct *work)
 {
 	struct cm36655_data *cm36655 = container_of(work, struct cm36655_data,
 						work_light);
+
+#if defined(CONFIG_SENSORS_SW_RESET)
+          if (cm36655->reset_state) {
+		SENSOR_ERR("cancel workfunc because of proximity reset\n");
+		return;
+          }
+#endif
 	mutex_lock(&cm36655->read_lock);
 	cm36655_i2c_read_word(cm36655, REG_ALS_RED_DATA, &cm36655->als_red_data);
 	cm36655_i2c_read_word(cm36655, REG_ALS_GREEN_DATA, &cm36655->als_green_data);
@@ -1063,7 +1241,7 @@ static void cm36655_work_func_light(struct work_struct *work)
 	cm36655_i2c_read_word(cm36655, REG_WHITE_DATA, &cm36655->white_data);
 	mutex_unlock(&cm36655->read_lock);
 
-cm36655->als_data = cm36655->als_green_data;
+	cm36655->als_data = cm36655->als_green_data;
 	input_report_rel(cm36655->light_input_dev, REL_HWHEEL,
 		cm36655->als_red_data + 1);
 	input_report_rel(cm36655->light_input_dev, REL_DIAL,
@@ -1220,7 +1398,9 @@ static int cm36655_parse_dt(struct device *dev, struct cm36655_platform_data)
 static int prox_regulator_onoff(struct device *dev, bool onoff)
 {
 	struct regulator *vdd;
+#ifdef FEATURE_PROXIMITY_VIO
 	struct regulator *vio;
+#endif
 	int ret = 0;
 
 	pr_info("%s %s\n", __func__, (onoff) ? "on" : "off");
@@ -1234,6 +1414,7 @@ static int prox_regulator_onoff(struct device *dev, bool onoff)
 		ret = regulator_set_voltage(vdd, 3300000, 3300000);
 	}
 
+#ifdef FEATURE_PROXIMITY_VIO
 	vio = devm_regulator_get(dev, "cm36655,vio");
 	if (IS_ERR(vio)) {
 		pr_err("%s: cannot get vio\n", __func__);
@@ -1242,33 +1423,38 @@ static int prox_regulator_onoff(struct device *dev, bool onoff)
 	} else if (!regulator_get_voltage(vio)) {
 		ret = regulator_set_voltage(vio, 1800000, 1800000);
 	}
-
+#endif
 	if (onoff) {
 		ret = regulator_enable(vdd);
 		if (ret) {
 			pr_err("%s: Failed to enable vdd.\n", __func__);
 		}
 		msleep(20);
+#ifdef FEATURE_PROXIMITY_VIO
 		ret = regulator_enable(vio);
 		if (ret) {
 			pr_err("%s: Failed to enable vio.\n", __func__);
 		}
 		msleep(20);
+#endif
 	} else {
 		ret = regulator_disable(vdd);
 		if (ret) {
 			pr_err("%s: Failed to enable vdd.\n", __func__);
 		}
 		msleep(20);
+#ifdef FEATURE_PROXIMITY_VIO
 		ret = regulator_disable(vio);
 		if (ret) {
 			pr_err("%s: Failed to enable vio.\n", __func__);
 		}
 		msleep(20);
+#endif
 	}
-
+#ifdef FEATURE_PROXIMITY_VIO
 	devm_regulator_put(vio);
 err_vio:
+#endif
 	devm_regulator_put(vdd);
 err_vdd:
 	return ret;
@@ -1366,7 +1552,9 @@ static int cm36655_i2c_probe(struct i2c_client *client,
 	cm36655->pdata = pdata;
 	cm36655->i2c_client = client;
 	i2c_set_clientdata(client, cm36655);
-
+#if defined(CONFIG_SENSORS_SW_RESET)
+	cm36655->reset_state = OFF;
+#endif
 	mutex_init(&cm36655->power_lock);
 	mutex_init(&cm36655->read_lock);
 
@@ -1670,6 +1858,21 @@ static int cm36655_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
+static void cm36655_i2c_shutdown(struct i2c_client *client)
+{
+	struct cm36655_data *cm36655 = i2c_get_clientdata(client);
+
+	if (cm36655->power_state & LIGHT_ENABLED)
+		cm36655_light_disable(cm36655);
+	if (cm36655->power_state & PROXIMITY_ENABLED) {
+		disable_irq_wake(cm36655->irq);
+		disable_irq(cm36655->irq);
+		cm36655_i2c_write_word(cm36655, REG_PS_CONF1, 0x0001);
+	}
+
+	SENSOR_INFO("is called.\n");
+}
+
 static int cm36655_suspend(struct device *dev)
 {
 	/* We disable power only if proximity is disabled.  If proximity
@@ -1727,6 +1930,7 @@ static struct i2c_driver cm36655_i2c_driver = {
 		   .pm = &cm36655_pm_ops
 	},
 	.probe = cm36655_i2c_probe,
+	.shutdown = cm36655_i2c_shutdown,
 	.remove = cm36655_i2c_remove,
 	.id_table = cm36655_device_id,
 };

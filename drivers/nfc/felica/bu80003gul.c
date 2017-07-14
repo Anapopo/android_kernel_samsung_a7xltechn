@@ -101,8 +101,7 @@ static struct of_device_id bu80003gul_i2c_match_table[] = {
  */
 static struct i2c_driver bu80003gul_i2c_driver = {
 	.probe = bu80003gul_i2c_probe,
-	.remove = bu80003gul_i2c_remove,
-	.id_table = bu80003gul_i2c_idtable,
+	.remove = bu80003gul_i2c_remove,	.id_table = bu80003gul_i2c_idtable,
 	.driver = {
 				.name = BU80003GUL_I2C_NAME,
 				.owner = THIS_MODULE,
@@ -339,6 +338,9 @@ static ssize_t felica_epc_read(struct file *file, char __user *buf,
 				__func__, ret);
 		return -EFAULT;
 	}
+
+	if (len > sizeof(read_buff))
+		len = sizeof(read_buff);
 
 	ret = copy_to_user(buf, &read_buff, len);
 	if (ret != 0) {

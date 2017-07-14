@@ -32,6 +32,11 @@
 static struct switch_dev switch_dock = {
 	.name = "dock",
 };
+#ifdef CONFIG_UART3
+static struct switch_dev switch_uart3 = {
+	.name = "uart3",	/* /sys/class/switch/uart3/state */
+};
+#endif
 #endif /* CONFIG_SWITCH */
 
 /* 1: 619K is used as a wake-up noti which sends a dock noti.
@@ -46,18 +51,26 @@ static int switch_sel;
 /*
  * func : set_switch_sel
  * switch_sel value get from bootloader comand line
- * switch_sel data consist 4 bits
+ * switch_sel data consist 12 bits (xxxxyyyyzzzz)
+ * first 4bits(zzzz) mean path infomation.
+ * next 4bits(yyyy) mean if pmic version info
+ * next 4bits(xxxx) mean afc disable info
  */
 static int set_switch_sel(char *str)
 {
 	get_option(&str, &switch_sel);
-	switch_sel = switch_sel & 0x0f;
+	switch_sel = switch_sel & 0x0fff;
 	printk(KERN_DEBUG "[muic] %s : 0x%x\n",
 		__func__, switch_sel);
 
 	return switch_sel;
 }
 __setup("pmic_info=", set_switch_sel);
+
+int get_switch_sel(void)
+{
+	return switch_sel;
+}
 
 #if defined(CONFIG_MUIC_NOTIFIER)
 static struct notifier_block dock_notifier_block;
@@ -118,6 +131,7 @@ static int muic_handle_dock_notification(struct notifier_block *nb,
 			else if (action == MUIC_NOTIFY_CMD_DETACH)
 				return muic_dock_detach_notify();
 		}
+
 		printk(KERN_DEBUG "[muic] %s: ignore(%d)\n", __func__, attached_dev);
 		return NOTIFY_DONE;
 	}
@@ -142,6 +156,16 @@ static int muic_handle_dock_notification(struct notifier_block *nb,
 		else if (action == MUIC_NOTIFY_CMD_DETACH)
 			return muic_dock_detach_notify();
 		break;
+#ifdef CONFIG_UART3	//XO Shutdown
+	case ATTACHED_DEV_JIG_UART_OFF_MUIC:
+	case ATTACHED_DEV_JIG_UART_OFF_VB_MUIC:
+		/* write value at "sys/class/switch/uart3/state" */
+		if (action == MUIC_NOTIFY_CMD_ATTACH)
+			switch_set_state(&switch_uart3, action);
+		else if(action == MUIC_NOTIFY_CMD_DETACH)
+			switch_set_state(&switch_uart3, action);
+		break;
+#endif
 	case ATTACHED_DEV_SMARTDOCK_MUIC:
 	case ATTACHED_DEV_SMARTDOCK_VB_MUIC:
 	case ATTACHED_DEV_SMARTDOCK_TA_MUIC:
@@ -261,6 +285,15 @@ static void muic_init_switch_dev_cb(void)
 				__func__, ret);
 		return;
 	}
+#ifdef CONFIG_UART3
+	/* for JigUartOnObserver */
+	ret = switch_dev_register(&switch_uart3);
+	if (ret < 0) {
+		printk(KERN_ERR "[muic] %s: Failed to register uart3 switch(%d)\n",
+				__func__, ret);
+		return;
+	}
+#endif
 #endif /* CONFIG_SWITCH */
 
 #if defined(CONFIG_MUIC_NOTIFIER)

@@ -50,7 +50,6 @@
 #define SX9310_SAR_CTRL1_REG	0x2B
 #define SX9310_SAR_CTRL2_REG	0x2C
 
-#define SX9310_WHOAMI_REG	0x42
 #define SX9310_SOFTRESET_REG	0x7F
 
 /* Sensor Readback */
@@ -83,10 +82,11 @@
 #define SX9310_TCHCMPSTAT_TCHSTAT1_FLAG  0x02
 #define SX9310_TCHCMPSTAT_TCHSTAT0_FLAG  0x01
 
-/* Bodystat */
-#define SX9310_BODYCMPSTAT_FLAG  0x10
 /* SoftReset */
 #define SX9310_SOFTRESET  0xDE
+
+
+// #define SX9310_CS2_GND
 #define SX9310_CS0_GND
 
 struct smtc_reg_data {
@@ -95,22 +95,7 @@ struct smtc_reg_data {
 };
 
 static const struct smtc_reg_data setup_reg[] = {
-	{
-		.reg = SX9310_IRQ_ENABLE_REG,
-		.val = 0xf0,
-	},
-	{
-		.reg = SX9310_IRQFUNC_REG,
-		.val = 0x00,
-	},
-	{
-		.reg = SX9310_CPS_CTRL0_REG,
-		.val = 0x20, /* SCANPERIOD: 30ms */
-	},
-	{
-		.reg = SX9310_CPS_CTRL1_REG,
-		.val = 0x00,
-	},
+
 #if defined(SX9310_CS2_GND)
 	{
 		.reg = SX9310_CPS_CTRL2_REG,
@@ -128,28 +113,40 @@ static const struct smtc_reg_data setup_reg[] = {
 	},
 #endif
 	{
+		.reg = SX9310_IRQ_ENABLE_REG,
+		.val = 0x70,
+	},
+	{
+		.reg = SX9310_IRQFUNC_REG,
+		.val = 0x00,
+	},
+	{
+		.reg = SX9310_CPS_CTRL1_REG,
+		.val = 0x00,
+	},
+	{
 		.reg = SX9310_CPS_CTRL3_REG,
-		.val = 0x0F, /* GAIN12,GAIN0: X8 */
+		.val = 0x0F,
 	},
 	{
 		.reg = SX9310_CPS_CTRL4_REG,
-		.val = 0x0D, /* RESOLUTION: 256, FREQ: 166.7 KHz */
+		.val = 0x0D,
 	},
 	{
 		.reg = SX9310_CPS_CTRL5_REG,
-		.val = 0xC3, /* RANGE: SMALL, RAWFILT: 1-1/8 */
+		.val = 0xC1,
 	},
 	{
 		.reg = SX9310_CPS_CTRL6_REG,
-		.val = 0x20, /* AVGTHRESH: +-16384 */
+		.val = 0x20,
 	},
 	{
 		.reg = SX9310_CPS_CTRL7_REG,
-		.val = 0x4C, /* AVGPOSFILT: 1-1/256, AVGNEGFILT: 1-1/2 */
+		.val = 0x4C,
 	},
 	{
 		.reg = SX9310_CPS_CTRL8_REG,
-		.val = 0xc9, /* on defconfig */
+		.val = 0x7E,
 	},
 	{
 		.reg = SX9310_CPS_CTRL9_REG,
@@ -157,7 +154,7 @@ static const struct smtc_reg_data setup_reg[] = {
 	},
 	{
 		.reg = SX9310_CPS_CTRL10_REG,
-		.val = 0x10, /* HYSTERESIS: +-6% */
+		.val = 0x10,
 	},
 #if defined(SX9310_CS2_GND)
 	{
@@ -175,6 +172,10 @@ static const struct smtc_reg_data setup_reg[] = {
 		.val = 0x00,
 	},
 #endif
+	{
+		.reg = SX9310_CPS_CTRL0_REG,
+		.val = 0x50,
+	},
 };
 
 enum {

@@ -20,3 +20,11 @@ config TOUCHSCREEN_SEC_TS_GLOVEMODE
           support for the built-in touchscreen.
 
           If unsure, say N.
+
+config TOUCHSCREEN_DUMP_MODE
+        tristate "Samsung Electronics Touchscreen"
+        depends on I2C
+        help
+          added tsp dump mode for ghost touch and force cal error handset.
+          check cap offset(sdc), cap offset(sec), ambient value.
+ 

@@ -78,7 +78,7 @@ struct sec_fg_info {
 	int battery_table[3][16];
 	int rce_value[3];
 	int dtcd_value;
-	int rs_value[4]; /*rs mix_factor max min*/
+	int rs_value[5]; /*rs p_mix_factor n_mix_factor max min*/
 	int vit_period;
 	int mix_value[2]; /*mix_rate init_blank*/
 	int misc;
@@ -91,28 +91,51 @@ struct sec_fg_info {
 	int cycle_low_limit;
 	int cycle_limit_cntl;
 
+	int enable_v_offset_cancel_p;
+	int enable_v_offset_cancel_n;
+	int v_offset_cancel_level;
+	int v_offset_cancel_mohm;
+
 	int volt_cal;
 	int curr_offset;
 	int p_curr_cal;
 	int n_curr_cal;
+	int curr_lcal_en;
+	int curr_lcal_0;
+	int curr_lcal_1;
+	int curr_lcal_2;
+	int en_auto_curr_offset;
 	int cntl_value;
 
 	int temp_std;
+	int en_fg_temp_volcal;
+	int fg_temp_volcal_denom;
+	int fg_temp_volcal_fact;
+	int en_high_fg_temp_offset;
+	int high_fg_temp_offset_denom;
+	int high_fg_temp_offset_fact;
+	int en_low_fg_temp_offset;
+	int low_fg_temp_offset_denom;
+	int low_fg_temp_offset_fact;
 	int en_high_fg_temp_cal;
-	int high_fg_temp_cal_denom;
+	int high_fg_temp_p_cal_denom;
 	int high_fg_temp_p_cal_fact;
+	int high_fg_temp_n_cal_denom;
 	int high_fg_temp_n_cal_fact;
 	int en_low_fg_temp_cal;
-	int low_fg_temp_cal_denom;
+	int low_fg_temp_p_cal_denom;
 	int low_fg_temp_p_cal_fact;
+	int low_fg_temp_n_cal_denom;
 	int low_fg_temp_n_cal_fact;
 	int en_high_temp_cal;
-	int high_temp_cal_denom;
+	int high_temp_p_cal_denom;
 	int high_temp_p_cal_fact;
+	int high_temp_n_cal_denom;
 	int high_temp_n_cal_fact;
 	int en_low_temp_cal;
-	int low_temp_cal_denom;
+	int low_temp_p_cal_denom;
 	int low_temp_p_cal_fact;
+	int low_temp_n_cal_denom;
 	int low_temp_n_cal_fact;
 
 
@@ -123,6 +146,7 @@ struct sec_fg_info {
 	uint32_t flag_chg_status : 1; /* 0 : discharging, 1: charging*/
 
 	int32_t irq_ctrl;
+	int value_v_alarm;
 
 	uint32_t is_FG_initialised;
 	int iocv_error_count;

@@ -406,9 +406,7 @@ EXPORT_SYMBOL(mmc_blk_init_bkops_statistics);
  */
 void mmc_start_delayed_bkops(struct mmc_card *card)
 {
-	if (!card ||
-		!(mmc_card_get_bkops_en_manual(card)) ||
-		mmc_card_doing_bkops(card))
+	if (!card || !card->ext_csd.bkops_en || mmc_card_doing_bkops(card))
 		return;
 
 	if (card->bkops_info.sectors_changed <
@@ -445,7 +443,7 @@ void mmc_start_bkops(struct mmc_card *card, bool from_exception)
 	int err;
 
 	BUG_ON(!card);
-	if (!(mmc_card_get_bkops_en_manual(card)))
+	if (!card->ext_csd.bkops_en)
 		return;
 
 	if ((card->bkops_info.cancel_delayed_work) && !from_exception) {
@@ -3365,8 +3363,6 @@ int _mmc_detect_card_removed(struct mmc_host *host)
 
 	ret = host->bus_ops->alive(host);
 
-	if (!ret)
-		return ret;
 	/*
 	 * Card detect status and alive check may be out of sync if card is
 	 * removed slowly, when card detect switch changes while card/slot
@@ -3479,12 +3475,6 @@ void mmc_rescan(struct work_struct *work)
 	mmc_bus_put(host);
 
 	if (host->ops->get_cd && host->ops->get_cd(host) == 0) {
-		/* check Card's status */
-		struct mmc_card *card = host->card;
-		u32 status;
-		if (card && !mmc_send_status(card, &status))
-			goto out;
-
 		mmc_claim_host(host);
 		mmc_power_off(host);
 		mmc_release_host(host);

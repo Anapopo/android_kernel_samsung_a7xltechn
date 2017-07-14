@@ -879,6 +879,7 @@ static struct rcg_clk blsp1_qup1_i2c_apps_clk_src = {
 
 static struct clk_freq_tbl ftbl_gcc_blsp1_qup1_6_spi_apps_clk[] = {
 	F(    960000,	      gcc_xo,  10,	  1,	2),
+	F(   4000000,       gpll0_out_main, 10,   1,   20),
 	F(   4800000,	      gcc_xo,   4,	  0,	0),
 	F(   9600000,	      gcc_xo,   2,	  0,	0),
 	F(  16000000,	   gpll0_out_main,  10,	  1,	5),
@@ -3477,6 +3478,7 @@ static int msm_gcc_probe(struct platform_device *pdev)
 		ret = of_msm_clock_register(pdev->dev.of_node,
 				msm_clocks_lookup_v1,
 				ARRAY_SIZE(msm_clocks_lookup_v1));
+
 				/* Disable GMEM HW Dynamic */
 				regval = 0x1;
 				writel_relaxed(regval, GCC_REG_BASE(GCC_SPARE3_REG));

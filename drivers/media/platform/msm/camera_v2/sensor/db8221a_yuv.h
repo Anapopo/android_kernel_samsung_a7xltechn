@@ -14,12 +14,8 @@
 #ifndef _DB8221A_REGS_H_
 #define _DB8221A_REGS_H_
 
-#if defined(CONFIG_SEC_GTES_PROJECT)
+#if defined(CONFIG_SEC_GTES_PROJECT) || defined(CONFIG_MACH_J3LTE_USA_SPR) || defined(CONFIG_MACH_J3LTE_USA_VZW)
 #define INIT_RES_800_600
-#endif
-
-#if defined(CONFIG_MACH_J3LTE_USA_SPR)|| defined(CONFIG_MACH_J3LTE_USA_VZW) || defined(CONFIG_MACH_J3LTE_USA_USC)
-#define MIPI_CLK_277MHZ
 #endif
 
 /*==============================================*/
@@ -552,11 +548,7 @@ struct msm_camera_i2c_reg_conf db8221a_Init_Reg[] = {
 	{0x51, 0x80},	// LuxTimeTB_3
 
 	{0x72, 0x0D},	// 71.5Mhz SCLK
-#if defined(MIPI_CLK_277MHZ)
-	{0x73, 0x8D},	//
-#else
-	{0x73, 0xF7},	//
-#endif
+	{0x73, 0xF7},	// 
 
 	{0x79, 0xB8},	// Gain Max
 	{0x7A, 0x48},	// Gain 3lut
@@ -578,17 +570,10 @@ struct msm_camera_i2c_reg_conf db8221a_Init_Reg[] = {
 	{0x89, 0x06},	// Time1Lut50Hz	: 15fps
 
 	{0x8A, 0x05},	// 60Hz Frame Rate
-#if defined(MIPI_CLK_277MHZ)
-	{0x8B, 0x26},	//
-
-	{0x8C, 0x05},	// 50Hz Frame Rate
-	{0x8D, 0x26},	//
-#else
-	{0x8B, 0x04},	//
+	{0x8B, 0x04},	// 
 
 	{0x8C, 0x04},	// 50Hz Frame Rate
-	{0x8D, 0xF4},	//
-#endif
+	{0x8D, 0xF4},	// 
 
 	{0x8E, 0x30},	// LuxLevel_Y3
 	{0x8F, 0x20},	// LuxLevel_Y2
@@ -1224,13 +1209,8 @@ struct msm_camera_i2c_reg_conf db8221a_Init_Reg[] = {
 	{0x47, 0x00},	// SensorTestMode_Addr
 	{0x48, 0x00},	// XSubSmplEn_Addr
 	{0x49, 0x00},	// XSubSmplEn_Addr
-#if defined(MIPI_CLK_277MHZ)
-	{0x4A, 0x02},	// PLL_P
-	{0x4B, 0x1F},	// PLL_M
-#else
 	{0x4A, 0x01},	// PLL_P
 	{0x4B, 0x15},	// PLL_M
-#endif
 	{0x4C, 0x00},	// PLL_S
 	{0x4D, 0x00},	// PLL_Ctrl
 	{0x4E, 0x01},	// scr_clk_sel
@@ -1283,13 +1263,8 @@ struct msm_camera_i2c_reg_conf db8221a_Init_Reg[] = {
 	{0x1F, 0x00},	// SensorTestMode_Addr
 	{0x20, 0x00},	// XSubSmplEn_Addr
 	{0x21, 0x00},	// XSubSmplEn_Addr
-#if defined(MIPI_CLK_277MHZ)
-	{0x22, 0x02},	// PLL_P
-	{0x23, 0x1F},	// PLL_M
-#else
 	{0x22, 0x01},	// PLL_P
 	{0x23, 0x15},	// PLL_M
-#endif
 	{0x24, 0x00},	// PLL_S
 	{0x25, 0x00},	// PLL_Ctrl
 	{0x26, 0x01},	// scr_clk_sel
@@ -1882,11 +1857,7 @@ struct msm_camera_i2c_reg_conf db8221a_VT_Init_Reg[] = {
 	{0x51, 0x80},	// LuxTimeTB_3
 
 	{0x72, 0x0D},	// 71.5Mhz SCLK
-#if defined(MIPI_CLK_277MHZ)
-	{0x73, 0x8D},	//
-#else
-	{0x73, 0xF7},	//
-#endif
+	{0x73, 0xF7},	// 
 
 	{0x79, 0xB8},	// Gain Max
 	{0x7A, 0x48},	// Gain 3lut
@@ -1908,17 +1879,10 @@ struct msm_camera_i2c_reg_conf db8221a_VT_Init_Reg[] = {
 	{0x89, 0x06},	// Time1Lut50Hz	: 15fps
 
 	{0x8A, 0x05},	// 60Hz Frame Rate
-#if defined(MIPI_CLK_277MHZ)
-	{0x8B, 0x26},	//
-
-	{0x8C, 0x05},	// 50Hz Frame Rate
-	{0x8D, 0x26},	//
-#else
 	{0x8B, 0x04},	//
 
 	{0x8C, 0x04},	// 50Hz Frame Rate
 	{0x8D, 0xF4},	//
-#endif
 
 	{0x8E, 0x19},	// LuxLevel_Y3
 	{0x8F, 0x08},	// LuxLevel_Y2
@@ -2560,13 +2524,8 @@ struct msm_camera_i2c_reg_conf db8221a_VT_Init_Reg[] = {
 	{0x47, 0x00},	// SensorTestMode_Addr
 	{0x48, 0x00},	// XSubSmplEn_Addr
 	{0x49, 0x00},	// XSubSmplEn_Addr
-#if defined(MIPI_CLK_277MHZ)
-	{0x4A, 0x02},	// PLL_P
-	{0x4B, 0x1F},	// PLL_M
-#else
 	{0x4A, 0x01},	// PLL_P
 	{0x4B, 0x15},	// PLL_M
-#endif
 	{0x4C, 0x00},	// PLL_S
 	{0x4D, 0x00},	// PLL_Ctrl
 	{0x4E, 0x01},	// scr_clk_sel
@@ -2607,13 +2566,8 @@ struct msm_camera_i2c_reg_conf db8221a_VT_Init_Reg[] = {
 	{0x1F, 0x00},	// SensorTestMode_Addr
 	{0x20, 0x00},	// XSubSmplEn_Addr
 	{0x21, 0x00},	// XSubSmplEn_Addr
-#if defined(MIPI_CLK_277MHZ)
-	{0x22, 0x02},	// PLL_P
-	{0x23, 0x1F},	// PLL_M
-#else
 	{0x22, 0x01},	// PLL_P
 	{0x23, 0x15},	// PLL_M
-#endif
 	{0x24, 0x00},	// PLL_S
 	{0x25, 0x00},	// PLL_Ctrl
 	{0x26, 0x01},	// scr_clk_sel
@@ -2688,7 +2642,7 @@ struct msm_camera_i2c_reg_conf db8221a_preview_800_600[]= {
 	{0xC9, 0x02},  // SCLCropEndY
 	{0xCA, 0x58},
 
-#if defined(CONFIG_SEC_GTES_PROJECT) || defined(CONFIG_MACH_J3LTE_USA_SPR) || defined(CONFIG_MACH_J3LTE_USA_VZW) || defined(CONFIG_MACH_J3LTE_USA_USC)
+#if defined(CONFIG_SEC_GTES_PROJECT) || defined(CONFIG_MACH_J3LTE_USA_SPR) || defined(CONFIG_MACH_J3LTE_USA_VZW)
 	{0xFE, 0x16},	// Wait  25
 #else
 	{0xFE, 0x64},	// Wait  100
@@ -2696,7 +2650,7 @@ struct msm_camera_i2c_reg_conf db8221a_preview_800_600[]= {
 	{0xFF, 0xE4},
 	{0x04, 0x01},	// Stream on
 
-#if defined(CONFIG_SEC_GTES_PROJECT) || defined(CONFIG_MACH_J3LTE_USA_SPR)|| defined(CONFIG_MACH_J3LTE_USA_VZW) || defined(CONFIG_MACH_J3LTE_USA_USC)
+#if defined(CONFIG_SEC_GTES_PROJECT) || defined(CONFIG_MACH_J3LTE_USA_SPR)|| defined(CONFIG_MACH_J3LTE_USA_VZW)
 	{0xFE, 0x32},	// Wait  50
 	{0xFF, 0xE4},
 	{0x04, 0x00},	// Stream off
@@ -2797,43 +2751,11 @@ struct msm_camera_i2c_reg_conf db8221a_preview_640_480[] = {
 	{0xC9, 0x01},  // SCLCropEndY
 	{0xCA, 0xE0},  
 
-#if defined(CONFIG_MACH_J3LTE_USA_SPR) || defined(CONFIG_MACH_J3LTE_USA_VZW) || defined(CONFIG_MACH_J3LTE_USA_USC)
-	{0xFE, 0x16},	// Wait  25
-#else
 	{0xFE, 0x64},	// Wait  100
-#endif
-	{0xFF, 0xE4},
-	{0x04, 0x01},	// Stream on
-
-#if defined(CONFIG_MACH_J3LTE_USA_SPR)|| defined(CONFIG_MACH_J3LTE_USA_VZW) || defined(CONFIG_MACH_J3LTE_USA_USC)
-	{0xFE, 0x32},	// Wait  50
-	{0xFF, 0xE4},
-	{0x04, 0x00},	// Stream off
-
-	{0xFF, 0xE4},
-	{0x14, 0x05},
-	{0x15, 0x00},	// MIPI_WORD_COUNT
-
-	{0xFF, 0x98},
-	{0xBE, 0x02},  // SCLCtrl
-	{0xBF, 0x01},  // SCLHorScale
-	{0xC0, 0x99},  
-	{0xC1, 0x01},  // SCLVerScale
-	{0xC2, 0x99},  
-	{0xC3, 0x00},  // SCLCropStartX
-	{0xC4, 0x00},  
-	{0xC5, 0x00},  // SCLCropStartY
-	{0xC6, 0x00},  
-	{0xC7, 0x02},  // SCLCropEndX
-	{0xC8, 0x80},  
-	{0xC9, 0x01},  // SCLCropEndY
-	{0xCA, 0xE0},  
-
-	{0xFE, 0x16},	// Wait  25
 
 	{0xFF, 0xE4},
 	{0x04, 0x01},	// Stream on
-#endif
+
 };
 
 /*==============================================*/
@@ -2975,45 +2897,6 @@ struct msm_camera_i2c_reg_conf db8221a_Capture_1600_1200[] = {
 	{0x04, 0x01},	// Stream on
 
 };
-
-struct msm_camera_i2c_reg_conf db8221a_Capture_1600_1200_for_24fps[] = {
-
-	{0xFF, 0xE4},
-	{0x04, 0x00},	// Stream off
-
-	{0xFF, 0x92},
-	{0xED, 0x10},  // Func
-
-	{0xFF, 0xE4},
-	{0x14, 0x0C},
-	{0x15, 0x80},	// MIPI_WORD_COUNT
-
-	{0xFF, 0x98},
-	{0xE4, 0x05},  // 
-	{0xE5, 0xF6},  // 
-	{0xBE, 0x00},  // SCLCtrl
-	{0xBF, 0x03},  // SCLHorScale
-	{0xC0, 0xFF},  
-	{0xC1, 0x03},  // SCLVerScale
-	{0xC2, 0xFF},  
-	{0xC3, 0x00},  // SCLCropStartX
-	{0xC4, 0x00},  
-	{0xC5, 0x00},  // SCLCropStartY
-	{0xC6, 0x00},  
-	{0xC7, 0x05},  // SCLCropEndX
-	{0xC8, 0x00},  
-	{0xC9, 0x04},  // SCLCropEndY
-	{0xCA, 0x00},  
-
-	{0xEA, 0x00},  // X Sub-Sampling
-	{0xEB, 0x00},  // Y Sub-Sampling
-	{0xFE, 0x96},	// Wait  150 
-
-	{0xFF, 0xE4},
-	{0x04, 0x01},	// Stream on
-
-};
-
 /*-------------------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------------------*/
 
@@ -3368,7 +3251,7 @@ struct msm_camera_i2c_reg_conf db8221a_effect_gray[] = {
 /*==============================================*/
 /* CAMERA_EFFECT_SEPIA						              */
 /*==============================================*/
-#if defined(CONFIG_MACH_J3LTE_USA_SPR) || defined(CONFIG_MACH_J3LTE_USA_VZW) || defined(CONFIG_MACH_J3LTE_USA_USC)
+#if defined(CONFIG_MACH_J3LTE_USA_SPR) || defined(CONFIG_MACH_J3LTE_USA_VZW)
 struct msm_camera_i2c_reg_conf db8221a_effect_sepia[] = {
 
 	{0xFF, 0x98},
@@ -3615,15 +3498,9 @@ struct msm_camera_i2c_reg_conf db8221a_auto_fps[] = {
 	{0x88, 0x06},	// 50Hz 2 Lut
 	{0x89, 0x06},	// 50Hz 1 Lut
 	{0x8A, 0x05},	// 60Hz Max Frame High
-#if defined(MIPI_CLK_277MHZ)
-	{0x8B, 0x26},	// 60Hz Max Frame Low
-	{0x8C, 0x05},	// 50Hz Max Frame High
-	{0x8D, 0x26},	// 50Hz Max Frame Low
-#else
 	{0x8B, 0x04},	// 60Hz Max Frame Low
 	{0x8C, 0x04},	// 50Hz Max Frame High
 	{0x8D, 0xF4},	// 50Hz Max Frame Low
-#endif
 
 	{0x8E, 0x30},	// LuxLevel_Y3
 	{0x8F, 0x20},	// LuxLevel_Y2
@@ -3686,11 +3563,7 @@ struct msm_camera_i2c_reg_conf db8221a_24fps_Camcoder[]  = {
 	{0x7F, 0x61},	// Min Frame Low
 
 	{0x72, 0x0D},	// Sensor clock
-#if defined(MIPI_CLK_277MHZ)
-	{0x73, 0x8D},	//
-#else
 	{0x73, 0xF8},	//
-#endif
 
 // AE : Matrix
 	{0xFF, 0x93},
@@ -3721,120 +3594,11 @@ struct msm_camera_i2c_reg_conf db8221a_24fps_Camcoder[]  = {
 	{0x87, 0x03},	// 50Hz 3 Lut
 	{0x88, 0x03},	// 50Hz 2 Lut
 	{0x89, 0x03},	// 50Hz 1 Lut
-#if defined(MIPI_CLK_277MHZ)
-	{0x8A, 0x03},	// 60Hz Max Frame High
-	{0x8B, 0x0D},	// 60Hz Max Frame Low
-	{0x8C, 0x03},	// 50Hz Max Frame High
-	{0x8D, 0x34},	// 50Hz Max Frame Low
-#else
 	{0x8A, 0x02},	// 60Hz Max Frame High
 	{0x8B, 0xF3},	// 60Hz Max Frame Low
 	{0x8C, 0x02},	// 50Hz Max Frame High
 	{0x8D, 0xD5},	// 50Hz Max Frame Low
-#endif
-	{0x8E, 0x19},	// LuxLevel_Y3
-	{0x8F, 0x08},	// LuxLevel_Y2
-	{0x90, 0x01},	// LuxLevel_Y1
 
-	{0x08, 0x3D},	// AECTRL
-
-	{0xFF, 0xE4},
-	{0x04, 0x01},	// Stream on
-
-};
-
-
-struct msm_camera_i2c_reg_conf db8221a_24fps_Camcoder_800_600[]  = {
-
-// 64{0x48, 0x0_}PR
-	{0xFF, 0xE4},
-	{0x04, 0x00},	// Stream off
-
-	{0xFF, 0xE4},
-	{0x14, 0x06},
-	{0x15, 0x40},	// MIPI_WORD_COUNT
-
-	{0xFF, 0x98},
-	{0xBE, 0x02},  // SCLCtrl
-	{0xBF, 0x01},  // SCLHorScale
-	{0xC0, 0xFF},  
-	{0xC1, 0x03},  // SCLVerScale
-	{0xC2, 0xFF},  
-	{0xC3, 0x00},  // SCLCropStartX
-	{0xC4, 0x00},  
-	{0xC5, 0x00},  // SCLCropStartY
-	{0xC6, 0x00},  
-	{0xC7, 0x03},  // SCLCropEndX
-	{0xC8, 0x20},  
-	{0xC9, 0x02},  // SCLCropEndY
-	{0xCA, 0x58},  
-
-	{0xEA, 0x00},	// HorSubsampling
-	{0xEB, 0x01},	// VerSubsampling
-
-
-// Fixed Frame
-	{0xFF, 0x93},
-	{0x07, 0x02},	// AEMODE
-	{0x4A, 0x00},	// LuxTimeTB_0
-	{0x4B, 0x80},	// LuxTimeTB_0
-	{0x4C, 0x00},	// LuxTimeTB_1
-	{0x4D, 0xD0},	// LuxTimeTB_1
-	{0x4E, 0x01},	// LuxTimeTB_2
-	{0x4F, 0x00},	// LuxTimeTB_2
-	{0x50, 0x01},	// LuxTimeTB_3
-	{0x51, 0x80},	// LuxTimeTB_3
-	{0x79, 0xC0},	// Gain Max
-	{0x7E, 0x09},	// Min Frame High
-	{0x7F, 0x61},	// Min Frame Low
-
-	{0x72, 0x0D},	// Sensor clock
-#if defined(MIPI_CLK_277MHZ)
-	{0x73, 0x8D},	//
-#else
-	{0x73, 0xF8},	//
-#endif
-
-// AE : Matrix
-	{0xFF, 0x93},
-	{0x0B, 0x88},	 // Weight_0 
-	{0x0C, 0x88},	 // Weight_1
-	{0x0D, 0x88},	 // Weight_2
-	{0x0E, 0x88},	 // Weight_3
-	{0x0F, 0x88},	 // Weight_4
-	{0x10, 0x88},	 // Weight_5
-	{0x11, 0x88},	 // Weight_6
-	{0x12, 0x88},	 // Weight_7
-	{0x13, 0x88},	 // Weight_8
-	{0x14, 0x88},	 // Weight_9
-	{0x15, 0x88},	 // Weight_10
-	{0x16, 0x88},	 // Weight_11
-	{0x17, 0x08},	 // Weight_12
-
-	{0x18, 0x01},	// AESpeed
-
-	{0x1B, 0x08},	//Analog gain Max
-
-
-	{0x82, 0x04},	// 60Hz Max
-	{0x83, 0x04},	// 60Hz 3 Lut
-	{0x84, 0x04},	// 60Hz 2 Lut
-	{0x85, 0x04},	// 60Hz 1 Lut
-	{0x86, 0x03},	// 50Hz Max
-	{0x87, 0x03},	// 50Hz 3 Lut
-	{0x88, 0x03},	// 50Hz 2 Lut
-	{0x89, 0x03},	// 50Hz 1 Lut
-#if defined(MIPI_CLK_277MHZ)
-	{0x8A, 0x03},	// 60Hz Max Frame High
-	{0x8B, 0x0D},	// 60Hz Max Frame Low
-	{0x8C, 0x03},	// 50Hz Max Frame High
-	{0x8D, 0x34},	// 50Hz Max Frame Low
-#else
-	{0x8A, 0x02},	// 60Hz Max Frame High
-	{0x8B, 0xF3},	// 60Hz Max Frame Low
-	{0x8C, 0x02},	// 50Hz Max Frame High
-	{0x8D, 0xD5},	// 50Hz Max Frame Low
-#endif
 	{0x8E, 0x19},	// LuxLevel_Y3
 	{0x8F, 0x08},	// LuxLevel_Y2
 	{0x90, 0x01},	// LuxLevel_Y1
@@ -3856,13 +3620,8 @@ struct msm_camera_i2c_reg_conf db8221a_anti_banding_flicker_50Hz[]= {
 	{0xFF, 0x93},
 	{0x1C, 0x00},
 	{0x1D, 0x05},
-#if defined(MIPI_CLK_277MHZ)
-	{0x1E, 0x4B},
-	{0x1F, 0x14},
-#else
 	{0x1E, 0x74},
 	{0x1F, 0x7C},
-#endif
 	{0x08, 0x3D},	// 50Hz
 
 };
@@ -3877,13 +3636,8 @@ struct msm_camera_i2c_reg_conf db8221a_anti_banding_flicker_60Hz[]= {
 	{0xFF, 0x93},
 	{0x1C, 0x00},
 	{0x1D, 0x04},
-#if defined(MIPI_CLK_277MHZ)
-	{0x1E, 0x69},
-	{0x1F, 0x3B},
-#else
 	{0x1E, 0x8B},
 	{0x1F, 0xBC},
-#endif
 	{0x08, 0x3F},	// 60Hz
 
 };

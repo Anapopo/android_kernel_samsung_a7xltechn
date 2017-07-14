@@ -121,21 +121,35 @@ static int __handle_request(sdp_fs_handler_request_t *req, char *ret) {
 
 }
 
-int sdp_fs_request(sdp_fs_command_t *cmd, fs_request_cb_t callback){
-    sdp_fs_handler_request_t *req = request_alloc(cmd->opcode);
+int sdp_fs_request(sdp_fs_request_t *sdp_req, fs_request_cb_t callback){
+    int opcode = sdp_req->opcode;
+    sdp_fs_handler_request_t *req = request_alloc(opcode);
     int ret = -1;
     req_dump(req, "request allocated");
 
     if(req) {
-    	memcpy(&req->command, cmd, sizeof(sdp_fs_command_t));
-    	req->command.req_id = req->id;
+        switch(req->opcode) {
+        case SDP_FS_OPCODE_SET_SENSITIVE:
+        case SDP_FS_OPCODE_SET_PROTECTED:
+            req->command.request_id = req->id;
+            req->command.userid = sdp_req->userid;
+            req->command.opcode = opcode;
+            req->command.partition_id = sdp_req->partid;
+            req->command.ino = sdp_req->ino;
+            req->callback = callback;
+            break;
+        default:
+            SDP_FS_HANDLER_LOGE("opcode[%d] failed, not supported\n", opcode);
+            goto error;
+            break;
+        }
 
         req_dump(req, "__handle_reqeust start");
         ret = __handle_request(req, NULL);
         req_dump(req, "__handle_reqeust end");
 
         if(ret != 0) {
-            SDP_FS_HANDLER_LOGE("opcode[%d] failed\n", cmd->opcode);
+            SDP_FS_HANDLER_LOGE("opcode[%d] failed\n", opcode);
             goto error;
         }
     } else {
@@ -213,8 +227,20 @@ static void recver(struct sk_buff  *skb)
 
 static int to_netlink_msg(sdp_fs_handler_request_t *req, char **msg)
 {
-	*msg = (char *)&req->command;
-	return sizeof(sdp_fs_command_t);
+    int msg_len = -1;
+
+    switch(req->opcode) {
+    case SDP_FS_OPCODE_SET_SENSITIVE:
+    case SDP_FS_OPCODE_SET_PROTECTED:
+        *msg = (char *)&req->command;
+        msg_len = sizeof(sdp_chamber_dir_cmd_t);
+        break;
+    default:
+        *msg = NULL;
+        msg_len = -1;
+        break;
+    }
+    return msg_len;
 }
 
 static u32 get_unique_id(sdp_fs_handler_control_t *control)
@@ -234,7 +260,7 @@ static u32 get_unique_id(sdp_fs_handler_control_t *control)
 }
 static void req_dump(sdp_fs_handler_request_t *req, const char *msg) {
 #if SDP_FS_HANDLER_DEBUG
-    SDP_FS_HANDLER_LOGD("DUMP REQUEST [%s] ID[%d] opcode[%d] state[%d]\n", msg, req->id, req->opcode, req->state);
+    SDP_FS_HANDLER_LOGD("DUMP REQUEST [%s] ID[%d] state[%d]\n", msg, req->id, req->state);
 #endif
 }
 

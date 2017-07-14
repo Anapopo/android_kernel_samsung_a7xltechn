@@ -117,7 +117,6 @@ static char *pm_batt_supplied_to[] = {
 };
 #endif
 
-
 static enum power_supply_property sec_battery_props[] = {
 	POWER_SUPPLY_PROP_STATUS,
 	POWER_SUPPLY_PROP_CHARGE_TYPE,
@@ -379,6 +378,7 @@ static unsigned long calculate_average_adc(
 	return average_adc;
 }
 */
+
 static int sec_bat_get_adc_value(
 		struct sec_battery_info *battery, int channel)
 {
@@ -595,10 +595,10 @@ static void sec_bat_set_charging_status(struct sec_battery_info *battery,
 		int status) {
 	union power_supply_propval value;
 	switch (status) {
-		case POWER_SUPPLY_STATUS_NOT_CHARGING:
-		case POWER_SUPPLY_STATUS_DISCHARGING:
-			if((battery->status == POWER_SUPPLY_STATUS_FULL) ||
-				(battery->capacity == 100)) {
+	case POWER_SUPPLY_STATUS_NOT_CHARGING:
+	case POWER_SUPPLY_STATUS_DISCHARGING:
+		if((battery->status == POWER_SUPPLY_STATUS_FULL) ||
+		   (battery->capacity == 100)){
 #if defined(CONFIG_AFC_CHARGER_MODE) || defined(CONFIG_PREVENT_SOC_JUMP)
 			value.intval = battery->capacity;
 			psy_do_property(battery->pdata->fuelgauge_name, set,
@@ -608,15 +608,15 @@ static void sec_bat_set_charging_status(struct sec_battery_info *battery,
 			psy_do_property(battery->pdata->fuelgauge_name, set,
 					POWER_SUPPLY_PROP_CHARGE_FULL, value);
 #endif
-				/* To get SOC value (NOT raw SOC), need to reset value */
-				value.intval = 0;
-				psy_do_property(battery->pdata->fuelgauge_name, get,
-						POWER_SUPPLY_PROP_CAPACITY, value);
-				battery->capacity = value.intval;
-			}
-			break;
-		default:
-			break;
+			/* To get SOC value (NOT raw SOC), need to reset value */
+			value.intval = 0;
+			psy_do_property(battery->pdata->fuelgauge_name, get,
+					POWER_SUPPLY_PROP_CAPACITY, value);
+			battery->capacity = value.intval;
+		}
+		break;
+	default:
+		break;
 	}
 	battery->status = status;
 }
@@ -1104,6 +1104,7 @@ static void sec_bat_swelling_check(struct sec_battery_info *battery, int tempera
 
 	if (!battery->voltage_now)
 		return;
+
 	if (battery->swelling_mode) {
 		if (temperature <= battery->swelling_temp_low_recovery)
 			swelling_rechg_voltage = battery->pdata->swelling_low_rechg_voltage;
@@ -1239,7 +1240,7 @@ static bool sec_bat_temperature_check(
 	} else if ((temp_value <= battery->temp_high_recovery) &&
 				(temp_value >= battery->temp_low_recovery)) {
 		if (battery->health == POWER_SUPPLY_HEALTH_OVERHEAT ||
-			battery->health == POWER_SUPPLY_HEALTH_OVERHEATLIMIT ||
+		    battery->health == POWER_SUPPLY_HEALTH_OVERHEATLIMIT ||
 		    battery->health == POWER_SUPPLY_HEALTH_COLD) {
 			if (battery->temp_recover_cnt <
 			    battery->pdata->temp_check_count) {
@@ -1457,9 +1458,10 @@ static void sec_bat_self_discharging_control(struct sec_battery_info *battery, b
 			battery->force_discharging = true;
 		else
 			battery->force_discharging = false;
+			
 		psy_do_property(battery->pdata->charger_name, set,
 			POWER_SUPPLY_PROP_RESISTANCE, value);
-		
+
 		pr_info("%s: SELF_DISCHARGING Set to %s\n", __func__,
 			value.intval ? "Enabled" : "Disabled");
 		break;
@@ -1499,6 +1501,7 @@ static void sec_bat_chg_temperature_check(
 {
 	if (battery->skip_chg_temp_check)
 		return;
+
 	if (battery->siop_level >= 100 &&
 			((battery->cable_type == POWER_SUPPLY_TYPE_HV_MAINS) ||
 			 (battery->cable_type == POWER_SUPPLY_TYPE_HV_ERR))) {
@@ -1801,6 +1804,7 @@ static bool sec_bat_time_management(
 					battery->charging_passed_time);
 		}
 	}
+
 	switch (battery->status) {
 	case POWER_SUPPLY_STATUS_FULL:
 		if (battery->is_recharging && (charging_time >
@@ -2072,26 +2076,7 @@ static void sec_bat_do_fullcharged(
 	sec_bat_set_charging_status(battery,
 			POWER_SUPPLY_STATUS_FULL);
 
-#if defined(CONFIG_AFC_CHARGER_MODE) || defined(CONFIG_PREVENT_SOC_JUMP)
-	if (battery->charging_mode == SEC_BATTERY_CHARGING_1ST &&
-		battery->pdata->full_check_type_2nd != SEC_BATTERY_FULLCHARGED_NONE) {
-		battery->charging_mode = SEC_BATTERY_CHARGING_2ND;
-		battery->charging_fullcharged_time =
-			battery->charging_passed_time;
-		sec_bat_set_charge(battery, true);
-	} else if (battery->capacity == 100) {
-		battery->charging_mode = SEC_BATTERY_CHARGING_NONE;
-		battery->is_recharging = false;
-		sec_bat_set_charge(battery, false);
-
-		value.intval = POWER_SUPPLY_STATUS_FULL;
-		psy_do_property(battery->pdata->fuelgauge_name, set,
-			POWER_SUPPLY_PROP_STATUS, value);
-	} else {
-		battery->full_check_cnt = battery->pdata->full_check_count; 
-	}
-#else	
-	if (battery->charging_mode == SEC_BATTERY_CHARGING_1ST &&
+	  if (battery->charging_mode == SEC_BATTERY_CHARGING_1ST &&
 		battery->pdata->full_check_type_2nd != SEC_BATTERY_FULLCHARGED_NONE) {
 		battery->charging_mode = SEC_BATTERY_CHARGING_2ND;
 		battery->charging_fullcharged_time =
@@ -2106,7 +2091,6 @@ static void sec_bat_do_fullcharged(
 		psy_do_property(battery->pdata->fuelgauge_name, set,
 			POWER_SUPPLY_PROP_STATUS, value);
 	}
-#endif
 
 #if !defined(CONFIG_DISABLE_SAVE_CAPACITY_MAX)
 #if defined(CONFIG_PREVENT_SOC_JUMP)
@@ -2979,7 +2963,10 @@ static void sec_bat_cable_work(struct work_struct *work)
 				battery->charging_mode =
 					SEC_BATTERY_CHARGING_2ND;
 
-			if (battery->status == POWER_SUPPLY_STATUS_FULL)
+			if (((battery->cable_type == POWER_SUPPLY_TYPE_HV_MAINS) ||
+				(battery->cable_type == POWER_SUPPLY_TYPE_HV_PREPARE_MAINS) ||
+				(battery->cable_type == POWER_SUPPLY_TYPE_HV_ERR)) &&
+				(battery->status == POWER_SUPPLY_STATUS_FULL))
 				sec_bat_set_charging_status(battery,
 						POWER_SUPPLY_STATUS_FULL);
 			else
@@ -3224,10 +3211,14 @@ ssize_t sec_bat_show_attrs(struct device *dev,
 	case FG_RESET_CAP:
 		break;
 	case FG_ASOC:
+#if defined(CONFIG_INBATTERY)
 		psy_do_property(battery->pdata->fuelgauge_name, get,
 				POWER_SUPPLY_PROP_ENERGY_FULL, value);
+#else
+		value.intval = -1;
+#endif
 		i += scnprintf(buf + i, PAGE_SIZE - i, "%d\n",
-				value.intval);
+			       value.intval);
 		break;
 	case FG_CAPACITY:
 	{
@@ -3479,6 +3470,7 @@ ssize_t sec_bat_show_attrs(struct device *dev,
 		i += scnprintf(buf + i, PAGE_SIZE - i, "%d\n",
 			(battery->cable_type == POWER_SUPPLY_TYPE_HMT_CHARGE) ? 1 : 0);
 		break;
+
 	default:
 		i = -EINVAL;
 	}
@@ -3696,8 +3688,7 @@ ssize_t sec_bat_store_attrs(
 		break;
 	case STORE_MODE:
 		if (sscanf(buf, "%d\n", &x) == 1) {
-		        if (x)
-			        battery->store_mode = true;
+			battery->store_mode = x ? true : false;
 			ret = count;
 #if !defined(CONFIG_SEC_FACTORY)
 			if (battery->store_mode) {
@@ -4035,6 +4026,7 @@ ssize_t sec_bat_store_attrs(
 			ret = count;
 		}
 		break;
+
 	default:
 		ret = -EINVAL;
 	}
@@ -4325,7 +4317,7 @@ static int sec_bat_get_property(struct power_supply *psy,
 		}
 #else
 #if defined(CONFIG_AFC_CHARGER_MODE) || defined(CONFIG_PREVENT_SOC_JUMP)
-		val->intval = battery->capacity;
+			val->intval = battery->capacity;
 #else
 		/* In full-charged status, SOC is always 100% */
 		if (battery->status == POWER_SUPPLY_STATUS_FULL)
@@ -4524,6 +4516,8 @@ static int sec_ps_set_property(struct power_supply *psy,
 			queue_delayed_work_on(0, battery->monitor_wqueue, &battery->monitor_work, 0);
 		} else {
 			battery->ps_status = false;
+			battery->ps_enable = false;
+			battery->ps_changed = false;
 			dev_info(battery->dev,
 				"%s: power sharing cable plugout (%d)\n", __func__, battery->ps_status);
 			wake_lock(&battery->monitor_wake_lock);
@@ -5354,7 +5348,6 @@ static int sec_bat_parse_dt(struct device *dev,
 		pr_info("%s : Force Discharging recov is Empty", __func__);
 
 	if (!pdata->self_discharging_type) {
-
 		ret = of_property_read_u32(np, "battery,discharging_adc_min",
 					   (unsigned int *)&pdata->discharging_adc_min);
 		pr_info("%s : battery,discharging_adc_min %d \n", __func__,pdata->discharging_adc_min);
@@ -5566,6 +5559,7 @@ static int sec_battery_probe(struct platform_device *pdev)
 	battery->dev = &pdev->dev;
 
 	mutex_init(&battery->adclock);
+
 	dev_dbg(battery->dev, "%s: ADC init\n", __func__);
 
 	battery->pdata->temp_highlimit_threshold_event = TEMP_HIGHLIMIT_DEFAULT;
@@ -5915,6 +5909,7 @@ static int sec_battery_probe(struct platform_device *pdev)
 				vbus_handle_notification,
 				VBUS_NOTIFY_DEV_CHARGER);
 #endif
+
 #if defined(CONFIG_AFC_CHARGER_MODE)
 	value.intval = 1;
 	psy_do_property(battery->pdata->charger_name, set,

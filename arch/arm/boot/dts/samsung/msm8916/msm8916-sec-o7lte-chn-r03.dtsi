@@ -214,7 +214,7 @@
 			sm5703_fled {
 				compatible = "siliconmitus,sm5703-fled";
 				enable = <1 1>;
-				flash_current = <1200>;
+				flash_current = <1050>;
 				movie_current = <170>;
 				sm5703,led1-gpio = <&msm_gpio 36 0x00>;
 				sm5703,led2-gpio = <&msm_gpio 34 0x00>;

@@ -326,7 +326,6 @@ static struct otg_notify sec_otg_notify = {
 	.set_host = sec_set_host,
 	.vbus_detect_gpio = -1,
 	.is_wakelock = 1,
-	.disable_control = 1,
 	.set_battcall = set_online,
 };
 

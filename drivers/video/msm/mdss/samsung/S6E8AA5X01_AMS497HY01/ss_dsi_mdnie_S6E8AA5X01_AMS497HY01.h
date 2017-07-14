@@ -1175,23 +1175,23 @@ static char DSI0_UI_STANDARD_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x00, //ascr_Cr
-	0xf9, //ascr_Rr
-	0xef, //ascr_Cg
-	0x00, //ascr_Rg
-	0xe4, //ascr_Cb
+	0xfb, //ascr_Rr
+	0xed, //ascr_Cg
+	0x0b, //ascr_Rg
+	0xe6, //ascr_Cb
 	0x00, //ascr_Rb
 	0xff, //ascr_Mr
 	0x00, //ascr_Gr
-	0x00, //ascr_Mg
-	0xe4, //ascr_Gg
-	0xe4, //ascr_Mb
+	0x0a, //ascr_Mg
+	0xe1, //ascr_Gg
+	0xe8, //ascr_Mb
 	0x00, //ascr_Gb
-	0xf3, //ascr_Yr
-	0x00, //ascr_Br
-	0xee, //ascr_Yg
+	0xee, //ascr_Yr
+	0x04, //ascr_Br
+	0xef, //ascr_Yg
 	0x00, //ascr_Bg
-	0x18, //ascr_Yb
-	0xed, //ascr_Bb
+	0x19, //ascr_Yb
+	0xef, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf7, //ascr_Wg
@@ -1317,22 +1317,22 @@ static char DSI0_UI_NATURAL_MDNIE_2[] ={
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x8c, //ascr_Cr
-	0xd5, //ascr_Rr
-	0xf4, //ascr_Cg
-	0x16, //ascr_Rg
-	0xec, //ascr_Cb
-	0x15, //ascr_Rb
-	0xde, //ascr_Mr
-	0x64, //ascr_Gr
-	0x1a, //ascr_Mg
-	0xef, //ascr_Gg
-	0xde, //ascr_Mb
-	0x28, //ascr_Gb
-	0xf3, //ascr_Yr
-	0x1c, //ascr_Br
+	0xd2, //ascr_Rr
+	0xf2, //ascr_Cg
+	0x24, //ascr_Rg
+	0xe9, //ascr_Cb
+	0x16, //ascr_Rb
+	0xd8, //ascr_Mr
+	0x68, //ascr_Gr
+	0x30, //ascr_Mg
+	0xec, //ascr_Gg
+	0xe6, //ascr_Mb
+	0x20, //ascr_Gb
+	0xf0, //ascr_Yr
+	0x12, //ascr_Br
 	0xef, //ascr_Yg
-	0x11, //ascr_Bg
-	0x50, //ascr_Yb
+	0x12, //ascr_Bg
+	0x48, //ascr_Yb
 	0xe5, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
@@ -2029,23 +2029,23 @@ static char DSI0_VIDEO_STANDARD_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x00, //ascr_Cr
-	0xf9, //ascr_Rr
-	0xef, //ascr_Cg
-	0x00, //ascr_Rg
-	0xe4, //ascr_Cb
+	0xfb, //ascr_Rr
+	0xed, //ascr_Cg
+	0x0b, //ascr_Rg
+	0xe6, //ascr_Cb
 	0x00, //ascr_Rb
 	0xff, //ascr_Mr
 	0x00, //ascr_Gr
-	0x00, //ascr_Mg
-	0xe4, //ascr_Gg
-	0xe4, //ascr_Mb
+	0x0a, //ascr_Mg
+	0xe1, //ascr_Gg
+	0xe8, //ascr_Mb
 	0x00, //ascr_Gb
-	0xf3, //ascr_Yr
-	0x00, //ascr_Br
-	0xee, //ascr_Yg
+	0xee, //ascr_Yr
+	0x04, //ascr_Br
+	0xef, //ascr_Yg
 	0x00, //ascr_Bg
-	0x18, //ascr_Yb
-	0xed, //ascr_Bb
+	0x19, //ascr_Yb
+	0xef, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf7, //ascr_Wg
@@ -2171,22 +2171,22 @@ static char DSI0_VIDEO_NATURAL_MDNIE_2[] ={
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x8c, //ascr_Cr
-	0xd5, //ascr_Rr
-	0xf4, //ascr_Cg
-	0x16, //ascr_Rg
-	0xec, //ascr_Cb
-	0x15, //ascr_Rb
-	0xde, //ascr_Mr
-	0x64, //ascr_Gr
-	0x1a, //ascr_Mg
-	0xef, //ascr_Gg
-	0xde, //ascr_Mb
-	0x28, //ascr_Gb
-	0xf3, //ascr_Yr
-	0x1c, //ascr_Br
+	0xd2, //ascr_Rr
+	0xf2, //ascr_Cg
+	0x24, //ascr_Rg
+	0xe9, //ascr_Cb
+	0x16, //ascr_Rb
+	0xd8, //ascr_Mr
+	0x68, //ascr_Gr
+	0x30, //ascr_Mg
+	0xec, //ascr_Gg
+	0xe6, //ascr_Mb
+	0x20, //ascr_Gb
+	0xf0, //ascr_Yr
+	0x12, //ascr_Br
 	0xef, //ascr_Yg
-	0x11, //ascr_Bg
-	0x50, //ascr_Yb
+	0x12, //ascr_Bg
+	0x48, //ascr_Yb
 	0xe5, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
@@ -3589,23 +3589,23 @@ static char DSI0_CAMERA_STANDARD_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x00, //ascr_Cr
-	0xf9, //ascr_Rr
-	0xef, //ascr_Cg
-	0x00, //ascr_Rg
-	0xe4, //ascr_Cb
+	0xfb, //ascr_Rr
+	0xed, //ascr_Cg
+	0x0b, //ascr_Rg
+	0xe6, //ascr_Cb
 	0x00, //ascr_Rb
 	0xff, //ascr_Mr
 	0x00, //ascr_Gr
-	0x00, //ascr_Mg
-	0xe4, //ascr_Gg
-	0xe4, //ascr_Mb
+	0x0a, //ascr_Mg
+	0xe1, //ascr_Gg
+	0xe8, //ascr_Mb
 	0x00, //ascr_Gb
-	0xf3, //ascr_Yr
-	0x00, //ascr_Br
-	0xee, //ascr_Yg
+	0xee, //ascr_Yr
+	0x04, //ascr_Br
+	0xef, //ascr_Yg
 	0x00, //ascr_Bg
-	0x18, //ascr_Yb
-	0xed, //ascr_Bb
+	0x19, //ascr_Yb
+	0xef, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf7, //ascr_Wg
@@ -3732,22 +3732,22 @@ static char DSI0_CAMERA_NATURAL_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x8c, //ascr_Cr
-	0xd5, //ascr_Rr
-	0xf4, //ascr_Cg
-	0x16, //ascr_Rg
-	0xec, //ascr_Cb
-	0x15, //ascr_Rb
-	0xde, //ascr_Mr
-	0x64, //ascr_Gr
-	0x1a, //ascr_Mg
-	0xef, //ascr_Gg
-	0xde, //ascr_Mb
-	0x28, //ascr_Gb
-	0xf3, //ascr_Yr
-	0x1c, //ascr_Br
+	0xd2, //ascr_Rr
+	0xf2, //ascr_Cg
+	0x24, //ascr_Rg
+	0xe9, //ascr_Cb
+	0x16, //ascr_Rb
+	0xd8, //ascr_Mr
+	0x68, //ascr_Gr
+	0x30, //ascr_Mg
+	0xec, //ascr_Gg
+	0xe6, //ascr_Mb
+	0x20, //ascr_Gb
+	0xf0, //ascr_Yr
+	0x12, //ascr_Br
 	0xef, //ascr_Yg
-	0x11, //ascr_Bg
-	0x50, //ascr_Yb
+	0x12, //ascr_Bg
+	0x48, //ascr_Yb
 	0xe5, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
@@ -4006,8 +4006,8 @@ static char DSI0_CAMERA_AUTO_MDNIE_2[] = {
 	0x30,
 	0xc3,
 	0xff, //ascr_skin_Rr
-	0x08, //ascr_skin_Rg
-	0x18, //ascr_skin_Rb
+	0x38, //ascr_skin_Rg
+	0x48, //ascr_skin_Rb
 	0xff, //ascr_skin_Yr
 	0xf0, //ascr_skin_Yg
 	0x00, //ascr_skin_Yb
@@ -4304,23 +4304,23 @@ static char DSI0_GALLERY_STANDARD_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x00, //ascr_Cr
-	0xf9, //ascr_Rr
-	0xef, //ascr_Cg
-	0x00, //ascr_Rg
-	0xe4, //ascr_Cb
+	0xfb, //ascr_Rr
+	0xed, //ascr_Cg
+	0x0b, //ascr_Rg
+	0xe6, //ascr_Cb
 	0x00, //ascr_Rb
 	0xff, //ascr_Mr
 	0x00, //ascr_Gr
-	0x00, //ascr_Mg
-	0xe4, //ascr_Gg
-	0xe4, //ascr_Mb
+	0x0a, //ascr_Mg
+	0xe1, //ascr_Gg
+	0xe8, //ascr_Mb
 	0x00, //ascr_Gb
-	0xf3, //ascr_Yr
-	0x00, //ascr_Br
-	0xee, //ascr_Yg
+	0xee, //ascr_Yr
+	0x04, //ascr_Br
+	0xef, //ascr_Yg
 	0x00, //ascr_Bg
-	0x18, //ascr_Yb
-	0xed, //ascr_Bb
+	0x19, //ascr_Yb
+	0xef, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf7, //ascr_Wg
@@ -4446,22 +4446,22 @@ static char DSI0_GALLERY_NATURAL_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x8c, //ascr_Cr
-	0xd5, //ascr_Rr
-	0xf4, //ascr_Cg
-	0x16, //ascr_Rg
-	0xec, //ascr_Cb
-	0x15, //ascr_Rb
-	0xde, //ascr_Mr
-	0x64, //ascr_Gr
-	0x1a, //ascr_Mg
-	0xef, //ascr_Gg
-	0xde, //ascr_Mb
-	0x28, //ascr_Gb
-	0xf3, //ascr_Yr
-	0x1c, //ascr_Br
+	0xd2, //ascr_Rr
+	0xf2, //ascr_Cg
+	0x24, //ascr_Rg
+	0xe9, //ascr_Cb
+	0x16, //ascr_Rb
+	0xd8, //ascr_Mr
+	0x68, //ascr_Gr
+	0x30, //ascr_Mg
+	0xec, //ascr_Gg
+	0xe6, //ascr_Mb
+	0x20, //ascr_Gb
+	0xf0, //ascr_Yr
+	0x12, //ascr_Br
 	0xef, //ascr_Yg
-	0x11, //ascr_Bg
-	0x50, //ascr_Yb
+	0x12, //ascr_Bg
+	0x48, //ascr_Yb
 	0xe5, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
@@ -4718,8 +4718,8 @@ static char DSI0_GALLERY_AUTO_MDNIE_2[] = {
 	0x30,
 	0xc3,
 	0xff, //ascr_skin_Rr
-	0x08, //ascr_skin_Rg
-	0x18, //ascr_skin_Rb
+	0x38, //ascr_skin_Rg
+	0x48, //ascr_skin_Rb
 	0xff, //ascr_skin_Yr
 	0xf0, //ascr_skin_Yg
 	0x00, //ascr_skin_Yb
@@ -5016,23 +5016,23 @@ static char DSI0_VT_STANDARD_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x00, //ascr_Cr
-	0xf9, //ascr_Rr
-	0xef, //ascr_Cg
-	0x00, //ascr_Rg
-	0xe4, //ascr_Cb
+	0xfb, //ascr_Rr
+	0xed, //ascr_Cg
+	0x0b, //ascr_Rg
+	0xe6, //ascr_Cb
 	0x00, //ascr_Rb
 	0xff, //ascr_Mr
 	0x00, //ascr_Gr
-	0x00, //ascr_Mg
-	0xe4, //ascr_Gg
-	0xe4, //ascr_Mb
+	0x0a, //ascr_Mg
+	0xe1, //ascr_Gg
+	0xe8, //ascr_Mb
 	0x00, //ascr_Gb
-	0xf3, //ascr_Yr
-	0x00, //ascr_Br
-	0xee, //ascr_Yg
+	0xee, //ascr_Yr
+	0x04, //ascr_Br
+	0xef, //ascr_Yg
 	0x00, //ascr_Bg
-	0x18, //ascr_Yb
-	0xed, //ascr_Bb
+	0x19, //ascr_Yb
+	0xef, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf7, //ascr_Wg
@@ -5158,22 +5158,22 @@ static char DSI0_VT_NATURAL_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x8c, //ascr_Cr
-	0xd5, //ascr_Rr
-	0xf4, //ascr_Cg
-	0x16, //ascr_Rg
-	0xec, //ascr_Cb
-	0x15, //ascr_Rb
-	0xde, //ascr_Mr
-	0x64, //ascr_Gr
-	0x1a, //ascr_Mg
-	0xef, //ascr_Gg
-	0xde, //ascr_Mb
-	0x28, //ascr_Gb
-	0xf3, //ascr_Yr
-	0x1c, //ascr_Br
+	0xd2, //ascr_Rr
+	0xf2, //ascr_Cg
+	0x24, //ascr_Rg
+	0xe9, //ascr_Cb
+	0x16, //ascr_Rb
+	0xd8, //ascr_Mr
+	0x68, //ascr_Gr
+	0x30, //ascr_Mg
+	0xec, //ascr_Gg
+	0xe6, //ascr_Mb
+	0x20, //ascr_Gb
+	0xf0, //ascr_Yr
+	0x12, //ascr_Br
 	0xef, //ascr_Yg
-	0x11, //ascr_Bg
-	0x50, //ascr_Yb
+	0x12, //ascr_Bg
+	0x48, //ascr_Yb
 	0xe5, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
@@ -5726,23 +5726,23 @@ static char DSI0_BROWSER_STANDARD_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x00, //ascr_Cr
-	0xf9, //ascr_Rr
-	0xef, //ascr_Cg
-	0x00, //ascr_Rg
-	0xe4, //ascr_Cb
+	0xfb, //ascr_Rr
+	0xed, //ascr_Cg
+	0x0b, //ascr_Rg
+	0xe6, //ascr_Cb
 	0x00, //ascr_Rb
 	0xff, //ascr_Mr
 	0x00, //ascr_Gr
-	0x00, //ascr_Mg
-	0xe4, //ascr_Gg
-	0xe4, //ascr_Mb
+	0x0a, //ascr_Mg
+	0xe1, //ascr_Gg
+	0xe8, //ascr_Mb
 	0x00, //ascr_Gb
-	0xf3, //ascr_Yr
-	0x00, //ascr_Br
-	0xee, //ascr_Yg
+	0xee, //ascr_Yr
+	0x04, //ascr_Br
+	0xef, //ascr_Yg
 	0x00, //ascr_Bg
-	0x18, //ascr_Yb
-	0xed, //ascr_Bb
+	0x19, //ascr_Yb
+	0xef, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf7, //ascr_Wg
@@ -5868,22 +5868,22 @@ static char DSI0_BROWSER_NATURAL_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x8c, //ascr_Cr
-	0xd5, //ascr_Rr
-	0xf4, //ascr_Cg
-	0x16, //ascr_Rg
-	0xec, //ascr_Cb
-	0x15, //ascr_Rb
-	0xde, //ascr_Mr
-	0x64, //ascr_Gr
-	0x1a, //ascr_Mg
-	0xef, //ascr_Gg
-	0xde, //ascr_Mb
-	0x28, //ascr_Gb
-	0xf3, //ascr_Yr
-	0x1c, //ascr_Br
+	0xd2, //ascr_Rr
+	0xf2, //ascr_Cg
+	0x24, //ascr_Rg
+	0xe9, //ascr_Cb
+	0x16, //ascr_Rb
+	0xd8, //ascr_Mr
+	0x68, //ascr_Gr
+	0x30, //ascr_Mg
+	0xec, //ascr_Gg
+	0xe6, //ascr_Mb
+	0x20, //ascr_Gb
+	0xf0, //ascr_Yr
+	0x12, //ascr_Br
 	0xef, //ascr_Yg
-	0x11, //ascr_Bg
-	0x50, //ascr_Yb
+	0x12, //ascr_Bg
+	0x48, //ascr_Yb
 	0xe5, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
@@ -6438,23 +6438,23 @@ static char DSI0_EBOOK_STANDARD_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x00, //ascr_Cr
-	0xf9, //ascr_Rr
-	0xef, //ascr_Cg
-	0x00, //ascr_Rg
-	0xe4, //ascr_Cb
+	0xfb, //ascr_Rr
+	0xed, //ascr_Cg
+	0x0b, //ascr_Rg
+	0xe6, //ascr_Cb
 	0x00, //ascr_Rb
 	0xff, //ascr_Mr
 	0x00, //ascr_Gr
-	0x00, //ascr_Mg
-	0xe4, //ascr_Gg
-	0xe4, //ascr_Mb
+	0x0a, //ascr_Mg
+	0xe1, //ascr_Gg
+	0xe8, //ascr_Mb
 	0x00, //ascr_Gb
-	0xf3, //ascr_Yr
-	0x00, //ascr_Br
-	0xee, //ascr_Yg
+	0xee, //ascr_Yr
+	0x04, //ascr_Br
+	0xef, //ascr_Yg
 	0x00, //ascr_Bg
-	0x18, //ascr_Yb
-	0xed, //ascr_Bb
+	0x19, //ascr_Yb
+	0xef, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf7, //ascr_Wg
@@ -6580,22 +6580,22 @@ static char DSI0_EBOOK_NATURAL_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x8c, //ascr_Cr
-	0xd5, //ascr_Rr
-	0xf4, //ascr_Cg
-	0x16, //ascr_Rg
-	0xec, //ascr_Cb
-	0x15, //ascr_Rb
-	0xde, //ascr_Mr
-	0x64, //ascr_Gr
-	0x1a, //ascr_Mg
-	0xef, //ascr_Gg
-	0xde, //ascr_Mb
-	0x28, //ascr_Gb
-	0xf3, //ascr_Yr
-	0x1c, //ascr_Br
+	0xd2, //ascr_Rr
+	0xf2, //ascr_Cg
+	0x24, //ascr_Rg
+	0xe9, //ascr_Cb
+	0x16, //ascr_Rb
+	0xd8, //ascr_Mr
+	0x68, //ascr_Gr
+	0x30, //ascr_Mg
+	0xec, //ascr_Gg
+	0xe6, //ascr_Mb
+	0x20, //ascr_Gb
+	0xf0, //ascr_Yr
+	0x12, //ascr_Br
 	0xef, //ascr_Yg
-	0x11, //ascr_Bg
-	0x50, //ascr_Yb
+	0x12, //ascr_Bg
+	0x48, //ascr_Yb
 	0xe5, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
@@ -7463,8 +7463,8 @@ static char DSI0_CURTAIN_2[] = {
 static struct dsi_cmd_desc DSI0_BYPASS_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BYPASS_MDNIE_2)}, DSI0_BYPASS_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BYPASS_MDNIE_1)}, DSI0_BYPASS_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BYPASS_MDNIE_2)}, DSI0_BYPASS_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7472,8 +7472,8 @@ static struct dsi_cmd_desc DSI0_BYPASS_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_NEGATIVE_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_NEGATIVE_MDNIE_2)}, DSI0_NEGATIVE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_NEGATIVE_MDNIE_1)}, DSI0_NEGATIVE_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_NEGATIVE_MDNIE_2)}, DSI0_NEGATIVE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7481,8 +7481,8 @@ static struct dsi_cmd_desc DSI0_NEGATIVE_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_GRAYSCALE_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GRAYSCALE_MDNIE_2)}, DSI0_GRAYSCALE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GRAYSCALE_MDNIE_1)}, DSI0_GRAYSCALE_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GRAYSCALE_MDNIE_2)}, DSI0_GRAYSCALE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7490,8 +7490,8 @@ static struct dsi_cmd_desc DSI0_GRAYSCALE_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_GRAYSCALE_NEGATIVE_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GRAYSCALE_NEGATIVE_MDNIE_2)}, DSI0_GRAYSCALE_NEGATIVE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GRAYSCALE_NEGATIVE_MDNIE_1)}, DSI0_GRAYSCALE_NEGATIVE_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GRAYSCALE_NEGATIVE_MDNIE_2)}, DSI0_GRAYSCALE_NEGATIVE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7499,8 +7499,8 @@ static struct dsi_cmd_desc DSI0_GRAYSCALE_NEGATIVE_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_COLOR_BLIND_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_COLOR_BLIND_MDNIE_2)}, DSI0_COLOR_BLIND_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_COLOR_BLIND_MDNIE_1)}, DSI0_COLOR_BLIND_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_COLOR_BLIND_MDNIE_2)}, DSI0_COLOR_BLIND_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7508,8 +7508,8 @@ static struct dsi_cmd_desc DSI0_COLOR_BLIND_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_HBM_CE_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_HBM_CE_MDNIE_2)}, DSI0_HBM_CE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_HBM_CE_MDNIE_1)}, DSI0_HBM_CE_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_HBM_CE_MDNIE_2)}, DSI0_HBM_CE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7517,8 +7517,8 @@ static struct dsi_cmd_desc DSI0_HBM_CE_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_HBM_CE_TEXT_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_HBM_CE_TEXT_MDNIE_2)}, DSI0_HBM_CE_TEXT_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_HBM_CE_TEXT_MDNIE_1)}, DSI0_HBM_CE_TEXT_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_HBM_CE_TEXT_MDNIE_2)}, DSI0_HBM_CE_TEXT_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7526,16 +7526,16 @@ static struct dsi_cmd_desc DSI0_HBM_CE_TEXT_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_RGB_SENSOR_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_RGB_SENSOR_MDNIE_2)}, DSI0_RGB_SENSOR_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_RGB_SENSOR_MDNIE_1)}, DSI0_RGB_SENSOR_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_RGB_SENSOR_MDNIE_2)}, DSI0_RGB_SENSOR_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
 
 static struct dsi_cmd_desc DSI0_CURTAIN[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CURTAIN_2)}, DSI0_CURTAIN_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CURTAIN_1)}, DSI0_CURTAIN_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CURTAIN_2)}, DSI0_CURTAIN_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
 
@@ -7544,8 +7544,8 @@ static struct dsi_cmd_desc DSI0_CURTAIN[] = {
 static struct dsi_cmd_desc DSI0_UI_DYNAMIC_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_UI_DYNAMIC_MDNIE_2)}, DSI0_UI_DYNAMIC_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_UI_DYNAMIC_MDNIE_1)}, DSI0_UI_DYNAMIC_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_UI_DYNAMIC_MDNIE_2)}, DSI0_UI_DYNAMIC_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7553,8 +7553,8 @@ static struct dsi_cmd_desc DSI0_UI_DYNAMIC_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_UI_STANDARD_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_UI_STANDARD_MDNIE_2)}, DSI0_UI_STANDARD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_UI_STANDARD_MDNIE_1)}, DSI0_UI_STANDARD_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_UI_STANDARD_MDNIE_2)}, DSI0_UI_STANDARD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7562,8 +7562,8 @@ static struct dsi_cmd_desc DSI0_UI_STANDARD_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_UI_NATURAL_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_UI_NATURAL_MDNIE_2)}, DSI0_UI_NATURAL_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_UI_NATURAL_MDNIE_1)}, DSI0_UI_NATURAL_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_UI_NATURAL_MDNIE_2)}, DSI0_UI_NATURAL_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7571,8 +7571,8 @@ static struct dsi_cmd_desc DSI0_UI_NATURAL_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_UI_MOVIE_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_UI_MOVIE_MDNIE_2)}, DSI0_UI_MOVIE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_UI_MOVIE_MDNIE_1)}, DSI0_UI_MOVIE_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_UI_MOVIE_MDNIE_2)}, DSI0_UI_MOVIE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7580,8 +7580,8 @@ static struct dsi_cmd_desc DSI0_UI_MOVIE_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_UI_AUTO_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_UI_AUTO_MDNIE_2)}, DSI0_UI_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_UI_AUTO_MDNIE_1)}, DSI0_UI_AUTO_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_UI_AUTO_MDNIE_2)}, DSI0_UI_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7589,8 +7589,8 @@ static struct dsi_cmd_desc DSI0_UI_AUTO_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_VIDEO_OUTDOOR_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_OUTDOOR_MDNIE_2)}, DSI0_VIDEO_OUTDOOR_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_OUTDOOR_MDNIE_1)}, DSI0_VIDEO_OUTDOOR_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_OUTDOOR_MDNIE_2)}, DSI0_VIDEO_OUTDOOR_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7598,8 +7598,8 @@ static struct dsi_cmd_desc DSI0_VIDEO_OUTDOOR_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_VIDEO_DYNAMIC_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_DYNAMIC_MDNIE_2)}, DSI0_VIDEO_DYNAMIC_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_DYNAMIC_MDNIE_1)}, DSI0_VIDEO_DYNAMIC_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_DYNAMIC_MDNIE_2)}, DSI0_VIDEO_DYNAMIC_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7607,8 +7607,8 @@ static struct dsi_cmd_desc DSI0_VIDEO_DYNAMIC_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_VIDEO_STANDARD_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_STANDARD_MDNIE_2)}, DSI0_VIDEO_STANDARD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_STANDARD_MDNIE_1)}, DSI0_VIDEO_STANDARD_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_STANDARD_MDNIE_2)}, DSI0_VIDEO_STANDARD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7616,8 +7616,8 @@ static struct dsi_cmd_desc DSI0_VIDEO_STANDARD_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_VIDEO_NATURAL_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_NATURAL_MDNIE_2)}, DSI0_VIDEO_NATURAL_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_NATURAL_MDNIE_1)}, DSI0_VIDEO_NATURAL_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_NATURAL_MDNIE_2)}, DSI0_VIDEO_NATURAL_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7625,8 +7625,8 @@ static struct dsi_cmd_desc DSI0_VIDEO_NATURAL_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_VIDEO_MOVIE_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_MOVIE_MDNIE_2)}, DSI0_VIDEO_MOVIE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_MOVIE_MDNIE_1)}, DSI0_VIDEO_MOVIE_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_MOVIE_MDNIE_2)}, DSI0_VIDEO_MOVIE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7634,8 +7634,8 @@ static struct dsi_cmd_desc DSI0_VIDEO_MOVIE_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_VIDEO_AUTO_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_AUTO_MDNIE_2)}, DSI0_VIDEO_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_AUTO_MDNIE_1)}, DSI0_VIDEO_AUTO_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_AUTO_MDNIE_2)}, DSI0_VIDEO_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7643,8 +7643,8 @@ static struct dsi_cmd_desc DSI0_VIDEO_AUTO_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_VIDEO_WARM_OUTDOOR_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_WARM_OUTDOOR_MDNIE_2)}, DSI0_VIDEO_WARM_OUTDOOR_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_WARM_OUTDOOR_MDNIE_1)}, DSI0_VIDEO_WARM_OUTDOOR_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_WARM_OUTDOOR_MDNIE_2)}, DSI0_VIDEO_WARM_OUTDOOR_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7652,8 +7652,8 @@ static struct dsi_cmd_desc DSI0_VIDEO_WARM_OUTDOOR_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_VIDEO_WARM_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_WARM_MDNIE_2)}, DSI0_VIDEO_WARM_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_WARM_MDNIE_1)}, DSI0_VIDEO_WARM_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_WARM_MDNIE_2)}, DSI0_VIDEO_WARM_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7661,8 +7661,8 @@ static struct dsi_cmd_desc DSI0_VIDEO_WARM_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_VIDEO_COLD_OUTDOOR_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_COLD_OUTDOOR_MDNIE_2)}, DSI0_VIDEO_COLD_OUTDOOR_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_COLD_OUTDOOR_MDNIE_1)}, DSI0_VIDEO_COLD_OUTDOOR_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_COLD_OUTDOOR_MDNIE_2)}, DSI0_VIDEO_COLD_OUTDOOR_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7670,8 +7670,8 @@ static struct dsi_cmd_desc DSI0_VIDEO_COLD_OUTDOOR_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_VIDEO_COLD_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_COLD_MDNIE_2)}, DSI0_VIDEO_COLD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_COLD_MDNIE_1)}, DSI0_VIDEO_COLD_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VIDEO_COLD_MDNIE_2)}, DSI0_VIDEO_COLD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7679,8 +7679,8 @@ static struct dsi_cmd_desc DSI0_VIDEO_COLD_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_CAMERA_OUTDOOR_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_OUTDOOR_MDNIE_2)}, DSI0_CAMERA_OUTDOOR_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_OUTDOOR_MDNIE_1)}, DSI0_CAMERA_OUTDOOR_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_OUTDOOR_MDNIE_2)}, DSI0_CAMERA_OUTDOOR_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7688,8 +7688,8 @@ static struct dsi_cmd_desc DSI0_CAMERA_OUTDOOR_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_CAMERA_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_MDNIE_2)}, DSI0_CAMERA_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_MDNIE_1)}, DSI0_CAMERA_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_MDNIE_2)}, DSI0_CAMERA_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7697,8 +7697,8 @@ static struct dsi_cmd_desc DSI0_CAMERA_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_CAMERA_DYNAMIC_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_DYNAMIC_MDNIE_2)}, DSI0_CAMERA_DYNAMIC_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_DYNAMIC_MDNIE_1)}, DSI0_CAMERA_DYNAMIC_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_DYNAMIC_MDNIE_2)}, DSI0_CAMERA_DYNAMIC_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7706,8 +7706,8 @@ static struct dsi_cmd_desc DSI0_CAMERA_DYNAMIC_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_CAMERA_STANDARD_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_STANDARD_MDNIE_2)}, DSI0_CAMERA_STANDARD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_STANDARD_MDNIE_1)}, DSI0_CAMERA_STANDARD_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_STANDARD_MDNIE_2)}, DSI0_CAMERA_STANDARD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7715,8 +7715,8 @@ static struct dsi_cmd_desc DSI0_CAMERA_STANDARD_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_CAMERA_NATURAL_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_NATURAL_MDNIE_2)}, DSI0_CAMERA_NATURAL_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_NATURAL_MDNIE_1)}, DSI0_CAMERA_NATURAL_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_NATURAL_MDNIE_2)}, DSI0_CAMERA_NATURAL_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7724,8 +7724,8 @@ static struct dsi_cmd_desc DSI0_CAMERA_NATURAL_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_CAMERA_MOVIE_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_MOVIE_MDNIE_2)}, DSI0_CAMERA_MOVIE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_MOVIE_MDNIE_1)}, DSI0_CAMERA_MOVIE_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_MOVIE_MDNIE_2)}, DSI0_CAMERA_MOVIE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7733,8 +7733,8 @@ static struct dsi_cmd_desc DSI0_CAMERA_MOVIE_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_CAMERA_AUTO_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_AUTO_MDNIE_2)}, DSI0_CAMERA_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_AUTO_MDNIE_1)}, DSI0_CAMERA_AUTO_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_CAMERA_AUTO_MDNIE_2)}, DSI0_CAMERA_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7742,8 +7742,8 @@ static struct dsi_cmd_desc DSI0_CAMERA_AUTO_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_GALLERY_DYNAMIC_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GALLERY_DYNAMIC_MDNIE_2)}, DSI0_GALLERY_DYNAMIC_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GALLERY_DYNAMIC_MDNIE_1)}, DSI0_GALLERY_DYNAMIC_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GALLERY_DYNAMIC_MDNIE_2)}, DSI0_GALLERY_DYNAMIC_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7751,8 +7751,8 @@ static struct dsi_cmd_desc DSI0_GALLERY_DYNAMIC_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_GALLERY_STANDARD_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GALLERY_STANDARD_MDNIE_2)}, DSI0_GALLERY_STANDARD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GALLERY_STANDARD_MDNIE_1)}, DSI0_GALLERY_STANDARD_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GALLERY_STANDARD_MDNIE_2)}, DSI0_GALLERY_STANDARD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7760,8 +7760,8 @@ static struct dsi_cmd_desc DSI0_GALLERY_STANDARD_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_GALLERY_NATURAL_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GALLERY_NATURAL_MDNIE_2)}, DSI0_GALLERY_NATURAL_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GALLERY_NATURAL_MDNIE_1)}, DSI0_GALLERY_NATURAL_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GALLERY_NATURAL_MDNIE_2)}, DSI0_GALLERY_NATURAL_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7769,8 +7769,8 @@ static struct dsi_cmd_desc DSI0_GALLERY_NATURAL_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_GALLERY_MOVIE_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GALLERY_MOVIE_MDNIE_2)}, DSI0_GALLERY_MOVIE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GALLERY_MOVIE_MDNIE_1)}, DSI0_GALLERY_MOVIE_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GALLERY_MOVIE_MDNIE_2)}, DSI0_GALLERY_MOVIE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7778,8 +7778,8 @@ static struct dsi_cmd_desc DSI0_GALLERY_MOVIE_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_GALLERY_AUTO_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GALLERY_AUTO_MDNIE_2)}, DSI0_GALLERY_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GALLERY_AUTO_MDNIE_1)}, DSI0_GALLERY_AUTO_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_GALLERY_AUTO_MDNIE_2)}, DSI0_GALLERY_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7787,8 +7787,8 @@ static struct dsi_cmd_desc DSI0_GALLERY_AUTO_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_VT_DYNAMIC_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VT_DYNAMIC_MDNIE_2)}, DSI0_VT_DYNAMIC_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VT_DYNAMIC_MDNIE_1)}, DSI0_VT_DYNAMIC_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VT_DYNAMIC_MDNIE_2)}, DSI0_VT_DYNAMIC_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7796,8 +7796,8 @@ static struct dsi_cmd_desc DSI0_VT_DYNAMIC_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_VT_STANDARD_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VT_STANDARD_MDNIE_2)}, DSI0_VT_STANDARD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VT_STANDARD_MDNIE_1)}, DSI0_VT_STANDARD_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VT_STANDARD_MDNIE_2)}, DSI0_VT_STANDARD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7805,8 +7805,8 @@ static struct dsi_cmd_desc DSI0_VT_STANDARD_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_VT_NATURAL_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VT_NATURAL_MDNIE_2)}, DSI0_VT_NATURAL_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VT_NATURAL_MDNIE_1)}, DSI0_VT_NATURAL_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VT_NATURAL_MDNIE_2)}, DSI0_VT_NATURAL_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7814,8 +7814,8 @@ static struct dsi_cmd_desc DSI0_VT_NATURAL_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_VT_MOVIE_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VT_MOVIE_MDNIE_2)}, DSI0_VT_MOVIE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VT_MOVIE_MDNIE_1)}, DSI0_VT_MOVIE_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VT_MOVIE_MDNIE_2)}, DSI0_VT_MOVIE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7823,8 +7823,8 @@ static struct dsi_cmd_desc DSI0_VT_MOVIE_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_VT_AUTO_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VT_AUTO_MDNIE_2)}, DSI0_VT_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VT_AUTO_MDNIE_1)}, DSI0_VT_AUTO_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_VT_AUTO_MDNIE_2)}, DSI0_VT_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7832,8 +7832,8 @@ static struct dsi_cmd_desc DSI0_VT_AUTO_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_BROWSER_DYNAMIC_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BROWSER_DYNAMIC_MDNIE_2)}, DSI0_BROWSER_DYNAMIC_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BROWSER_DYNAMIC_MDNIE_1)}, DSI0_BROWSER_DYNAMIC_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BROWSER_DYNAMIC_MDNIE_2)}, DSI0_BROWSER_DYNAMIC_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7841,8 +7841,8 @@ static struct dsi_cmd_desc DSI0_BROWSER_DYNAMIC_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_BROWSER_STANDARD_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BROWSER_STANDARD_MDNIE_2)}, DSI0_BROWSER_STANDARD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BROWSER_STANDARD_MDNIE_1)}, DSI0_BROWSER_STANDARD_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BROWSER_STANDARD_MDNIE_2)}, DSI0_BROWSER_STANDARD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7850,8 +7850,8 @@ static struct dsi_cmd_desc DSI0_BROWSER_STANDARD_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_BROWSER_NATURAL_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BROWSER_NATURAL_MDNIE_2)}, DSI0_BROWSER_NATURAL_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BROWSER_NATURAL_MDNIE_1)}, DSI0_BROWSER_NATURAL_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BROWSER_NATURAL_MDNIE_2)}, DSI0_BROWSER_NATURAL_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7859,8 +7859,8 @@ static struct dsi_cmd_desc DSI0_BROWSER_NATURAL_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_BROWSER_MOVIE_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BROWSER_MOVIE_MDNIE_2)}, DSI0_BROWSER_MOVIE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BROWSER_MOVIE_MDNIE_1)}, DSI0_BROWSER_MOVIE_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BROWSER_MOVIE_MDNIE_2)}, DSI0_BROWSER_MOVIE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7868,8 +7868,8 @@ static struct dsi_cmd_desc DSI0_BROWSER_MOVIE_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_BROWSER_AUTO_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BROWSER_AUTO_MDNIE_2)}, DSI0_BROWSER_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BROWSER_AUTO_MDNIE_1)}, DSI0_BROWSER_AUTO_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_BROWSER_AUTO_MDNIE_2)}, DSI0_BROWSER_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7877,8 +7877,8 @@ static struct dsi_cmd_desc DSI0_BROWSER_AUTO_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_EBOOK_DYNAMIC_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EBOOK_DYNAMIC_MDNIE_2)}, DSI0_EBOOK_DYNAMIC_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EBOOK_DYNAMIC_MDNIE_1)}, DSI0_EBOOK_DYNAMIC_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EBOOK_DYNAMIC_MDNIE_2)}, DSI0_EBOOK_DYNAMIC_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7886,8 +7886,8 @@ static struct dsi_cmd_desc DSI0_EBOOK_DYNAMIC_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_EBOOK_STANDARD_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EBOOK_STANDARD_MDNIE_2)}, DSI0_EBOOK_STANDARD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EBOOK_STANDARD_MDNIE_1)}, DSI0_EBOOK_STANDARD_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EBOOK_STANDARD_MDNIE_2)}, DSI0_EBOOK_STANDARD_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7895,8 +7895,8 @@ static struct dsi_cmd_desc DSI0_EBOOK_STANDARD_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_EBOOK_NATURAL_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EBOOK_NATURAL_MDNIE_2)}, DSI0_EBOOK_NATURAL_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EBOOK_NATURAL_MDNIE_1)}, DSI0_EBOOK_NATURAL_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EBOOK_NATURAL_MDNIE_2)}, DSI0_EBOOK_NATURAL_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7904,8 +7904,8 @@ static struct dsi_cmd_desc DSI0_EBOOK_NATURAL_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_EBOOK_MOVIE_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EBOOK_MOVIE_MDNIE_2)}, DSI0_EBOOK_MOVIE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EBOOK_MOVIE_MDNIE_1)}, DSI0_EBOOK_MOVIE_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EBOOK_MOVIE_MDNIE_2)}, DSI0_EBOOK_MOVIE_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7913,8 +7913,8 @@ static struct dsi_cmd_desc DSI0_EBOOK_MOVIE_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_EBOOK_AUTO_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EBOOK_AUTO_MDNIE_2)}, DSI0_EBOOK_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EBOOK_AUTO_MDNIE_1)}, DSI0_EBOOK_AUTO_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EBOOK_AUTO_MDNIE_2)}, DSI0_EBOOK_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };
@@ -7922,8 +7922,8 @@ static struct dsi_cmd_desc DSI0_EBOOK_AUTO_MDNIE[] = {
 static struct dsi_cmd_desc DSI0_EMAIL_AUTO_MDNIE[] = {
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_1_key_on)}, level_1_key_on},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(level_2_key_on)}, level_2_key_on},
-	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EMAIL_AUTO_MDNIE_2)}, DSI0_EMAIL_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EMAIL_AUTO_MDNIE_1)}, DSI0_EMAIL_AUTO_MDNIE_1},
+	{{DTYPE_DCS_LWRITE, 0, 0, 0, 0, sizeof(DSI0_EMAIL_AUTO_MDNIE_2)}, DSI0_EMAIL_AUTO_MDNIE_2},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_2_key_off)}, level_2_key_off},
 	{{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(level_1_key_off)}, level_1_key_off},
 };

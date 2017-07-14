@@ -27,6 +27,10 @@
 #include <linux/gpio.h>
 #include <linux/wakeup_reason.h>
 
+#ifdef CONFIG_SEC_FACTORY
+#undef CONFIG_ESE_SECURE
+#endif
+
 /* config translations */
 #define drv_str_to_rval(drv)	((drv >> 1) - 1)
 #define rval_to_drv_str(val)	((val + 1) << 1)
@@ -415,11 +419,21 @@ static int msm_tlmm_gp_cfg(uint pin_no, unsigned long *config,
 	void __iomem *inout_reg = NULL;
 	void __iomem *cfg_reg = TLMM_GP_CFG(pinfo, pin_no);
 
+#ifdef ENABLE_SENSORS_FPRINT_SECURE
+	if (pin_no >= CONFIG_SENSORS_FP_SPI_GPIO_START
+		&& pin_no <= CONFIG_SENSORS_FP_SPI_GPIO_END){
+		return 0;
+	}
+#endif
+
 #ifdef CONFIG_MST_LDO
 		if (pin_no == MST_GPIO_D_MINUS || pin_no == MST_GPIO_D_PLUS)
 			return 0;
 #endif
-
+#if defined(CONFIG_ESE_SECURE)
+		if (pin_no >= CONFIG_ESE_SPI_GPIO_START && pin_no <= CONFIG_ESE_SPI_GPIO_END)
+			return 0;
+#endif
 	id = pinconf_to_config_param(*config);
 	val = readl_relaxed(cfg_reg);
 	/* Get mask and shft values for this config type */
@@ -642,6 +656,18 @@ static void msm_tlmm_gp_fn(uint pin_no, u32 func, bool enable,
 {
 	unsigned int val;
 	void __iomem *cfg_reg = TLMM_GP_CFG(pinfo, pin_no);
+
+#if defined(CONFIG_ESE_SECURE)
+	if (pin_no >= CONFIG_ESE_SPI_GPIO_START && pin_no <= CONFIG_ESE_SPI_GPIO_END)
+		return;
+#endif
+
+#ifdef ENABLE_SENSORS_FPRINT_SECURE
+	if (pin_no >= CONFIG_SENSORS_FP_SPI_GPIO_START
+		&& pin_no <= CONFIG_SENSORS_FP_SPI_GPIO_END)
+		return;
+#endif
+
 	val = readl_relaxed(cfg_reg);
 	val &= ~(TLMM_GP_FUNC_MASK << TLMM_GP_FUNC_SHFT);
 	if (enable)
@@ -1210,9 +1236,15 @@ int msm_tlmm_v4_set_gp_cfg(uint pin_no, uint id, bool level)
 		pr_info("[secgpio_dvs][%s] pin_no = %d, id = %d, level = %d\n",
 				__func__,pin_no,id,level);
 #ifdef ENABLE_SENSORS_FPRINT_SECURE
-		if (pin_no >= 23 && pin_no <= 26)
+		if (pin_no >= CONFIG_SENSORS_FP_SPI_GPIO_START
+				&& pin_no <= CONFIG_SENSORS_FP_SPI_GPIO_END)
 			return 0;
 #endif
+#if defined(CONFIG_ESE_SECURE)
+		if (pin_no >= CONFIG_ESE_SPI_GPIO_START && pin_no <= CONFIG_ESE_SPI_GPIO_END)
+			return 0;
+#endif
+
         val = readl_relaxed(cfg_reg);
         /* Get mask and shft values for this config type */
         switch (id) {

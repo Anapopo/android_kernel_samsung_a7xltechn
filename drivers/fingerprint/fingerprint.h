@@ -21,10 +21,6 @@
 
 #include <linux/clk.h>
 
-#ifdef ENABLE_SENSORS_FPRINT_SECURE
-#define FEATURE_SPI_WAKELOCK
-#endif
-
 /* fingerprint debug timer */
 #define FPSENSOR_DEBUG_TIMER_SEC (10 * HZ)
 
@@ -40,7 +36,6 @@ enum {
 #define SENSOR_STATUS_SIZE 5
 static char sensor_status[SENSOR_STATUS_SIZE][8] ={"unknown", "failed",
 	"viper", "raptor", "egis"};
-
 
 #ifdef CONFIG_SENSORS_FINGERPRINT_DUALIZATION
 extern int FP_CHECK; /* extern variable */

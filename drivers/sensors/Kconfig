@@ -48,13 +48,6 @@ config SENSORS_CM36672P
 	default n
 	help
 	  This option enables proximity sensor using CM36672P driver.
-	  
-config SENSORS_CM36672P_SMART_PERS
-	depends on SENSORS_CM36672P
-	tristate "CM36672P driver"
-	default n
-	help
-	  This option enables smart persistence option using CM36672P driver.
 
 config SENSORS_CM36652
 	depends on I2C
@@ -83,20 +76,6 @@ config SENSORS_CM36655
 	default n
 	help
 	  This option enables proximity & light sensors using CM36655 driver.
-
-config SENSORS_CM36686
-	depends on I2C
-	tristate "CM36686 driver"
-	default n
-	help
-	  This option enables proximity & light sensors using CM36686 driver.
-
-config SENSORS_CM36686_LEDA_EN_GPIO
-	depends on I2C
-	tristate "CM36686 leda_en controlled by GPIO"
-	default n
-	help
-	  This option enables leda_en controlled by GPIO using CM36686 driver.
 
 config SENSORS_GP2A002
 	tristate "GP2A002 proximity sensor support"
@@ -307,14 +286,6 @@ config SENSORS_SX9310
 
 	  Say N here if you do not use sx9310.
 
-config SENSORS_SX9310_NORMAL_TOUCH_THRESHOLD
-	int "SX9310 Grip sensor threshold for normal touch"
-	depends on SENSORS_SX9310
-	default "193"
-	help
-	  This value is the standard of normal touch using
-	  SemTech sx9310 device driver.
-	  
 config SENSORS_SX9500_ALWAYS
 	depends on I2C
 	tristate "SX9500 driver"
@@ -397,3 +368,9 @@ config SENSORS_AK09916C
 	help
 	  If you say yes here you get support for Asahi Kasei's
 	  orientation sensor AK09911C.
+config SENSORS_SW_RESET
+	tristate "SENSOR SW RESET support"
+	default n
+	depends on I2C
+	help
+	  If you say yes here you get support for SENSOR SW RESET.

@@ -187,4 +187,6 @@ struct muic_platform_data {
 	void (*set_path_switch_resume) (struct device *dev);
 };
 
+int get_switch_sel(void);
+
 #endif /* __MUIC_H__ */

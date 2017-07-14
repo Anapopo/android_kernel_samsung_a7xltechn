@@ -148,7 +148,6 @@
 		qcom,mdss-dsi-lp11-init;
 		qcom,mdss-dsi-init-delay-us = <2000>;
 		qcom,mdss-power-off-delay-us = <12000>;
-		samsung,mdss-power-on-reset-delay-us = <3000>;
 		/*qcom,ulps-enabled*/
 /*
  * ************************************************************************************************************************************

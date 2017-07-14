@@ -16,7 +16,6 @@
 #include <linux/kobject.h>
 #include <linux/notifier.h>
 #include <linux/sysfs.h>
-#include <asm/cputime.h>
 
 /*********************************************************************
  *                        CPUFREQ INTERFACE                          *
@@ -169,9 +168,6 @@ enum {
 
 #if defined(CONFIG_ARCH_MSM8939)
 #define MIN_TOUCH_LIMIT         556600
-#define MIN_TOUCH_LIMIT_SECOND  499200
-#elif defined(CONFIG_ARCH_MSM8929)
-#define MIN_TOUCH_LIMIT         533333
 #define MIN_TOUCH_LIMIT_SECOND  499200
 #elif defined(CONFIG_ARCH_MSM8916)
 #define MIN_TOUCH_LIMIT		1190400
@@ -529,15 +525,6 @@ static inline int cpufreq_generic_exit(struct cpufreq_policy *policy)
 	return 0;
 }
 
-/*********************************************************************
- *                         CPUFREQ STATS                             *
- *********************************************************************/
-
-#ifdef CONFIG_CPU_FREQ_STAT
-void acct_update_power(struct task_struct *p, cputime_t cputime);
-#else
-static inline void acct_update_power(struct task_struct *p, cputime_t cputime) {}
-#endif
 #define MIN_FINGER_LIMIT 1344000
 
 #endif /* _LINUX_CPUFREQ_H */

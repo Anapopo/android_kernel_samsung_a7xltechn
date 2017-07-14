@@ -1130,9 +1130,6 @@ static void ecryptfs_set_default_crypt_stat_vals(
 #ifdef CONFIG_SDP
 	crypt_stat->engine_id = -1;
 #endif
-#ifdef CONFIG_DLP
-	memset(&crypt_stat->expiry, 0, sizeof(struct knox_dlp_data));
-#endif
 }
 
 /**
@@ -1231,10 +1228,7 @@ static struct ecryptfs_flag_map_elem ecryptfs_flag_map[] = {
     {0x00200000, ECRYPTFS_DEK_IS_SENSITIVE},
     {0x00400000, ECRYPTFS_DEK_MULTI_ENGINE},
 #else
-	{0x00000008, ECRYPTFS_ENCRYPT_FILENAMES},
-#endif
-#ifdef CONFIG_DLP
-	{0x00080000, ECRYPTFS_DLP_ENABLED},
+	{0x00000008, ECRYPTFS_ENCRYPT_FILENAMES}
 #endif
 };
 

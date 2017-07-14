@@ -14,7 +14,7 @@
 #include "msm8916-pinctrl-sec-j3lte-vzw-r00.dtsi"
 #include "msm8916-camera.dtsi"
 #include "msm8916-camera-sensor-cdp-j3spr-r00.dtsi"
-#include "msm8916-sec-j3-vzw-battery-r00.dtsi"
+#include "msm8916-sec-j3-spr-battery-r00.dtsi"
 #include "../../../../../../drivers/video/msm/mdss/samsung/S6E8AA5X01_AMS497HY01/dsi_panel_S6E8AA5X01_AMS497HY01_hd_octa_video.dtsi"
 / {
 	aliases {
@@ -32,7 +32,7 @@
 	samsung,simslot {
 		compatible = "simslot";
 		samsung,sim-slot = <&msm_gpio 106 0x1>;
-		low-is-dual; // If the value of sim-slot gpio is 'low' in 'dual sim' device, you must set this boolean property.
+		//low-is-dual; // If the value of sim-slot gpio is 'low' in 'dual sim' device, you must set this boolean property.
 		status = "ok";
 	};
 
@@ -91,7 +91,7 @@
 				chg_autostop = <0>;
 				chg_autoset = <1>;
 				chg_aiclen = <1>;
-				chg_aiclth = <4300>;
+				chg_aiclth = <4500>;
 				fg_vol_val = <4350>;
 				fg_soc_val = <95>;
 				fg_curr_avr_val = <150>;
@@ -212,14 +212,13 @@
 			cm36672p,irq_gpio = <&msm_gpio 113 0x1>;
 			cm36672p,vdd-supply = <&pm8916_l17>;
 			cm36672p,vio-supply = <&pm8916_l5>;
-			cm36672p,default_hi_thd = <18>;
-			cm36672p,default_low_thd = <12>;
+			cm36672p,default_hi_thd = <21>;
+			cm36672p,default_low_thd = <15>;
 			cm36672p,cancel_hi_thd = <10>;
 			cm36672p,cancel_low_thd = <7>;
-			cm36672p,ps_duty = <2>;
 			cm36672p,ps_it = <4>;
-			cm36672p,led_current = <3>;
-			cm36672p,default_trim = <3>;
+			cm36672p,led_current = <5>;
+			cm36672p,default_trim = <0>;
 		};
 	};
 
@@ -276,8 +275,6 @@
 
 	/* Over-riding model specific changes */
 	sound {
-		qcom,msm-micbias1-ext-cap;
-		qcom,msm-micbias2-ext-cap;
 		qcom,msm-ext-pa = "quaternary";
 		qcom,audio-routing =
 			"RX_BIAS", "MCLK",
@@ -375,13 +372,13 @@
 		qcom,earjack-read-vadc = <&pm8916_vadc>;
 
 		det-zones-list = <&det_zones 0 10000 10 0>,
-						 <&det_zones 911 10000 10 0>,
-						 <&det_zones 912 10000 10 1>,
+						 <&det_zones 970 10000 10 0>,
+						 <&det_zones 971 10000 10 1>,
 						 <&det_zones 9999 10000 10 1>;
-		but-zones-list = <&but_zones 0 0 198>,
-						<&but_zones 3 199 260>,	
-						 <&but_zones 1 261 385>,
-						 <&but_zones 2 386 999>;
+		but-zones-list = <&but_zones 0 0 311>,
+						<&but_zones 3 312 360>,	
+						 <&but_zones 1 361 480>,
+						 <&but_zones 2 481 999>;
 		mpp-channel-scaling = <2 1 1>;
 		pinctrl-names = "earjack_gpio_active","earjack_gpio_suspend";
 		pinctrl-0 = <&earjack_det_act &earjack_switch_act>;
@@ -508,16 +505,6 @@
 
 &mdss_mdp {
 	qcom,mdss-pref-prim-intf = "dsi";
-	ss_dsi_panel_S6E8AA5X01_AMS497HY01_HD: ss_dsi_panel_S6E8AA5X01_AMS497HY01_HD {
-		qcom,mdss-dsi-h-front-porch = <218>;
-		qcom,mdss-dsi-h-back-porch = <95>;
-		qcom,mdss-dsi-h-pulse-width = <20>;
-		qcom,mdss-dsi-h-sync-skew = <0>;
-		qcom,mdss-dsi-v-back-porch = <8>;
-		qcom,mdss-dsi-v-front-porch = <14>;
-		qcom,mdss-dsi-v-pulse-width = <2>;
-		qcom,mdss-dsi-panel-timings = [B8 1E 14 00 44 48 18 22 19 03 04 00];    //494MHz
-	};
 };
 
 &mdss_dsi0 {

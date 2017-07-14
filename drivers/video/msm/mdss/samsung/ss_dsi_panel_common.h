@@ -112,8 +112,8 @@ enum mipi_samsung_cmd_list {
 	PANEL_HMT_ENABLE,
 	PANEL_HMT_DISABLE,
 	PANEL_HMT_LOW_PERSISTENCE_OFF_BRIGHT,
-	PANEL_HMT_REVERSE_ENABLE,
-	PANEL_HMT_REVERSE_DISABLE,
+	PANEL_HMT_REVERSE,
+	PANEL_HMT_FORWARD,
 	PANEL_CABC_ON,
 	PANEL_CABC_OFF,
 	PANEL_BLIC_DIMMING,
@@ -185,15 +185,7 @@ struct candella_lux_map {
 	int *cmd_idx;
 	int lux_tab_size;
 	int bkl[256];
-};
-struct hbm_candella_lux_map {
-	int *lux_tab;
-	int *cmd_idx;
-	int lux_tab_size;
-	int *from;
-	int *end;
-	int *auto_level;
-	int hbm_min_lv;
+	int bkl_subdivision[256];
 };
 
 struct samsung_display_dtsi_data {
@@ -252,12 +244,14 @@ struct samsung_display_dtsi_data {
 
 	struct cmd_map aid_map_table[SUPPORT_PANEL_REVISION];
 	struct dsi_panel_cmds aid_tx_cmds[SUPPORT_PANEL_REVISION];
+	struct dsi_panel_cmds aid_subdivision_tx_cmds[SUPPORT_PANEL_REVISION];
 
 	/* CONFIG_HBM_RE */
 	struct dsi_panel_cmds hbm_rx_cmds[SUPPORT_PANEL_REVISION];
 	struct dsi_panel_cmds hbm2_rx_cmds[SUPPORT_PANEL_REVISION];
 	struct dsi_panel_cmds hbm_gamma_tx_cmds[SUPPORT_PANEL_REVISION];
 	struct dsi_panel_cmds hbm_etc_tx_cmds[SUPPORT_PANEL_REVISION];
+	struct dsi_panel_cmds hbm_pure_etc_tx_cmds[SUPPORT_PANEL_REVISION];
 	struct dsi_panel_cmds hbm_off_tx_cmds[SUPPORT_PANEL_REVISION];
 
 	/* CONFIG_TCON_MDNIE_LITE */
@@ -293,7 +287,6 @@ struct samsung_display_dtsi_data {
 	struct dsi_panel_cmds tft_pwm_tx_cmds[SUPPORT_PANEL_REVISION];
 	struct dsi_panel_cmds blic_dimming_cmds[SUPPORT_PANEL_REVISION];
 	struct candella_lux_map scaled_level_map_table[SUPPORT_PANEL_REVISION];
-	struct hbm_candella_lux_map hbm_candela_map_table[SUPPORT_PANEL_REVISION];
 
 	/* Command for nv read */
 	struct dsi_panel_cmds packet_size_tx_cmds[SUPPORT_PANEL_REVISION];
@@ -306,10 +299,9 @@ struct samsung_display_dtsi_data {
 	struct dsi_panel_cmds hmt_vint_tx_cmds[SUPPORT_PANEL_REVISION];
 	struct dsi_panel_cmds hmt_enable_tx_cmds[SUPPORT_PANEL_REVISION];
 	struct dsi_panel_cmds hmt_disable_tx_cmds[SUPPORT_PANEL_REVISION];
-	struct dsi_panel_cmds hmt_reverse_enable_tx_cmds[SUPPORT_PANEL_REVISION];
-	struct dsi_panel_cmds hmt_reverse_disable_tx_cmds[SUPPORT_PANEL_REVISION];
+	struct dsi_panel_cmds hmt_reverse_tx_cmds[SUPPORT_PANEL_REVISION];
+	struct dsi_panel_cmds hmt_forward_tx_cmds[SUPPORT_PANEL_REVISION];
 	struct dsi_panel_cmds hmt_aid_tx_cmds[SUPPORT_PANEL_REVISION];
-	struct dsi_panel_cmds hmt_150cd_rx_cmds[SUPPORT_PANEL_REVISION];
 	struct cmd_map hmt_reverse_aid_map_table[SUPPORT_PANEL_REVISION];
 	struct candella_lux_map hmt_candela_map_table[SUPPORT_PANEL_REVISION];
 
@@ -339,9 +331,6 @@ struct samsung_display_dtsi_data {
 	/* Backlight IC discharge delay */
 	int blic_discharging_delay_tft;
 	int cabc_delay;
-
-	/* Outdoor mode */
-	int outdoor_mode_support; 
 };
 
 struct samsung_brightenss_data {
@@ -370,7 +359,6 @@ struct display_status {
 struct hmt_status {
 	unsigned int hmt_on;
 	unsigned int hmt_reverse;
-	unsigned int hmt_low_persistence;
 	unsigned int hmt_is_first;
 
 	int hmt_bl_level;
@@ -609,6 +597,12 @@ struct samsung_display_driver_data {
 	void (*mdss_panel_tft_outdoormode_update) (struct mdss_dsi_ctrl_pdata *pdata);
 	/* ESD */
 	struct esd_recovery esd_recovery;
+
+	/* AID subdivision */
+	int aid_subdivision_enable;
+
+	/* auto brightness level */
+	int auto_brightness_level;
 };
 
 
@@ -651,8 +645,6 @@ int get_cmd_index(struct samsung_display_driver_data *vdd, int ndx);
 int get_candela_value(struct samsung_display_driver_data *vdd, int ndx);
 int mdss_samsung_brightness_dcs(struct mdss_dsi_ctrl_pdata *ctrl, int level);
 void mdss_samsung_brightness_tft_pwm(struct mdss_dsi_ctrl_pdata *ctrl, int level);
-void set_auto_brightness_value(struct samsung_display_driver_data *vdd, int ndx);
-
 /* TFT BL DCS RELATED FUNCTION */
 int get_scaled_level(struct samsung_display_driver_data *vdd, int ndx);
 

@@ -73,7 +73,7 @@
 static struct device *sec_touchkey;
 
 /* Force FW update if module# is different */
-#undef FORCE_FW_UPDATE_DIFF_MODULE
+#define FORCE_FW_UPDATE_DIFF_MODULE
 
 /* Touchkey LED twinkle during booting in factory sw (in LCD detached status) */
 #ifdef CONFIG_SEC_FACTORY
@@ -1247,16 +1247,16 @@ static int abov_tk_fw_check(struct abov_ft1604_info *info)
 	}
 
 #ifdef FORCE_FW_UPDATE_DIFF_MODULE
-	if (info->md_ver != MD_VERSION) {
+	if (info->md_ver != info->md_ver_bin) {
 		dev_err(&client->dev,
 			"MD version is different.(IC %x, BN %x). Do force FW update\n",
-			info->md_ver, MD_VERSION);
+			info->md_ver, info->md_ver_bin);
 		force = true;
 	}
 #endif
 	dev_info(&client->dev, "version IC:0x%x, Bin:0x%x\n",info->fw_ver, info->fw_ver_bin);
 
-	if (info->fw_ver != info->fw_ver_bin || info->fw_ver > 0xf0 || force == true) {
+	if (info->fw_ver < info->fw_ver_bin || info->fw_ver > 0xf0 || force == true) {
 		dev_err(&client->dev, "excute tk firmware update (0x%x -> 0x%x)\n",
 			info->fw_ver, info->fw_ver_bin);
 		ret = abov_flash_fw(info, true, BUILT_IN);

@@ -29,6 +29,9 @@ Copyright (C) 2012, Samsung Electronics. All rights reserved.
  * 02110-1301, USA.
  *
 */
+
+// 2015.11.06
+
 #ifndef _SAMSUNG_DSI_MDNIE_S6E3FA3_AMS549JR01_
 #define _SAMSUNG_DSI_MDNIE_S6E3FA3_AMS549JR01_
 
@@ -1681,8 +1684,8 @@ static char DSI0_UI_DYNAMIC_MDNIE_2[] ={
 	0x1c,
 	0xd8,
 	0xff, //ascr_skin_Rr
-	0x4c, //ascr_skin_Rg
-	0x48, //ascr_skin_Rb
+	0x64, //ascr_skin_Rg
+	0x78, //ascr_skin_Rb
 	0xff, //ascr_skin_Yr
 	0xff, //ascr_skin_Yg
 	0x00, //ascr_skin_Yb
@@ -1860,28 +1863,28 @@ static char DSI0_UI_STANDARD_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x00, //ascr_Cr
-	0xef, //ascr_Rr
-	0xef, //ascr_Cg
-	0x28, //ascr_Rg
-	0xeb, //ascr_Cb
+	0xf6, //ascr_Rr
+	0xf1, //ascr_Cg
+	0x30, //ascr_Rg
+	0xe6, //ascr_Cb
 	0x30, //ascr_Rb
-	0xfb, //ascr_Mr
+	0xfe, //ascr_Mr
 	0x00, //ascr_Gr
-	0x48, //ascr_Mg
-	0xde, //ascr_Gg
-	0xea, //ascr_Mb
+	0x4a, //ascr_Mg
+	0xf0, //ascr_Gg
+	0xe8, //ascr_Mb
 	0x30, //ascr_Gb
-	0xf2, //ascr_Yr
+	0xef, //ascr_Yr
 	0x2e, //ascr_Br
-	0xea, //ascr_Yg
-	0x35, //ascr_Bg
-	0x46, //ascr_Yb
-	0xe2, //ascr_Bb
+	0xef, //ascr_Yg
+	0x36, //ascr_Bg
+	0x47, //ascr_Yb
+	0xe0, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf9, //ascr_Wg
 	0x00, //ascr_Kg
-	0xee, //ascr_Wb
+	0xef, //ascr_Wb
 	0x00, //ascr_Kb
 	//end
 };
@@ -2025,29 +2028,29 @@ static char DSI0_UI_NATURAL_MDNIE_2[] ={
 	0xff, //ascr_skin_Wr
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
-	0x98, //ascr_Cr
+	0x9b, //ascr_Cr
 	0xd0, //ascr_Rr
 	0xf2, //ascr_Cg
-	0x23, //ascr_Rg
-	0xed, //ascr_Cb
-	0x28, //ascr_Rb
-	0xdc, //ascr_Mr
-	0x8b, //ascr_Gr
-	0x44, //ascr_Mg
-	0xe4, //ascr_Gg
-	0xe4, //ascr_Mb
-	0x4e, //ascr_Gb
-	0xf2, //ascr_Yr
-	0x2c, //ascr_Br
-	0xeb, //ascr_Yg
-	0x35, //ascr_Bg
-	0x58, //ascr_Yb
-	0xde, //ascr_Bb
+	0x29, //ascr_Rg
+	0xe9, //ascr_Cb
+	0x27, //ascr_Rb
+	0xde, //ascr_Mr
+	0x8e, //ascr_Gr
+	0x48, //ascr_Mg
+	0xe3, //ascr_Gg
+	0xe0, //ascr_Mb
+	0x50, //ascr_Gb
+	0xf3, //ascr_Yr
+	0x2e, //ascr_Br
+	0xec, //ascr_Yg
+	0x34, //ascr_Bg
+	0x5a, //ascr_Yb
+	0xd8, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf9, //ascr_Wg
 	0x00, //ascr_Kg
-	0xee, //ascr_Wb
+	0xef, //ascr_Wb
 	0x00, //ascr_Kb
 	//end
 };
@@ -2681,8 +2684,8 @@ static char DSI0_VIDEO_DYNAMIC_MDNIE_2[] = {
 	0x1c,
 	0xd8,
 	0xff, //ascr_skin_Rr
-	0x4c, //ascr_skin_Rg
-	0x48, //ascr_skin_Rb
+	0x64, //ascr_skin_Rg
+	0x78, //ascr_skin_Rb
 	0xff, //ascr_skin_Yr
 	0xff, //ascr_skin_Yg
 	0x00, //ascr_skin_Yb
@@ -2860,28 +2863,28 @@ static char DSI0_VIDEO_STANDARD_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x00, //ascr_Cr
-	0xef, //ascr_Rr
-	0xef, //ascr_Cg
-	0x28, //ascr_Rg
-	0xeb, //ascr_Cb
+	0xf6, //ascr_Rr
+	0xf1, //ascr_Cg
+	0x30, //ascr_Rg
+	0xe6, //ascr_Cb
 	0x30, //ascr_Rb
-	0xfb, //ascr_Mr
+	0xfe, //ascr_Mr
 	0x00, //ascr_Gr
-	0x48, //ascr_Mg
-	0xde, //ascr_Gg
-	0xea, //ascr_Mb
+	0x4a, //ascr_Mg
+	0xf0, //ascr_Gg
+	0xe8, //ascr_Mb
 	0x30, //ascr_Gb
-	0xf2, //ascr_Yr
+	0xef, //ascr_Yr
 	0x2e, //ascr_Br
-	0xea, //ascr_Yg
-	0x35, //ascr_Bg
-	0x46, //ascr_Yb
-	0xe2, //ascr_Bb
+	0xef, //ascr_Yg
+	0x36, //ascr_Bg
+	0x47, //ascr_Yb
+	0xe0, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf9, //ascr_Wg
 	0x00, //ascr_Kg
-	0xee, //ascr_Wb
+	0xef, //ascr_Wb
 	0x00, //ascr_Kb
 	//end
 };
@@ -3025,29 +3028,29 @@ static char DSI0_VIDEO_NATURAL_MDNIE_2[] ={
 	0xff, //ascr_skin_Wr
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
-	0x98, //ascr_Cr
+	0x9b, //ascr_Cr
 	0xd0, //ascr_Rr
 	0xf2, //ascr_Cg
-	0x23, //ascr_Rg
-	0xed, //ascr_Cb
-	0x28, //ascr_Rb
-	0xdc, //ascr_Mr
-	0x8b, //ascr_Gr
-	0x44, //ascr_Mg
-	0xe4, //ascr_Gg
-	0xe4, //ascr_Mb
-	0x4e, //ascr_Gb
-	0xf2, //ascr_Yr
-	0x2c, //ascr_Br
-	0xeb, //ascr_Yg
-	0x35, //ascr_Bg
-	0x58, //ascr_Yb
-	0xde, //ascr_Bb
+	0x29, //ascr_Rg
+	0xe9, //ascr_Cb
+	0x27, //ascr_Rb
+	0xde, //ascr_Mr
+	0x8e, //ascr_Gr
+	0x48, //ascr_Mg
+	0xe3, //ascr_Gg
+	0xe0, //ascr_Mb
+	0x50, //ascr_Gb
+	0xf3, //ascr_Yr
+	0x2e, //ascr_Br
+	0xec, //ascr_Yg
+	0x34, //ascr_Bg
+	0x5a, //ascr_Yb
+	0xd8, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf9, //ascr_Wg
 	0x00, //ascr_Kg
-	0xee, //ascr_Wb
+	0xef, //ascr_Wb
 	0x00, //ascr_Kb
 	//end
 };
@@ -3347,8 +3350,8 @@ static char DSI0_VIDEO_AUTO_MDNIE_2[] ={
 	0x1c,
 	0xd8,
 	0xff, //ascr_skin_Rr
-	0x4c, //ascr_skin_Rg
-	0x48, //ascr_skin_Rb
+	0x64, //ascr_skin_Rg
+	0x78, //ascr_skin_Rb
 	0xff, //ascr_skin_Yr
 	0xff, //ascr_skin_Yg
 	0x00, //ascr_skin_Yb
@@ -4349,8 +4352,8 @@ static char DSI0_CAMERA_DYNAMIC_MDNIE_2[] ={
 	0x1c,
 	0xd8,
 	0xff, //ascr_skin_Rr
-	0x4c, //ascr_skin_Rg
-	0x48, //ascr_skin_Rb
+	0x64, //ascr_skin_Rg
+	0x78, //ascr_skin_Rb
 	0xff, //ascr_skin_Yr
 	0xff, //ascr_skin_Yg
 	0x00, //ascr_skin_Yb
@@ -4528,28 +4531,28 @@ static char DSI0_CAMERA_STANDARD_MDNIE_2[] ={
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x00, //ascr_Cr
-	0xef, //ascr_Rr
-	0xef, //ascr_Cg
-	0x28, //ascr_Rg
-	0xeb, //ascr_Cb
+	0xf6, //ascr_Rr
+	0xf1, //ascr_Cg
+	0x30, //ascr_Rg
+	0xe6, //ascr_Cb
 	0x30, //ascr_Rb
-	0xfb, //ascr_Mr
+	0xfe, //ascr_Mr
 	0x00, //ascr_Gr
-	0x48, //ascr_Mg
-	0xde, //ascr_Gg
-	0xea, //ascr_Mb
+	0x4a, //ascr_Mg
+	0xf0, //ascr_Gg
+	0xe8, //ascr_Mb
 	0x30, //ascr_Gb
-	0xf2, //ascr_Yr
+	0xef, //ascr_Yr
 	0x2e, //ascr_Br
-	0xea, //ascr_Yg
-	0x35, //ascr_Bg
-	0x46, //ascr_Yb
-	0xe2, //ascr_Bb
+	0xef, //ascr_Yg
+	0x36, //ascr_Bg
+	0x47, //ascr_Yb
+	0xe0, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf9, //ascr_Wg
 	0x00, //ascr_Kg
-	0xee, //ascr_Wb
+	0xef, //ascr_Wb
 	0x00, //ascr_Kb
 	//end
 };
@@ -4694,29 +4697,29 @@ static char DSI0_CAMERA_NATURAL_MDNIE_2[] ={
 	0xff, //ascr_skin_Wr
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
-	0x98, //ascr_Cr
+	0x9b, //ascr_Cr
 	0xd0, //ascr_Rr
 	0xf2, //ascr_Cg
-	0x23, //ascr_Rg
-	0xed, //ascr_Cb
-	0x28, //ascr_Rb
-	0xdc, //ascr_Mr
-	0x8b, //ascr_Gr
-	0x44, //ascr_Mg
-	0xe4, //ascr_Gg
-	0xe4, //ascr_Mb
-	0x4e, //ascr_Gb
-	0xf2, //ascr_Yr
-	0x2c, //ascr_Br
-	0xeb, //ascr_Yg
-	0x35, //ascr_Bg
-	0x58, //ascr_Yb
-	0xde, //ascr_Bb
+	0x29, //ascr_Rg
+	0xe9, //ascr_Cb
+	0x27, //ascr_Rb
+	0xde, //ascr_Mr
+	0x8e, //ascr_Gr
+	0x48, //ascr_Mg
+	0xe3, //ascr_Gg
+	0xe0, //ascr_Mb
+	0x50, //ascr_Gb
+	0xf3, //ascr_Yr
+	0x2e, //ascr_Br
+	0xec, //ascr_Yg
+	0x34, //ascr_Bg
+	0x5a, //ascr_Yb
+	0xd8, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf9, //ascr_Wg
 	0x00, //ascr_Kg
-	0xee, //ascr_Wb
+	0xef, //ascr_Wb
 	0x00, //ascr_Kb
 	//end
 };
@@ -5017,8 +5020,8 @@ static char DSI0_CAMERA_AUTO_MDNIE_2[] = {
 	0x30,
 	0xc3,
 	0xff, //ascr_skin_Rr
-	0x38, //ascr_skin_Rg
-	0x48, //ascr_skin_Rb
+	0x36, //ascr_skin_Rg
+	0x43, //ascr_skin_Rb
 	0xff, //ascr_skin_Yr
 	0xf0, //ascr_skin_Yg
 	0x00, //ascr_skin_Yb
@@ -5184,8 +5187,8 @@ static char DSI0_GALLERY_DYNAMIC_MDNIE_2[] = {
 	0x1c,
 	0xd8,
 	0xff, //ascr_skin_Rr
-	0x4c, //ascr_skin_Rg
-	0x48, //ascr_skin_Rb
+	0x64, //ascr_skin_Rg
+	0x78, //ascr_skin_Rb
 	0xff, //ascr_skin_Yr
 	0xff, //ascr_skin_Yg
 	0x00, //ascr_skin_Yb
@@ -5363,28 +5366,28 @@ static char DSI0_GALLERY_STANDARD_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x00, //ascr_Cr
-	0xef, //ascr_Rr
-	0xef, //ascr_Cg
-	0x28, //ascr_Rg
-	0xeb, //ascr_Cb
+	0xf6, //ascr_Rr
+	0xf1, //ascr_Cg
+	0x30, //ascr_Rg
+	0xe6, //ascr_Cb
 	0x30, //ascr_Rb
-	0xfb, //ascr_Mr
+	0xfe, //ascr_Mr
 	0x00, //ascr_Gr
-	0x48, //ascr_Mg
-	0xde, //ascr_Gg
-	0xea, //ascr_Mb
+	0x4a, //ascr_Mg
+	0xf0, //ascr_Gg
+	0xe8, //ascr_Mb
 	0x30, //ascr_Gb
-	0xf2, //ascr_Yr
+	0xef, //ascr_Yr
 	0x2e, //ascr_Br
-	0xea, //ascr_Yg
-	0x35, //ascr_Bg
-	0x46, //ascr_Yb
-	0xe2, //ascr_Bb
+	0xef, //ascr_Yg
+	0x36, //ascr_Bg
+	0x47, //ascr_Yb
+	0xe0, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf9, //ascr_Wg
 	0x00, //ascr_Kg
-	0xee, //ascr_Wb
+	0xef, //ascr_Wb
 	0x00, //ascr_Kb
 	//end
 };
@@ -5528,29 +5531,29 @@ static char DSI0_GALLERY_NATURAL_MDNIE_2[] = {
 	0xff, //ascr_skin_Wr
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
-	0x98, //ascr_Cr
+	0x9b, //ascr_Cr
 	0xd0, //ascr_Rr
 	0xf2, //ascr_Cg
-	0x23, //ascr_Rg
-	0xed, //ascr_Cb
-	0x28, //ascr_Rb
-	0xdc, //ascr_Mr
-	0x8b, //ascr_Gr
-	0x44, //ascr_Mg
-	0xe4, //ascr_Gg
-	0xe4, //ascr_Mb
-	0x4e, //ascr_Gb
-	0xf2, //ascr_Yr
-	0x2c, //ascr_Br
-	0xeb, //ascr_Yg
-	0x35, //ascr_Bg
-	0x58, //ascr_Yb
-	0xde, //ascr_Bb
+	0x29, //ascr_Rg
+	0xe9, //ascr_Cb
+	0x27, //ascr_Rb
+	0xde, //ascr_Mr
+	0x8e, //ascr_Gr
+	0x48, //ascr_Mg
+	0xe3, //ascr_Gg
+	0xe0, //ascr_Mb
+	0x50, //ascr_Gb
+	0xf3, //ascr_Yr
+	0x2e, //ascr_Br
+	0xec, //ascr_Yg
+	0x34, //ascr_Bg
+	0x5a, //ascr_Yb
+	0xd8, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf9, //ascr_Wg
 	0x00, //ascr_Kg
-	0xee, //ascr_Wb
+	0xef, //ascr_Wb
 	0x00, //ascr_Kb
 	//end
 };
@@ -5850,8 +5853,8 @@ static char DSI0_GALLERY_AUTO_MDNIE_2[] = {
 	0x30,
 	0xc3,
 	0xff, //ascr_skin_Rr
-	0x38, //ascr_skin_Rg
-	0x48, //ascr_skin_Rb
+	0x36, //ascr_skin_Rg
+	0x43, //ascr_skin_Rb
 	0xff, //ascr_skin_Yr
 	0xf0, //ascr_skin_Yg
 	0x00, //ascr_skin_Yb
@@ -6017,8 +6020,8 @@ static char DSI0_VT_DYNAMIC_MDNIE_2[] = {
 	0x1c,
 	0xd8,
 	0xff, //ascr_skin_Rr
-	0x4c, //ascr_skin_Rg
-	0x48, //ascr_skin_Rb
+	0x64, //ascr_skin_Rg
+	0x78, //ascr_skin_Rb
 	0xff, //ascr_skin_Yr
 	0xff, //ascr_skin_Yg
 	0x00, //ascr_skin_Yb
@@ -6196,28 +6199,28 @@ static char DSI0_VT_STANDARD_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x00, //ascr_Cr
-	0xef, //ascr_Rr
-	0xef, //ascr_Cg
-	0x28, //ascr_Rg
-	0xeb, //ascr_Cb
+	0xf6, //ascr_Rr
+	0xf1, //ascr_Cg
+	0x30, //ascr_Rg
+	0xe6, //ascr_Cb
 	0x30, //ascr_Rb
-	0xfb, //ascr_Mr
+	0xfe, //ascr_Mr
 	0x00, //ascr_Gr
-	0x48, //ascr_Mg
-	0xde, //ascr_Gg
-	0xea, //ascr_Mb
+	0x4a, //ascr_Mg
+	0xf0, //ascr_Gg
+	0xe8, //ascr_Mb
 	0x30, //ascr_Gb
-	0xf2, //ascr_Yr
+	0xef, //ascr_Yr
 	0x2e, //ascr_Br
-	0xea, //ascr_Yg
-	0x35, //ascr_Bg
-	0x46, //ascr_Yb
-	0xe2, //ascr_Bb
+	0xef, //ascr_Yg
+	0x36, //ascr_Bg
+	0x47, //ascr_Yb
+	0xe0, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf9, //ascr_Wg
 	0x00, //ascr_Kg
-	0xee, //ascr_Wb
+	0xef, //ascr_Wb
 	0x00, //ascr_Kb
 	//end
 };
@@ -6361,29 +6364,29 @@ static char DSI0_VT_NATURAL_MDNIE_2[] = {
 	0xff, //ascr_skin_Wr
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
-	0x98, //ascr_Cr
+	0x9b, //ascr_Cr
 	0xd0, //ascr_Rr
 	0xf2, //ascr_Cg
-	0x23, //ascr_Rg
-	0xed, //ascr_Cb
-	0x28, //ascr_Rb
-	0xdc, //ascr_Mr
-	0x8b, //ascr_Gr
-	0x44, //ascr_Mg
-	0xe4, //ascr_Gg
-	0xe4, //ascr_Mb
-	0x4e, //ascr_Gb
-	0xf2, //ascr_Yr
-	0x2c, //ascr_Br
-	0xeb, //ascr_Yg
-	0x35, //ascr_Bg
-	0x58, //ascr_Yb
-	0xde, //ascr_Bb
+	0x29, //ascr_Rg
+	0xe9, //ascr_Cb
+	0x27, //ascr_Rb
+	0xde, //ascr_Mr
+	0x8e, //ascr_Gr
+	0x48, //ascr_Mg
+	0xe3, //ascr_Gg
+	0xe0, //ascr_Mb
+	0x50, //ascr_Gb
+	0xf3, //ascr_Yr
+	0x2e, //ascr_Br
+	0xec, //ascr_Yg
+	0x34, //ascr_Bg
+	0x5a, //ascr_Yb
+	0xd8, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf9, //ascr_Wg
 	0x00, //ascr_Kg
-	0xee, //ascr_Wb
+	0xef, //ascr_Wb
 	0x00, //ascr_Kb
 	//end
 };
@@ -6849,8 +6852,8 @@ static char DSI0_BROWSER_DYNAMIC_MDNIE_2[] = {
 	0x1c,
 	0xd8,
 	0xff, //ascr_skin_Rr
-	0x4c, //ascr_skin_Rg
-	0x48, //ascr_skin_Rb
+	0x64, //ascr_skin_Rg
+	0x78, //ascr_skin_Rb
 	0xff, //ascr_skin_Yr
 	0xff, //ascr_skin_Yg
 	0x00, //ascr_skin_Yb
@@ -7027,28 +7030,28 @@ static char DSI0_BROWSER_STANDARD_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x00, //ascr_Cr
-	0xef, //ascr_Rr
-	0xef, //ascr_Cg
-	0x28, //ascr_Rg
-	0xeb, //ascr_Cb
+	0xf6, //ascr_Rr
+	0xf1, //ascr_Cg
+	0x30, //ascr_Rg
+	0xe6, //ascr_Cb
 	0x30, //ascr_Rb
-	0xfb, //ascr_Mr
+	0xfe, //ascr_Mr
 	0x00, //ascr_Gr
-	0x48, //ascr_Mg
-	0xde, //ascr_Gg
-	0xea, //ascr_Mb
+	0x4a, //ascr_Mg
+	0xf0, //ascr_Gg
+	0xe8, //ascr_Mb
 	0x30, //ascr_Gb
-	0xf2, //ascr_Yr
+	0xef, //ascr_Yr
 	0x2e, //ascr_Br
-	0xea, //ascr_Yg
-	0x35, //ascr_Bg
-	0x46, //ascr_Yb
-	0xe2, //ascr_Bb
+	0xef, //ascr_Yg
+	0x36, //ascr_Bg
+	0x47, //ascr_Yb
+	0xe0, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf9, //ascr_Wg
 	0x00, //ascr_Kg
-	0xee, //ascr_Wb
+	0xef, //ascr_Wb
 	0x00, //ascr_Kb
 	//end
 };
@@ -7192,29 +7195,29 @@ static char DSI0_BROWSER_NATURAL_MDNIE_2[] = {
 	0xff, //ascr_skin_Wr
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
-	0x98, //ascr_Cr
+	0x9b, //ascr_Cr
 	0xd0, //ascr_Rr
 	0xf2, //ascr_Cg
-	0x23, //ascr_Rg
-	0xed, //ascr_Cb
-	0x28, //ascr_Rb
-	0xdc, //ascr_Mr
-	0x8b, //ascr_Gr
-	0x44, //ascr_Mg
-	0xe4, //ascr_Gg
-	0xe4, //ascr_Mb
-	0x4e, //ascr_Gb
-	0xf2, //ascr_Yr
-	0x2c, //ascr_Br
-	0xeb, //ascr_Yg
-	0x35, //ascr_Bg
-	0x58, //ascr_Yb
-	0xde, //ascr_Bb
+	0x29, //ascr_Rg
+	0xe9, //ascr_Cb
+	0x27, //ascr_Rb
+	0xde, //ascr_Mr
+	0x8e, //ascr_Gr
+	0x48, //ascr_Mg
+	0xe3, //ascr_Gg
+	0xe0, //ascr_Mb
+	0x50, //ascr_Gb
+	0xf3, //ascr_Yr
+	0x2e, //ascr_Br
+	0xec, //ascr_Yg
+	0x34, //ascr_Bg
+	0x5a, //ascr_Yb
+	0xd8, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf9, //ascr_Wg
 	0x00, //ascr_Kg
-	0xee, //ascr_Wb
+	0xef, //ascr_Wb
 	0x00, //ascr_Kb
 	//end
 };
@@ -7515,7 +7518,7 @@ static char DSI0_BROWSER_AUTO_MDNIE_2[] = {
 	0x83,
 	0xff, //ascr_skin_Rr
 	0x5c, //ascr_skin_Rg
-	0x68, //ascr_skin_Rb
+	0x70, //ascr_skin_Rb
 	0xff, //ascr_skin_Yr
 	0xff, //ascr_skin_Yg
 	0x00, //ascr_skin_Yb
@@ -7681,8 +7684,8 @@ static char DSI0_EBOOK_DYNAMIC_MDNIE_2[] = {
 	0x1c,
 	0xd8,
 	0xff, //ascr_skin_Rr
-	0x4c, //ascr_skin_Rg
-	0x48, //ascr_skin_Rb
+	0x64, //ascr_skin_Rg
+	0x78, //ascr_skin_Rb
 	0xff, //ascr_skin_Yr
 	0xff, //ascr_skin_Yg
 	0x00, //ascr_skin_Yb
@@ -7860,28 +7863,28 @@ static char DSI0_EBOOK_STANDARD_MDNIE_2[] = {
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
 	0x00, //ascr_Cr
-	0xef, //ascr_Rr
-	0xef, //ascr_Cg
-	0x28, //ascr_Rg
-	0xeb, //ascr_Cb
+	0xf6, //ascr_Rr
+	0xf1, //ascr_Cg
+	0x30, //ascr_Rg
+	0xe6, //ascr_Cb
 	0x30, //ascr_Rb
-	0xfb, //ascr_Mr
+	0xfe, //ascr_Mr
 	0x00, //ascr_Gr
-	0x48, //ascr_Mg
-	0xde, //ascr_Gg
-	0xea, //ascr_Mb
+	0x4a, //ascr_Mg
+	0xf0, //ascr_Gg
+	0xe8, //ascr_Mb
 	0x30, //ascr_Gb
-	0xf2, //ascr_Yr
+	0xef, //ascr_Yr
 	0x2e, //ascr_Br
-	0xea, //ascr_Yg
-	0x35, //ascr_Bg
-	0x46, //ascr_Yb
-	0xe2, //ascr_Bb
+	0xef, //ascr_Yg
+	0x36, //ascr_Bg
+	0x47, //ascr_Yb
+	0xe0, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf9, //ascr_Wg
 	0x00, //ascr_Kg
-	0xee, //ascr_Wb
+	0xef, //ascr_Wb
 	0x00, //ascr_Kb
 	//end
 };
@@ -8025,29 +8028,29 @@ static char DSI0_EBOOK_NATURAL_MDNIE_2[] = {
 	0xff, //ascr_skin_Wr
 	0xff, //ascr_skin_Wg
 	0xff, //ascr_skin_Wb
-	0x98, //ascr_Cr
+	0x9b, //ascr_Cr
 	0xd0, //ascr_Rr
 	0xf2, //ascr_Cg
-	0x23, //ascr_Rg
-	0xed, //ascr_Cb
-	0x28, //ascr_Rb
-	0xdc, //ascr_Mr
-	0x8b, //ascr_Gr
-	0x44, //ascr_Mg
-	0xe4, //ascr_Gg
-	0xe4, //ascr_Mb
-	0x4e, //ascr_Gb
-	0xf2, //ascr_Yr
-	0x2c, //ascr_Br
-	0xeb, //ascr_Yg
-	0x35, //ascr_Bg
-	0x58, //ascr_Yb
-	0xde, //ascr_Bb
+	0x29, //ascr_Rg
+	0xe9, //ascr_Cb
+	0x27, //ascr_Rb
+	0xde, //ascr_Mr
+	0x8e, //ascr_Gr
+	0x48, //ascr_Mg
+	0xe3, //ascr_Gg
+	0xe0, //ascr_Mb
+	0x50, //ascr_Gb
+	0xf3, //ascr_Yr
+	0x2e, //ascr_Br
+	0xec, //ascr_Yg
+	0x34, //ascr_Bg
+	0x5a, //ascr_Yb
+	0xd8, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
 	0xf9, //ascr_Wg
 	0x00, //ascr_Kg
-	0xee, //ascr_Wb
+	0xef, //ascr_Wb
 	0x00, //ascr_Kb
 	//end
 };
@@ -8378,9 +8381,9 @@ static char DSI0_EBOOK_AUTO_MDNIE_2[] = {
 	0xff, //ascr_Bb
 	0xff, //ascr_Wr
 	0x00, //ascr_Kr
-	0xf5, //ascr_Wg
+	0xf6, //ascr_Wg
 	0x00, //ascr_Kg
-	0xe4, //ascr_Wb
+	0xe6, //ascr_Wb
 	0x00, //ascr_Kb
 	//end
 };

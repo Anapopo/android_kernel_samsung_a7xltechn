@@ -23,13 +23,17 @@
 	};
 
 	samsung,vibrator {
-		compatible = "samsung_vib";
+		compatible = "haptic_vib";
 		pinctrl-names = "tlmm_motor_active","tlmm_motor_suspend";
 		pinctrl-0 = <&motor_pwm_active>;
 		pinctrl-1 = <&motor_pwm_suspend>;
 		samsung,vib_pwm = <&msm_gpio 50 0x1>;
 		samsung,ldo_name = "VDD_MOTOR";
 		samsung,ldo_volt = <3000000>;
+		samsung,vib_model = <1>;
+		samsung,is_pmic_vib_pwm = <0>;
+		samsung,pwm_period_us = <40>;
+		samsung,duty_us = <36>;
 		status = "ok";
 	};
 
@@ -85,6 +89,9 @@
 			sec,tsp-project = "A7X";
 			sec,tsp-model = "A7100";
 			sec,i2c-burstmax = <256>;
+			clock-names = "iface_clk", "core_clk";
+			clocks = <&clock_gcc clk_gcc_blsp1_ahb_clk>,
+				 <&clock_gcc clk_gcc_blsp1_qup5_i2c_apps_clk>;
 		};
 	};
 
@@ -176,31 +183,14 @@
                         qcom,cal-mem7 = <0x4 0x11FC 2 0 1 0>;
                 };
 
-		pn547@2B {
-			compatible = "pn547";
-			reg = <0x2B>;
-			interrupt-parent = <&msm_gpio>;
-			interrupts = <51 0>;
-			pinctrl-names = "nfc_active","nfc_suspend";
-			pinctrl-0 = <&nfc_int_active >;
-			pinctrl-1 = <&nfc_int_suspend>;
-			pn547,firm-gpio = <&expander_gpios 3 0>;
-			pn547,ven-gpio = <&expander_gpios 0 0>;
-			pn547,irq-gpio = <&msm_gpio 51 0x01>;
-			pn547,pwr_req = <&expander_gpios 2 0>;
-			pn547,pvdd_en = <&expander_gpios 1 0>;
-			clocks = <&clock_rpm clk_bb_clk2_pin>;
-			clock-names = "nfc_clock";
-		};
-
 		sec-nfc@27 {
 			compatible = "sec-nfc";
 			reg = <0x27>;
 			interrupt-parent = <&msm_gpio>;
 			interrupts = <51 0>;
 			pinctrl-names = "nfc_active","nfc_suspend";
-			pinctrl-0 = <&nfc_int_active &expander_nfcfirm_active &expander_nfcen_active>;
-			pinctrl-1 = <&nfc_int_suspend &expander_nfcfirm_suspend &expander_nfcen_suspend>;
+			pinctrl-0 = <&nfc_int_active>;
+			pinctrl-1 = <&nfc_int_suspend>;
 			sec-nfc,pvdd-gpio = <&expander_gpios 1 0x01>;
 			sec-nfc,firm-gpio = <&expander_gpios 3 0>;
 			sec-nfc,ven-gpio = <&expander_gpios 0 0>;
@@ -373,6 +363,8 @@
 
 	};
 
+	/delete-node/ spi@0x78b5000;
+
 	spi_1: spi@78b5000 {  /* BLSP1 */
 		compatible = "qcom,spi-qup-v2";
 		#address-cells = <1>;
@@ -383,30 +375,24 @@
 		interrupt-names = "spi_irq", "spi_bam_irq";
 		interrupts = <0 95 0>, <0 238 0>;
 		spi-max-frequency = <19200000>;
-		pinctrl-names = "default", "sleep";
-		pinctrl-0 = <&spi1_default &spi1_cs_active>;
-		pinctrl-1 = <&spi1_sleep &spi1_cs_sleep>;
-		clocks = <&clock_gcc clk_gcc_blsp1_ahb_clk>,
-			 <&clock_gcc clk_gcc_blsp1_qup1_spi_apps_clk>;
-		clock-names = "iface_clk", "core_clk";
-		qcom,infinite-mode = <0>;
 		qcom,use-bam;
 		qcom,use-pinctrl;
 		qcom,ver-reg-exists;
 		qcom,bam-consumer-pipe-index = <4>;
 		qcom,bam-producer-pipe-index = <5>;
 		qcom,master-id = <86>;
-		cell-index = <1>;
 		status = "ok";
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&spi1_default &spi1_cs_active>;
+		pinctrl-1 = <&spi1_sleep &spi1_cs_sleep>;
+		clocks = <&clock_gcc clk_gcc_blsp1_ahb_clk>,
+			 <&clock_gcc clk_gcc_blsp1_qup1_spi_apps_clk>;
+		clock-names = "iface_clk", "core_clk";
 
 		P3_spi@0 {
 			compatible = "p3";
 			reg = <0>;
 			spi-max-frequency = <8000000>;
-			p3-mosipin = <&msm_gpio 0 0x0>;
-			p3-misopin = <&msm_gpio 1 0x0>;
-			p3-cspin = <&msm_gpio 2 0x0>;
-			p3-clkpin = <&msm_gpio 3 0x0>;
 			p3-ese_pwr_req = <&expander_gpios 2 0>;
 			p3-test = <0xBB>;
 		};
@@ -433,7 +419,7 @@
 			cm36655,vio-supply = <&pm8916_l5>;
 			cm36655,vdd-supply = <&pm8916_l17>;
 			cm36655,irq_gpio = <&msm_gpio 113 0x1>;
-			cm36655,default_hi_thd = <17>;
+			cm36655,default_hi_thd = <18>;
 			cm36655,default_low_thd = <13>;
 			cm36655,cancel_hi_thd = <10>;
 			cm36655,cancel_low_thd = <7>;
@@ -573,16 +559,6 @@
 	pinctrl-0 = <&uart_console_sleep>;
 };
 
-&pm8916_gpios {
-	gpio@c100 { /* GPIO 2 */
-		/* NFC_CLK_REQ */
-		qcom,mode = <0>; /* QPNP_PIN_MODE_DIG_IN */
-		qcom,pull = <5>; /* QPNP_PIN_PULL_NO */
-		qcom,vin-sel = <2>; /* QPNP_PIN_VIN2 */
-		qcom,src-sel = <2>; /* QPNP_PIN_SEL_FUNC_1 */
-		qcom,master-en = <1>;
-	};
-};
 &spmi_bus {
 	qcom,pm8916@0 {
 		qcom,leds@a100 {
@@ -750,7 +726,7 @@
 	gpio@c100 { /* GPIO 2 */
 		/* NFC_CLK_REQ */
 		qcom,mode = <0>; /* QPNP_PIN_MODE_DIG_IN */
-		qcom,pull = <5>; /* QPNP_PIN_PULL_NO */
+		qcom,pull = <4>; /* QPNP_PIN_PULL_DOWN */
 		qcom,vin-sel = <2>; /* QPNP_PIN_VIN2 */
 		qcom,src-sel = <2>; /* QPNP_PIN_SEL_FUNC_1 */
 		qcom,master-en = <1>;

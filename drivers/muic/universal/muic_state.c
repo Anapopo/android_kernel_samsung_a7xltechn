@@ -49,6 +49,9 @@
 #include "muic_i2c.h"
 #include "muic_vps.h"
 #include "muic_regmap.h"
+#if defined(CONFIG_MUIC_UNIVERSAL_SM5705)
+#include <linux/muic/muic_afc.h>
+#endif
 
 extern int muic_wakeup_noti;
 
@@ -61,9 +64,6 @@ void muic_set_wakeup_noti(int flag)
 static void muic_handle_attach(muic_data_t *pmuic,
 			muic_attached_dev_t new_dev, int adc, u8 vbvolt)
 {
-#if defined(CONFIG_MUIC_UNIVERSAL_SM5705_AFC)
-	struct afc_ops *afcops = pmuic->regmapdesc->afcops;
-#endif
 	int ret = 0;
 	bool noti_f = true;
 
@@ -88,6 +88,7 @@ static void muic_handle_attach(muic_data_t *pmuic,
 			ret = detach_usb(pmuic);
 		}
 		break;
+	case ATTACHED_DEV_HMT_MUIC:
 	case ATTACHED_DEV_OTG_MUIC:
 	/* OTG -> LANHUB, meaning TA is attached to LANHUB(OTG) */
 		if (new_dev == ATTACHED_DEV_USB_LANHUB_MUIC) {
@@ -148,7 +149,13 @@ static void muic_handle_attach(muic_data_t *pmuic,
 		break;
 	case ATTACHED_DEV_DESKDOCK_MUIC:
 	case ATTACHED_DEV_DESKDOCK_VB_MUIC:
-		if (new_dev != pmuic->attached_dev) {
+		if (new_dev == ATTACHED_DEV_DESKDOCK_MUIC || 
+				new_dev == ATTACHED_DEV_DESKDOCK_VB_MUIC) {
+			pr_warn("%s:%s new(%d)!=attached(%d), assume same device\n",
+					MUIC_DEV_NAME, __func__, new_dev,
+					pmuic->attached_dev);
+			noti_f = false;
+		} else if (new_dev != pmuic->attached_dev) {
 			pr_warn("%s:%s new(%d)!=attached(%d), assume detach\n",
 					MUIC_DEV_NAME, __func__, new_dev,
 					pmuic->attached_dev);
@@ -187,6 +194,7 @@ static void muic_handle_attach(muic_data_t *pmuic,
 	case ATTACHED_DEV_CDP_MUIC:
 		ret = attach_usb(pmuic, new_dev);
 		break;
+	case ATTACHED_DEV_HMT_MUIC:
 	case ATTACHED_DEV_OTG_MUIC:
 	case ATTACHED_DEV_USB_LANHUB_MUIC:
 		ret = attach_otg_usb(pmuic, new_dev);
@@ -196,17 +204,7 @@ static void muic_handle_attach(muic_data_t *pmuic,
 		break;
 	case ATTACHED_DEV_TA_MUIC:
 		attach_ta(pmuic);
-#if defined(CONFIG_MUIC_UNIVERSAL_SM5705_AFC)
-		if (pmuic->irq_n == -1) {
-	            pmuic->attached_dev = new_dev;
-	                muic_notifier_attach_attached_dev(new_dev);;
-			afcops->afc_init_check(pmuic->regmapdesc);
-			noti_f = false;
-		} else
-#endif
-		{
-			pmuic->attached_dev = new_dev;
-		}
+		pmuic->attached_dev = new_dev;
 		break;
 	case ATTACHED_DEV_JIG_UART_OFF_MUIC:
 		new_dev = attach_jig_uart_boot_off(pmuic, new_dev, vbvolt);
@@ -232,8 +230,7 @@ static void muic_handle_attach(muic_data_t *pmuic,
 		ret = attach_mhl(pmuic);
 		break;
 	case ATTACHED_DEV_DESKDOCK_MUIC:
-		if (vbvolt)
-			new_dev = ATTACHED_DEV_DESKDOCK_VB_MUIC;
+	case ATTACHED_DEV_DESKDOCK_VB_MUIC:
 		ret = attach_deskdock(pmuic, new_dev);
 		break;
 	case ATTACHED_DEV_UNIVERSAL_MMDOCK_MUIC:
@@ -244,9 +241,11 @@ static void muic_handle_attach(muic_data_t *pmuic,
 		break;
 	case ATTACHED_DEV_UNDEFINED_CHARGING_MUIC:
 		com_to_open_with_vbus(pmuic);
+		pmuic->attached_dev = new_dev;
 		break;
 	case ATTACHED_DEV_VZW_INCOMPATIBLE_MUIC:
 		com_to_open_with_vbus(pmuic);
+		pmuic->attached_dev = new_dev;
 		break;
 	default:
 		pr_warn("%s:%s unsupported dev=%d, adc=0x%x, vbus=%c\n",
@@ -272,7 +271,10 @@ static void muic_handle_detach(muic_data_t *pmuic)
 	bool noti_f = true;
 
 	ret = com_to_open_with_vbus(pmuic);
-
+#if defined(CONFIG_MUIC_UNIVERSAL_SM5705)
+	// ENAFC set '0'
+	pmuic->regmapdesc->afcops->afc_ctrl_reg(pmuic->regmapdesc, AFCCTRL_ENAFC, 0);
+#endif
 	//muic_enable_accdet(pmuic);
 
 	switch (pmuic->attached_dev) {
@@ -282,6 +284,7 @@ static void muic_handle_detach(muic_data_t *pmuic)
 	case ATTACHED_DEV_CDP_MUIC:
 		ret = detach_usb(pmuic);
 		break;
+	case ATTACHED_DEV_HMT_MUIC:
 	case ATTACHED_DEV_OTG_MUIC:
 	case ATTACHED_DEV_USB_LANHUB_MUIC:
 		ret = detach_otg_usb(pmuic);
@@ -297,10 +300,10 @@ static void muic_handle_detach(muic_data_t *pmuic)
 	case ATTACHED_DEV_JIG_UART_ON_MUIC:
 		if (pmuic->is_factory_start)
 			ret = detach_deskdock(pmuic);
-		else {
-			noti_f = false;
+		else
 			ret = detach_jig_uart_boot_on(pmuic);
-		}
+
+		muic_set_wakeup_noti(pmuic->is_factory_start ? 1: 0);
 		break;
 	case ATTACHED_DEV_DESKDOCK_MUIC:
 	case ATTACHED_DEV_DESKDOCK_VB_MUIC:
@@ -327,6 +330,7 @@ static void muic_handle_detach(muic_data_t *pmuic)
 		pmuic->attached_dev = ATTACHED_DEV_NONE_MUIC;
 		break;
 	default:
+		pmuic->is_afc_device = 0;
 		pr_info("%s:%s invalid attached_dev type(%d)\n", MUIC_DEV_NAME,
 			__func__, pmuic->attached_dev);
 		pmuic->attached_dev = ATTACHED_DEV_NONE_MUIC;
@@ -334,7 +338,7 @@ static void muic_handle_detach(muic_data_t *pmuic)
 	}
 
 	if (noti_f)
-	muic_notifier_detach_attached_dev(pmuic->attached_dev);
+		muic_notifier_detach_attached_dev(pmuic->attached_dev);
 
 	else
 		pr_info("%s:%s detach Noti. for (%d) discarded.\n",

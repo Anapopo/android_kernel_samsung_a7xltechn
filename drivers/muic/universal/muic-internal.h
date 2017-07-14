@@ -150,6 +150,7 @@ typedef struct _muic_data_t {
 	int is_flash_on;
 	int irq_n;
 	int is_afc_device;
+	struct delayed_work	afc_retry_work;
 }muic_data_t;
 
 extern struct device *switch_device;

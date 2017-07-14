@@ -776,8 +776,9 @@ power_attr(pm_freeze_timeout);
 
 #if defined(CONFIG_SW_SELF_DISCHARGING)
 static char selfdischg_usage_str[] =
-#if defined(CONFIG_ARCH_MSM8939) || defined(CONFIG_ARCH_MSM8929)
+#if defined(CONFIG_ARCH_MSM8939)
 	"[START]\n"
+	"/sys/power/selfdischg_usage 1\n"
 	"/sys/module/lpm_levels/system/power/cpu4/wfi/idle_enabled N\n"
 	"/sys/module/lpm_levels/system/power/cpu4/standalone_pc/idle_enabled N\n"
 	"/sys/module/lpm_levels/system/power/cpu4/pc/idle_enabled N\n"
@@ -785,6 +786,7 @@ static char selfdischg_usage_str[] =
 	"/sys/module/lpm_levels/system/power/cpu5/standalone_pc/idle_enabled N\n"
 	"/sys/module/lpm_levels/system/power/cpu5/pc/idle_enabled N\n"
 	"[STOP]\n"
+	"/sys/power/selfdischg_usage 0\n"
 	"/sys/module/lpm_levels/system/power/cpu4/wfi/idle_enabled Y\n"
 	"/sys/module/lpm_levels/system/power/cpu4/standalone_pc/idle_enabled Y\n"
 	"/sys/module/lpm_levels/system/power/cpu4/pc/idle_enabled Y\n"
@@ -792,6 +794,8 @@ static char selfdischg_usage_str[] =
 	"/sys/module/lpm_levels/system/power/cpu5/standalone_pc/idle_enabled Y\n"
 	"/sys/module/lpm_levels/system/power/cpu5/pc/idle_enabled Y\n"
 	"[END]\n";
+
+	#define DISABLE_CPU_MASK	0x30 // CPU 4,5
 #elif defined(CONFIG_ARCH_MSM8916)
 	"[START]\n"
 	"/sys/module/lpm_levels/system/cpu0/wfi/idle_enabled N\n"
@@ -808,24 +812,50 @@ static char selfdischg_usage_str[] =
 	"/sys/module/lpm_levels/system/cpu1/standalone_pc/idle_enabled Y\n"
 	"/sys/module/lpm_levels/system/cpu1/pc/idle_enabled Y\n"
 	"[END]\n";
+
+	#define DISABLE_CPU_MASK	0x00 // not support
 #else
 	"[NOT_SUPPORT]\n";
+
+	#define DISABLE_CPU_MASK	0x00 // not support
 #endif
+
+int selfdischg_cpu_mask = 0;
+EXPORT_SYMBOL(selfdischg_cpu_mask);
 
 static ssize_t selfdischg_usage_show(struct kobject *kobj,
 					struct kobj_attribute *attr,
 					char *buf)
 {
-	pr_info("%s\n", __func__);
+	pr_info("%s(%x)\n", __func__, selfdischg_cpu_mask);
 	return sprintf(buf, "%s", selfdischg_usage_str);
+}
+
+static ssize_t selfdischg_usage_store(struct kobject *kobj,
+				       struct kobj_attribute *attr,
+				       const char *buf, size_t n)
+{
+	unsigned long val;
+
+	if (kstrtoul(buf, 10, &val))
+		return -EINVAL;
+
+	if ( val == 1 )
+		selfdischg_cpu_mask = DISABLE_CPU_MASK;
+	else if ( val == 0 )
+		selfdischg_cpu_mask = 0x00;
+	pr_info("[SELFDISCHG] CMASK:%x\n", selfdischg_cpu_mask);
+
+	return n;
 }
 
 static struct kobj_attribute selfdischg_usage_attr = {
 	.attr	= {
 		.name = __stringify(selfdischg_usage),
-		.mode = 0440,
+		.mode = 0640,
 	},
 	.show	= selfdischg_usage_show,
+	.store	= selfdischg_usage_store,
 };
 #endif /* CONFIG_SW_SELF_DISCHARGING */
 

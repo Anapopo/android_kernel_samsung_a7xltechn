@@ -315,13 +315,6 @@ config S5K5E3YX
 		S.LSI. 5MP Bayer Sensor with auto focus, uses
 		2 mipi lanes full resolution @30fps
 
-config SR552
-	bool "Sensor SR552 (BAYER 5M)"
-	depends on MSMB_CAMERA
-	---help---
-		S.LSI. 5MP Bayer Sensor with auto focus, uses
-		2 mipi lanes full resolution @30fps
-
 config S5K4ECGX
 	bool "Sensor s5k4ecgx (SOC 5MP)"
 	depends on MSMB_CAMERA

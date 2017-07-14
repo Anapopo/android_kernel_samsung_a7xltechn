@@ -61,6 +61,10 @@
 #define SM5705_REG_CURR_OFF         0x51
 #define SM5705_REG_CURR_P_SLOPE     0x52
 #define SM5705_REG_CURR_N_SLOPE     0x53
+#define SM5705_REG_CURRLCAL_0		0x54
+#define SM5705_REG_CURRLCAL_1		0x55
+#define SM5705_REG_CURRLCAL_2		0x56
+
 
 //for debug
 #define SM5705_REG_OCV_STATE		0x80

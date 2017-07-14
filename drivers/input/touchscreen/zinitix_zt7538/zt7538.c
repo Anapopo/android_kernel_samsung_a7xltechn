@@ -28,6 +28,250 @@ static int get_boot_mode(char *str)
 }
 __setup("calmode=", get_boot_mode);
 
+#ifdef CONFIG_SECURE_TOUCH
+static irqreturn_t zt7538_touch_work(int irq, void *data);
+
+/**
+ * Sysfs attr group for secure touch & interrupt handler for Secure world.
+ * @atomic : syncronization for secure_enabled
+ * @pm_runtime : set rpm_resume or rpm_idle
+ */
+
+static void secure_touch_notify(struct zt7538_ts_info *info)
+{
+	dev_dbg(&info->client->dev, "%s\n", __func__);
+	sysfs_notify(&info->input_dev->dev.kobj, NULL, "secure_touch");
+}
+
+static irqreturn_t secure_filter_interrupt(struct zt7538_ts_info *info)
+{
+	if (atomic_read(&info->secure_enabled) == SECURE_TOUCH_ENABLED) {
+		if (atomic_cmpxchg(&info->secure_pending_irqs, 0, 1) == 0) {
+			dev_dbg(&info->client->dev, "%s: pending irq:%d\n",
+					__func__, (int)atomic_read(&info->secure_pending_irqs));
+
+			secure_touch_notify(info);
+		} else {
+			dev_info(&info->client->dev, "%s --\n", __func__);
+		}
+
+		return IRQ_HANDLED;
+	}
+
+	return IRQ_NONE;
+}
+
+static int secure_touch_clk_prepare_enable(struct zt7538_ts_info *info)
+{
+	int ret;
+
+	if (!info->core_clk || !info->iface_clk) {
+		dev_err(&info->client->dev, "%s: error clk\n", __func__);
+		return -ENODEV;
+	}
+
+	ret = clk_prepare_enable(info->core_clk);
+	if (ret < 0) {
+		dev_err(&info->client->dev, "%s: failed core clk\n", __func__);
+		goto err_core_clk;
+	}
+
+	ret = clk_prepare_enable(info->iface_clk);
+	if (ret < 0) {
+		dev_err(&info->client->dev, "%s: failed iface clk\n", __func__);
+		goto err_iface_clk;
+	}
+
+	return 0;
+
+err_iface_clk:
+	clk_disable_unprepare(info->core_clk);
+err_core_clk:
+	return -ENODEV;
+}
+
+static void secure_touch_clk_unprepare_diable(struct zt7538_ts_info *info)
+{
+
+	if (!info->core_clk || !info->iface_clk) {
+		dev_err(&info->client->dev, "%s: error clk\n", __func__);
+		return;
+	}
+
+	clk_disable_unprepare(info->core_clk);
+	clk_disable_unprepare(info->iface_clk);
+}
+
+static ssize_t secure_touch_enable_show(struct device *dev,
+				struct device_attribute *attr, char *buf)
+{
+	struct zt7538_ts_info *info = dev_get_drvdata(dev);
+
+	return snprintf(buf, PAGE_SIZE, "%d", atomic_read(&info->secure_enabled));
+}
+
+static ssize_t secure_touch_enable_store(struct device *dev,
+				struct device_attribute *attr, const char *buf, size_t count)
+{
+	struct zt7538_ts_info *info = dev_get_drvdata(dev);
+	int data, ret;
+
+	ret = sscanf(buf, "%d", &data);
+	if (ret < 0) {
+		dev_err(&info->client->dev, "%s: failed to read\n", __func__);
+		return -EINVAL;
+	}
+
+	dev_info(&info->client->dev, "%s: %d\n", __func__, data);
+
+	if (data == 1) {
+		/* Enable Secure Mode */
+		if (atomic_read(&info->secure_enabled) == SECURE_TOUCH_ENABLED) {
+			dev_err(&info->client->dev, "%s: already enabled\n", __func__);
+			return -EBUSY;
+		}
+
+		if (pm_runtime_get(info->client->adapter->dev.parent) < 0) {
+			dev_err(&info->client->dev, "%s: failed to get pm_runtime\n", __func__);
+			return -EIO;
+		}
+
+		if (secure_touch_clk_prepare_enable(info) < 0) {
+			pm_runtime_put(info->client->adapter->dev.parent);
+			dev_err(&info->client->dev, "%s: failed to clk enable\n", __func__);
+			return -ENXIO;
+		}
+
+		/* zinitix timer stop */
+		esd_timer_stop(info);
+		write_reg(misc_info->client, ZT7538_PERIODICAL_INTERRUPT_INTERVAL, 0);
+
+		INIT_COMPLETION(info->secure_powerdown);
+		INIT_COMPLETION(info->secure_interrupt);
+
+		atomic_set(&info->secure_enabled, 1);
+		synchronize_irq(info->client->irq);
+		atomic_set(&info->secure_pending_irqs, 0);
+
+		dev_err(&info->client->dev, "%s: clk enable\n", __func__);
+
+	} else if (data == 0) {
+
+		/* Disable Secure Mode */
+		if (atomic_read(&info->secure_enabled) == SECURE_TOUCH_DISABLED) {
+			dev_err(&info->client->dev, "%s: already disabled\n", __func__);
+			return count;
+		}
+
+		secure_touch_clk_unprepare_diable(info);
+		pm_runtime_put(info->client->adapter->dev.parent);
+		atomic_set(&info->secure_enabled, 0);
+		secure_touch_notify(info);
+
+		zt7538_touch_work(info->client->irq, info);
+		complete(&info->secure_powerdown);
+		complete(&info->secure_interrupt);
+
+		/* zinitix timer start */
+		esd_timer_start(CHECK_ESD_TIMER, info);
+		write_reg(misc_info->client, ZT7538_PERIODICAL_INTERRUPT_INTERVAL, SCAN_RATE_HZ * ESD_TIMER_INTERVAL);
+		dev_err(&info->client->dev, "%s: clk disable\n", __func__);
+
+	} else {
+		dev_err(&info->client->dev, "%s: unsupported value, %d\n", __func__, data);
+		return -EINVAL;
+	}
+
+	dev_err(&info->client->dev, "%s done\n", __func__);
+
+	return count;
+}
+
+static ssize_t secure_touch_show(struct device *dev,
+				struct device_attribute *attr, char *buf)
+{
+	struct zt7538_ts_info *info = dev_get_drvdata(dev);
+
+	if (atomic_read(&info->secure_enabled) == SECURE_TOUCH_DISABLED) {
+		dev_err(&info->client->dev, "%s: disable\n", __func__);
+		goto secure_touch_out;
+	}
+
+	if (atomic_cmpxchg(&info->secure_pending_irqs, -1, 0) == -1) {
+		dev_err(&info->client->dev, "%s: secure_pending_irqs -1\n", __func__);
+		goto secure_touch_out;
+
+	}
+
+	if (atomic_cmpxchg(&info->secure_pending_irqs, 1, 0) != 1) {
+		dev_err(&info->client->dev, "%s: secure_pending_irqs != 1\n", __func__);
+		goto secure_touch_out;
+
+	}
+
+	complete(&info->secure_interrupt);
+
+	return snprintf(buf, PAGE_SIZE, "1");
+
+secure_touch_out:
+	return snprintf(buf, PAGE_SIZE, "0");
+}
+
+static struct device_attribute secure_attrs[] = {
+	__ATTR(secure_touch_enable, (S_IRUGO | S_IWUSR | S_IWGRP),
+				secure_touch_enable_show,
+				secure_touch_enable_store),
+	__ATTR(secure_touch, S_IRUGO,
+				secure_touch_show,
+				NULL),
+};
+
+static int secure_touch_init(struct zt7538_ts_info *info)
+{
+	dev_info(&info->client->dev, "%s\n", __func__);
+
+	init_completion(&info->secure_powerdown);
+	init_completion(&info->secure_interrupt);
+
+	info->core_clk = clk_get(&info->client->dev, "core_clk");
+	if (IS_ERR_OR_NULL(info->core_clk)) {
+		dev_err(&info->client->dev, "%s: failed to get core_clk: %ld\n",
+				__func__, PTR_ERR(info->core_clk));
+		goto err_core_clk;
+	}
+
+	info->iface_clk = clk_get(&info->client->dev, "iface_clk");
+	if (IS_ERR_OR_NULL(info->iface_clk)) {
+		dev_err(&info->client->dev, "%s: failed to get iface_clk: %ld\n",
+				__func__, PTR_ERR(info->iface_clk));
+		goto err_iface_clk;
+	}
+
+	return 0;
+
+err_iface_clk:
+	clk_put(info->core_clk);
+err_core_clk:
+	info->core_clk = NULL;
+	info->iface_clk = NULL;
+
+	return -ENODEV;
+}
+
+static void secure_touch_stop(struct zt7538_ts_info *info, bool stop)
+{
+	dev_info(&info->client->dev, "%s, %d\n", __func__, stop);
+
+	if (atomic_read(&info->secure_enabled)) {
+		atomic_set(&info->secure_pending_irqs, -1);
+		secure_touch_notify(info);
+
+		if (stop)
+			wait_for_completion_interruptible(&info->secure_powerdown);
+	}
+}
+#endif
+
 static void zinitix_delay(unsigned int ms)
 {
 	if (ms <= 20)
@@ -201,42 +445,42 @@ static inline s32 read_firmware_data(struct i2c_client *client, u16 addr, u8 *va
 	return length;
 }
 
+static void zt7538_set_cover_type(struct zt7538_ts_info *info, bool enable)
+{
+	m_optional_mode.select_mode.cover_type = info->cover_type;
+
+	if (enable)
+		zinitix_bit_set(m_optional_mode.select_mode.state, DEF_OPTIONAL_MODE_SVIEW_DETECT_BIT);
+	else
+		zinitix_bit_clr(m_optional_mode.select_mode.state, DEF_OPTIONAL_MODE_SVIEW_DETECT_BIT);
+
+	info->flip_state = enable;
+
+	dev_info(&info->client->dev, "%s: %d, %d\n", __func__, info->cover_type, enable);
+}
+
 static void zt7538_set_optional_mode(struct zt7538_ts_info *info, bool force)
 {
 	if (!info->device_enabled)
 		return;
-	if (m_prev_optional_mode == m_optional_mode && !force)
+
+	if (m_prev_optional_mode.optional_mode == m_optional_mode.optional_mode&& !force)
 		return;
 
-	if (write_reg(info->client, ZT7538_OPTIONAL_SETTING, m_optional_mode) == I2C_SUCCESS) {
+	if (write_reg(info->client, ZT7538_OPTIONAL_SETTING, m_optional_mode.optional_mode) == I2C_SUCCESS) {
 		m_prev_optional_mode = m_optional_mode;
 		dev_info(&misc_info->client->dev, "%s: 0x%04x\n",
-						__func__, m_optional_mode);
+						__func__, m_optional_mode.optional_mode);
 	}
 }
 static void zt7538_set_ta_status(struct zt7538_ts_info *info)
 {
 	if (ta_connected)
-		zinitix_bit_set(m_optional_mode, DEF_OPTIONAL_MODE_USB_DETECT_BIT);
+		zinitix_bit_set(m_optional_mode.select_mode.state, DEF_OPTIONAL_MODE_USB_DETECT_BIT);
 	else
-		zinitix_bit_clr(m_optional_mode, DEF_OPTIONAL_MODE_USB_DETECT_BIT);
+		zinitix_bit_clr(m_optional_mode.select_mode.state, DEF_OPTIONAL_MODE_USB_DETECT_BIT);
 
 	zt7538_set_optional_mode(info, false);
-}
-
-static void cover_set(struct zt7538_ts_info *info)
-{
-	if (g_cover_state == COVER_OPEN) {
-		zinitix_bit_clr(m_optional_mode, DEF_OPTIONAL_MODE_SVIEW_DETECT_BIT);
-	}
-	else if (g_cover_state == COVER_CLOSED) {
-		zinitix_bit_set(m_optional_mode, DEF_OPTIONAL_MODE_SVIEW_DETECT_BIT);
-	}
-
-	if (info->work_state == SUSPEND || info->work_state == EALRY_SUSPEND || info->work_state == PROBE)
-		return;
-
-	zt7538_set_optional_mode(info, true);
 }
 
 #ifdef TSP_MUIC_NOTIFICATION
@@ -245,16 +489,13 @@ int tsp_cable_check(muic_attached_dev_t attached_dev)
 	int current_cable_type = -1;
 
 	switch (attached_dev) {
-	case ATTACHED_DEV_NONE_MUIC:
-	case ATTACHED_DEV_OTG_MUIC:
-	case ATTACHED_DEV_JIG_UART_OFF_MUIC:
-	case ATTACHED_DEV_MHL_MUIC:
-	case ATTACHED_DEV_DESKDOCK_MUIC:
-	case ATTACHED_DEV_CHARGING_CABLE_MUIC:
-		current_cable_type = 0;
+	case ATTACHED_DEV_USB_MUIC:
+	case ATTACHED_DEV_CDP_MUIC:
+	case ATTACHED_DEV_TA_MUIC:
+		current_cable_type = 1;
 		break;
 	default:
-		current_cable_type = 1;
+		current_cable_type = 0;
 		break;
 	}
 
@@ -443,26 +684,20 @@ static bool ts_read_coord(struct zt7538_ts_info *info)
 				}
 			}
 		}
-#endif
-
+#else
 	if (read_data(info->client, ZT7538_POINT_STATUS_REG,
 			(u8 *)(&info->touch_info), sizeof(struct point_info)) < 0) {
 		dev_err(&client->dev, "Failed to read point info\n");
 		return false;
 	}
+
+#endif
+
 out:
 	if (zinitix_bit_test(info->touch_info.status, BIT_MUST_ZERO)) {
 		dev_err(&client->dev, "Invalid must zero bit(%04x)\n", info->touch_info.status);
 		return false;
 	}
-#ifdef DEF_OPTIONAL_STATE_CHECK
-	if (zinitix_bit_test(info->touch_info.status, BIT_DEBUG)) {
-		if (read_data(info->client, ZT7538_DEBUG_REGSITER,	(u8 *)&m_debug_register, 2 ) < 0) {
-			dev_err(&client->dev, "error read debug register\n");
-			return false;
-		}
-	}
-#endif
 	write_cmd(info->client, ZT7538_CLEAR_INT_STATUS_CMD);
 
 	return true;
@@ -1178,24 +1413,6 @@ retry_init:
 
 	cap->total_node_num = cap->x_node_num * cap->y_node_num;
 
-	if (read_data(client, ZT7538_DND_CP_CTRL_L, (u8 *)&cap->cp_ctrl_l, 2) < 0)
-		goto fail_init;
-
-	if (read_data(client, ZT7538_DND_V_FORCE, (u8 *)&cap->v_force, 2) < 0)
-		goto fail_init;
-
-	if (read_data(client, ZT7538_DND_AMP_V_SEL, (u8 *)&cap->amp_v_sel, 2) < 0)
-		goto fail_init;
-
-	if (read_data(client, ZT7538_DND_N_COUNT, (u8 *)&cap->N_cnt, 2) < 0)
-		goto fail_init;
-
-	if (read_data(client, ZT7538_DND_U_COUNT, (u8 *)&cap->u_cnt, 2) < 0)
-		goto fail_init;
-
-	if (read_data(client, ZT7538_AFE_FREQUENCY, (u8 *)&cap->afe_frequency, 2) < 0)
-		goto fail_init;
-
 	/* get chip firmware version */
 	if (read_data(client, ZT7538_FIRMWARE_VERSION, (u8 *)&cap->fw_version, 2) < 0)
 		goto fail_init;
@@ -1249,9 +1466,6 @@ retry_init:
 		if (write_reg(client, ZT7538_INT_ENABLE_FLAG, 0) != I2C_SUCCESS)
 			goto fail_init;
 	}
-
-	if (write_reg(client, ZT75XX_RESOLUTION_EXPANDER, 4))  //resolution * 4
-		goto fail_init;
 
 	cap->MinX = (u32)0;
 	cap->MinY = (u32)0;
@@ -1375,9 +1589,6 @@ static bool mini_init_touch(struct zt7538_ts_info *info)
 		goto fail_mini_init;
 	}
 
-	if (write_reg(client, ZT75XX_RESOLUTION_EXPANDER, 4)) //resolution * 4
-		goto fail_mini_init;
-
 	if (write_reg(client, ZT7538_BUTTON_SUPPORTED_NUM, (u16)info->cap_info.button_num) != I2C_SUCCESS)
 		goto fail_mini_init;
 
@@ -1389,6 +1600,17 @@ static bool mini_init_touch(struct zt7538_ts_info *info)
 
 	if (write_reg(client, ZT7538_TOUCH_MODE, info->touch_mode) != I2C_SUCCESS)
 		goto fail_mini_init;
+
+	if (info->flip_enable) {
+		zt7538_set_cover_type(info, true);
+		dev_err(&client->dev, "%s zt7538_set_cover_type\n", __func__);
+	}
+
+	if (info->flip_state != info->flip_enable) {
+			dev_err(&info->client->dev, "%s: not equal cover state.(%d, %d)\n",
+				__func__, info->flip_state, info->flip_enable);
+			zt7538_set_cover_type(info, info->flip_enable);
+	}
 
 	zt7538_set_ta_status(info);
 	zt7538_set_optional_mode(info, true);
@@ -1463,9 +1685,9 @@ static void clear_report_data(struct zt7538_ts_info *info)
 	for (i = 0; i < info->cap_info.multi_fingers; i++) {
 		sub_status = info->reported_touch_info.coord[i].sub_status;
 		if (zinitix_bit_test(sub_status, SUB_BIT_EXIST)) {
-			dev_info(&info->client->dev, "[%d][R] M[%d] Ver[%02x] Mode[%02x]\n",
+			dev_info(&info->client->dev, "[%d][R] M[%d] Ver[%02x] Mode[%04x]\n",
 					i, info->move_cnt[i],
-					info->cap_info.reg_data_version, m_optional_mode);
+					info->cap_info.reg_data_version, m_optional_mode.optional_mode);
 			info->move_cnt[i] = 0;
 			input_mt_slot(info->input_dev, i);
 #ifdef REPORT_2D_Z
@@ -1505,9 +1727,24 @@ static irqreturn_t zt7538_touch_work(int irq, void *data)
 #endif
 	u8 palm = 0;
 
-#ifdef DEF_OPTIONAL_STATE_CHECK
-	m_debug_register = 0;
+#ifdef CONFIG_SECURE_TOUCH
+	if (IRQ_HANDLED == secure_filter_interrupt(info)) {
+		wait_for_completion_interruptible_timeout(&info->secure_interrupt,
+				msecs_to_jiffies(5 * MSEC_PER_SEC));
+
+		dev_dbg(&info->client->dev,
+				"%s: secure interrupt handled\n", __func__);
+
+		return IRQ_HANDLED;
+	}
 #endif
+
+/* in LPM, waiting blsp block resume */
+	if (info->is_lpm_suspend) {
+		wake_lock_timeout(&info->wakelock, msecs_to_jiffies(3 * MSEC_PER_SEC));
+		/* waiting for blsp block resuming, if not occurs i2c error */
+		wait_for_completion_interruptible(&info->resume_done);	
+	}
 
 	if (gpio_get_value(info->pdata->gpio_int)) {
 		dev_err(&client->dev, "Invalid interrupt\n");
@@ -1583,6 +1820,21 @@ static irqreturn_t zt7538_touch_work(int irq, void *data)
 		}
 	}
 #endif
+		if (info->spay_mode) {
+			if (zinitix_bit_test(info->touch_info.status, BIT_GESTURE)) {
+				dev_info(&client->dev, "%s gesture event \n", __func__);
+				/* ID for Gesture */
+				info->scrub_id = 0x04;
+				input_report_key(info->input_dev, KEY_BLACK_UI_GESTURE, 1);
+				input_sync(info->input_dev);
+				input_report_key(info->input_dev, KEY_BLACK_UI_GESTURE, 0);
+				input_sync(info->input_dev);
+				info->work_state = NOTHING;
+				up(&info->work_lock);
+
+				return IRQ_HANDLED;;
+			}
+		}
 
 #ifdef SUPPORTED_PALM_TOUCH
 		if(zinitix_bit_test(info->touch_info.status, BIT_PALM)){
@@ -1670,8 +1922,6 @@ static irqreturn_t zt7538_touch_work(int irq, void *data)
 		} else
 			memset(&info->touch_info.coord[i], 0x0, sizeof(struct coord));
 
-		input_sync(info->input_dev);
-
 		if (zinitix_bit_test(sub_status, SUB_BIT_EXIST) && zinitix_bit_test(sub_status, SUB_BIT_DOWN)) {
 #if !defined(CONFIG_SAMSUNG_PRODUCT_SHIP)
 			dev_info(&client->dev, "[%d][P] x = %d, y = %d,"
@@ -1682,19 +1932,21 @@ static irqreturn_t zt7538_touch_work(int irq, void *data)
 #endif
 		} else if ( (!zinitix_bit_test(sub_status, SUB_BIT_EXIST)) && (zinitix_bit_test(sub_status, SUB_BIT_UP) ||
 			zinitix_bit_test(prev_sub_status, SUB_BIT_EXIST)) ) {
-			dev_info(&client->dev, "[%d][R] M[%d] Ver[%02x] Mode[%02x]\n",
+			dev_info(&client->dev, "[%d][R] M[%d] Ver[%02x] Mode[%04x]\n",
 					i, info->move_cnt[i],
-					info->cap_info.reg_data_version, m_optional_mode);
+					info->cap_info.reg_data_version, m_optional_mode.optional_mode);
 			info->move_cnt[i] = 0;
 		}
 	}
 	memcpy((char *)&info->reported_touch_info, (char *)&info->touch_info,
 							sizeof(struct point_info));
+
+	input_sync(info->input_dev);
 out:
 	zt7538_set_optional_mode(info, false);
 #ifdef DEF_OPTIONAL_STATE_CHECK
-	if(m_debug_register) {
-		dev_info(&client->dev, "debug_register = [0x%04x]\n", m_debug_register);
+	if (zinitix_bit_test(info->touch_info.status, BIT_DEBUG)) {
+		dev_info(&client->dev, "debug_register = [0x%04x]\n", info->touch_info.reg_debug);
 	}
 #endif
 #ifdef CONFIG_INPUT_BOOSTER
@@ -1714,8 +1966,32 @@ out:
 	return IRQ_HANDLED;
 }
 
+static void zt7538_reset_work(struct work_struct *work)
+{
+	struct zt7538_ts_info *info =
+				container_of(work, struct zt7538_ts_info, reset_work.work);
+	struct i2c_client *client = info->client;
+
+	dev_err(&client->dev, "%s start\n", __func__);
+	
+	info->device_enabled = 0;
+/* IC reset */
+	disable_irq(info->irq);
+	zt7538_power_control(info, POWER_OFF);
+	zt7538_power_control(info, POWER_ON_SEQUENCE);
+
+	info->device_enabled = 1;
+/* enter normal mode */
+	write_cmd(info->client, ZT7538_WAKEUP_CMD);
+	if (!mini_init_touch(info))
+		dev_info(&info->client->dev, "Failed to input_open\n");
+	enable_irq(info->irq);
+
+	dev_err(&client->dev, "%s finish\n", __func__);
+}
+
 #if defined(CONFIG_PM)
-static int zt7538_ts_resume(struct device *dev)
+static int zt7538_ts_open(struct device *dev)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct zt7538_ts_info *info = i2c_get_clientdata(client);
@@ -1744,7 +2020,7 @@ static int zt7538_ts_resume(struct device *dev)
 	return 0;
 }
 
-static int zt7538_ts_suspend(struct device *dev)
+static int zt7538_ts_close(struct device *dev)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct zt7538_ts_info *info = i2c_get_clientdata(client);
@@ -1773,7 +2049,6 @@ static int zt7538_ts_suspend(struct device *dev)
 	esd_timer_stop(info);
 #endif
 
-	write_cmd(info->client, ZT7538_SLEEP_CMD);
 	info->work_state = SUSPEND;
 	zt7538_power_control(info, POWER_OFF);
 	zt7538_pinctrl_configure(info, 0);
@@ -1790,7 +2065,19 @@ static int zt7538_input_open(struct input_dev *dev)
 
 	info = input_get_drvdata(dev);
 	dev_info(&info->client->dev, "%s\n", __func__);
-	return zt7538_ts_resume(&info->client->dev);
+
+#ifdef CONFIG_SCURE_TOUCH
+	secure_touch_stop(info, 0);
+#endif
+
+	if (info->spay_mode) {
+		if (device_may_wakeup(&info->client->dev))
+			disable_irq_wake(info->irq);
+		schedule_work(&info->reset_work.work);
+	} else
+		zt7538_ts_open(&info->client->dev);
+
+	return 0;
 }
 static void zt7538_input_close(struct input_dev *dev)
 {
@@ -1798,7 +2085,27 @@ static void zt7538_input_close(struct input_dev *dev)
 
 	info = input_get_drvdata(dev);
 	dev_info(&info->client->dev, "%s\n", __func__);
-	zt7538_ts_suspend(&info->client->dev);
+#ifdef CONFIG_SECURE_TOUCH
+		secure_touch_stop(info, 1);
+#endif
+
+	if (info->spay_mode) {
+		info->device_enabled = 0;
+		disable_irq(info->irq);
+#if ESD_TIMER_INTERVAL
+		flush_work(&info->tmr_work);
+		clear_report_data(info);
+		esd_timer_stop(info);
+#endif
+
+/* Enter sleep mode and gesture mode */
+		write_cmd(info->client, ZT7538_SLEEP_CMD);
+		enable_irq(info->irq);
+
+		if (device_may_wakeup(&info->client->dev))
+			enable_irq_wake(info->irq);
+	}	else
+		zt7538_ts_close(&info->client->dev);
 }
 
 /* For DND*/
@@ -1818,49 +2125,8 @@ static bool ts_set_touchmode(u16 value)
 
 	write_cmd(misc_info->client, ZT7538_WAKEUP_CMD);
 	zinitix_delay(50);
-	if (misc_info->touch_mode == TOUCH_POINT_MODE) {
-		/* factory data */
-		read_data(misc_info->client, ZT7538_MUTUAL_AMP_V_SEL,
-				(u8 *)&misc_info->cap_info.mutual_amp_v_sel, 2);
-		read_data(misc_info->client, ZT7538_AFE_FREQUENCY,
-				(u8 *)&misc_info->cap_info.afe_frequency, 2);
-		read_data(misc_info->client, ZT7538_DND_SHIFT_VALUE,
-				(u8 *)&misc_info->cap_info.shift_value, 2);
-	}
+
 	misc_info->work_state = SET_MODE;
-
-	if (value == TOUCH_DND_MODE) {
-		if (write_reg(misc_info->client, ZT7538_DND_N_COUNT,
-				SEC_DND_N_COUNT)!=I2C_SUCCESS)
-			dev_info(&misc_info->client->dev, "[zinitix_touch] TEST Mode : "
-					"Fail to set ZT7538_DND_N_COUNT %d.\n", SEC_DND_N_COUNT);
-		if (write_reg(misc_info->client, ZT7538_DND_U_COUNT,
-				SEC_DND_U_COUNT)!=I2C_SUCCESS)
-			dev_info(&misc_info->client->dev, "[zinitix_touch] TEST Mode : "
-					"Fail to set ZT7538_DND_U_COUNT %d.\n", SEC_DND_U_COUNT);
-		if (write_reg(misc_info->client, ZT7538_AFE_FREQUENCY,
-				SEC_DND_FREQUENCY)!=I2C_SUCCESS)
-			dev_info(&misc_info->client->dev, "[zinitix_touch] TEST Mode : "
-					"Fail to set ZT7538_AFE_FREQUENCY %d.\n", SEC_DND_FREQUENCY);
-	} else if (misc_info->touch_mode == TOUCH_DND_MODE) {
-		if (write_reg(misc_info->client, ZT7538_MUTUAL_AMP_V_SEL,
-				misc_info->cap_info.mutual_amp_v_sel) != I2C_SUCCESS)
-			dev_info(&misc_info->client->dev, "[zinitix_touch] TEST Mode : "
-					"Fail to reset ZT7538_MUTUAL_AMP_V_SEL %d.\n",
-					misc_info->cap_info.mutual_amp_v_sel);
-
-		if (write_reg(misc_info->client, ZT7538_DND_SHIFT_VALUE,
-				misc_info->cap_info.shift_value) != I2C_SUCCESS)
-			dev_info(&misc_info->client->dev, "[zinitix_touch] TEST Mode : "
-					"Fail to reset ZT7538_DND_SHIFT_VALUE %d.\n",
-					misc_info->cap_info.shift_value);
-
-		if (write_reg(misc_info->client, ZT7538_AFE_FREQUENCY,
-				misc_info->cap_info.afe_frequency) != I2C_SUCCESS)
-			dev_info(&misc_info->client->dev, "[zinitix_touch] TEST Mode : "
-					"Fail to reset ZT7538_AFE_FREQUENCY %d.\n",
-					misc_info->cap_info.afe_frequency);
-	}
 
 	if (value == TOUCH_SEC_MODE)
 		misc_info->touch_mode = TOUCH_POINT_MODE;
@@ -1899,102 +2165,6 @@ static bool ts_set_touchmode(u16 value)
 	return 1;
 }
 
-/* For HFDND */
-static bool ts_set_touchmode2(u16 value)
-{
-	int i;
-
-	disable_irq(misc_info->irq);
-
-	down(&misc_info->work_lock);
-	if (misc_info->work_state != NOTHING) {
-		dev_info(&misc_info->client->dev, "other process occupied.. (%d)\n",
-			misc_info->work_state);
-		enable_irq(misc_info->irq);
-		up(&misc_info->work_lock);
-		return -1;
-	}
-
-	write_cmd(misc_info->client, ZT7538_WAKEUP_CMD);
-	zinitix_delay(50);
-	if (misc_info->touch_mode == TOUCH_POINT_MODE) {
-		/* factory data */
-		read_data(misc_info->client, ZT7538_MUTUAL_AMP_V_SEL,
-				(u8 *)&misc_info->cap_info.mutual_amp_v_sel, 2);
-		read_data(misc_info->client, ZT7538_AFE_FREQUENCY,
-				(u8 *)&misc_info->cap_info.afe_frequency, 2);
-		read_data(misc_info->client, ZT7538_DND_SHIFT_VALUE,
-				(u8 *)&misc_info->cap_info.shift_value, 2);
-	}
-	misc_info->work_state = SET_MODE;
-
-	if(value == TOUCH_DND_MODE) {
-		if (write_reg(misc_info->client, ZT7538_DND_N_COUNT,
-				SEC_HFDND_N_COUNT)!=I2C_SUCCESS)
-			dev_info(&misc_info->client->dev, "[zinitix_touch] TEST Mode : "
-					"Fail to set ZT7538_HFDND_N_COUNT %d.\n", SEC_HFDND_N_COUNT);
-		if (write_reg(misc_info->client, ZT7538_DND_U_COUNT,
-				SEC_HFDND_U_COUNT)!=I2C_SUCCESS)
-			dev_info(&misc_info->client->dev, "[zinitix_touch] TEST Mode : "
-					"Fail to set ZT7538_HFDND_U_COUNT %d.\n", SEC_HFDND_U_COUNT);
-		if (write_reg(misc_info->client, ZT7538_AFE_FREQUENCY,
-				SEC_HFDND_FREQUENCY)!=I2C_SUCCESS)
-			dev_info(&misc_info->client->dev, "[zinitix_touch] TEST Mode : "
-					"Fail to set ZT7538_AFE_FREQUENCY %d.\n", SEC_HFDND_FREQUENCY);
-	} else if (misc_info->touch_mode == TOUCH_DND_MODE) {
-		if (write_reg(misc_info->client, ZT7538_MUTUAL_AMP_V_SEL,
-				misc_info->cap_info.mutual_amp_v_sel) != I2C_SUCCESS)
-			dev_info(&misc_info->client->dev, "[zinitix_touch] TEST Mode : "
-					"Fail to reset ZT7538_MUTUAL_AMP_V_SEL %d.\n",
-					misc_info->cap_info.mutual_amp_v_sel);
-
-		if (write_reg(misc_info->client, ZT7538_DND_SHIFT_VALUE,
-				misc_info->cap_info.shift_value) != I2C_SUCCESS)
-			dev_info(&misc_info->client->dev, "[zinitix_touch] TEST Mode : "
-					"Fail to reset ZT7538_DND_SHIFT_VALUE %d.\n",
-					misc_info->cap_info.shift_value);
-
-		if (write_reg(misc_info->client, ZT7538_AFE_FREQUENCY,
-				misc_info->cap_info.afe_frequency) != I2C_SUCCESS)
-			dev_info(&misc_info->client->dev, "[zinitix_touch] TEST Mode : "
-					"Fail to reset ZT7538_AFE_FREQUENCY %d.\n",
-					misc_info->cap_info.afe_frequency);
-	}
-	if (value == TOUCH_SEC_MODE)
-		misc_info->touch_mode = TOUCH_POINT_MODE;
-	else
-		misc_info->touch_mode = value;
-
-	dev_info(&misc_info->client->dev, "[zinitix_touch] tsp_set_testmode, "
-			"touchkey_testmode = %d\r\n", misc_info->touch_mode);
-
-	if (misc_info->touch_mode != TOUCH_POINT_MODE) {
-		if (write_reg(misc_info->client, ZT7538_DELAY_RAW_FOR_HOST,
-				RAWDATA_DELAY_FOR_HOST) != I2C_SUCCESS)
-			dev_info(&misc_info->client->dev,
-					"Fail to set ZT7538_DELAY_RAW_FOR_HOST.\r\n");
-	}
-
-	if (write_reg(misc_info->client, ZT7538_TOUCH_MODE,
-			misc_info->touch_mode) != I2C_SUCCESS)
-		dev_info(&misc_info->client->dev, "[zinitix_touch] TEST Mode : "
-				"Fail to set ZINITX_TOUCH_MODE %d.\r\n", misc_info->touch_mode);
-
-	if (write_cmd(misc_info->client, ZT7538_SWRESET_CMD) != I2C_SUCCESS) {
-		dev_info(&misc_info->client->dev, "Failed to write reset command\n");
-	}
-
-	/* clear garbage data */
-	for (i = 0; i < 10; i++) {
-		zinitix_delay(20);
-		write_cmd(misc_info->client, ZT7538_CLEAR_INT_STATUS_CMD);
-	}
-
-	misc_info->work_state = NOTHING;
-	enable_irq(misc_info->irq);
-	up(&misc_info->work_lock);
-	return 1;
-}
 static int ts_upgrade_sequence(const u8 *firmware_data)
 {
 	bool ret = true;
@@ -2051,24 +2221,18 @@ static struct tsp_cmd tsp_cmds[] = {
 	{TSP_CMD("get_dnd_v_gap", get_dnd_v_gap),},
 	{TSP_CMD("run_dnd_h_gap_read", run_dnd_h_gap_read),},
 	{TSP_CMD("get_dnd_h_gap", get_dnd_h_gap),},
-	{TSP_CMD("run_hfdnd_read", run_hfdnd_read),},
-	{TSP_CMD("get_hfdnd", get_hfdnd),},
-	{TSP_CMD("get_hfdnd_all_data", get_hfdnd_all_data),},
-	{TSP_CMD("run_hfdnd_v_gap_read", run_hfdnd_v_gap_read),},
-	{TSP_CMD("get_hfdnd_v_gap", get_hfdnd_v_gap),},
-	{TSP_CMD("run_hfdnd_h_gap_read", run_hfdnd_h_gap_read),},
-	{TSP_CMD("get_hfdnd_h_gap", get_hfdnd_h_gap),},
 	{TSP_CMD("run_delta_read", run_delta_read),},
 	{TSP_CMD("get_delta", get_delta),},
 	{TSP_CMD("get_delta_all_data", get_delta_all_data),},
 	{TSP_CMD("dead_zone_enable", dead_zone_enable),},
+	{TSP_CMD("spay_enable", spay_enable),},
 	{TSP_CMD("clear_cover_mode", clear_cover_mode),},
 	{TSP_CMD("clear_reference_data", clear_reference_data),},
 	{TSP_CMD("run_ref_calibration", run_ref_calibration),},
+	{TSP_CMD("get_checksum_data", get_checksum_data),},
 #ifdef CONFIG_INPUT_BOOSTER
 	{TSP_CMD("boost_level", boost_level),},
 #endif
-	{TSP_CMD("hfdnd_spec_adjust", hfdnd_spec_adjust),},
 };
 
 static inline void set_cmd_result(struct tsp_factory_info *finfo, char *buff, int len)
@@ -2609,48 +2773,6 @@ all_data_out:
 	info->get_all_data = false;
 }
 
-static void hfdnd_spec_adjust(void *device_data)
-{
-	struct zt7538_ts_info *info = (struct zt7538_ts_info *)device_data;
-	struct i2c_client *client = info->client;
-	struct tsp_factory_info *finfo = info->factory_info;
-	int test;
-
-	set_default_result(finfo);
-
-	test = finfo->cmd_param[0];
-
-	if (test) {	/* set : assy */
-		info->dnd_max_spec = DND_MAX_Ref_data;
-		info->dnd_min_spec = DND_MIN_Ref_data;
-		info->dnd_v_gap_spec = DND_V_GAP_Ref_data;
-		info->dnd_h_gap_spec = DND_H_GAP_Ref_data;
-		info->hfdnd_max_spec = HF_DND_MAX_Ref_data;
-		info->hfdnd_min_spec = HF_DND_MIN_Ref_data;
-		info->hfdnd_v_gap_spec = HF_DND_V_GAP_Ref_data;
-		info->hfdnd_h_gap_spec = HF_DND_H_GAP_Ref_data;
-		dev_info(&client->dev, "%s: set set spec: %d\n", __func__, test);
-	} else {	/* module */
-		info->dnd_max_spec = Module_DND_MAX_Ref_data;
-		info->dnd_min_spec = Module_DND_MIN_Ref_data;
-		info->dnd_v_gap_spec = Module_DND_V_GAP_Ref_data;
-		info->dnd_h_gap_spec = Module_DND_H_GAP_Ref_data;
-		info->hfdnd_max_spec = Module_HF_DND_MAX_Ref_data;
-		info->hfdnd_min_spec = Module_HF_DND_MIN_Ref_data;
-		info->hfdnd_v_gap_spec = Module_HF_DND_V_GAP_Ref_data;
-		info->hfdnd_h_gap_spec = Module_HF_DND_H_GAP_Ref_data;
-		dev_info(&client->dev, "%s: set module spec: %d\n", __func__, test);
-	}
-
-	snprintf(finfo->cmd_buff, sizeof(finfo->cmd_buff), "%s", "OK");
-	set_cmd_result(finfo, finfo->cmd_buff, (int)strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-	finfo->cmd_state = OK;
-
-	dev_info(&client->dev, "%s: %s(%d)\n", __func__,
-			finfo->cmd_buff, (int)strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-	return;
-}
-
 static void run_dnd_read(void *device_data)
 {
 	struct zt7538_ts_info *info = (struct zt7538_ts_info *)device_data;
@@ -2659,8 +2781,6 @@ static void run_dnd_read(void *device_data)
 	struct tsp_raw_data *raw_data = info->raw_data;
 	u16 min, max;
 	s32 i, j,offset;
-	int fx, fy;
-	bool result = true;
 
 #if ESD_TIMER_INTERVAL
 	esd_timer_stop(misc_info);
@@ -2684,28 +2804,12 @@ static void run_dnd_read(void *device_data)
 				min = raw_data->dnd_data[offset];
 			if (raw_data->dnd_data[offset] > max)
 				max = raw_data->dnd_data[offset];
-			if (result && offset < ZT7538_DND_DATA_SIZE &&
-				(raw_data->dnd_data[offset] > info->dnd_max_spec[offset]
-				|| raw_data->dnd_data[offset] < info->dnd_min_spec[offset])) {
-				result = false;
-				fx = i;
-				fy = j;
-				pr_cont("(E)");
-			}
 		}
 		pr_cont("\n");
 	}
 
-	if(result) {
-		sprintf(finfo->cmd_buff, "%s", "OK");
-	} else {
-		offset = (fx * info->cap_info.y_node_num) + fy;
-		sprintf(finfo->cmd_buff, "%d,%d,%d,%d,%d", fx, fy,
-					info->dnd_min_spec[offset],
-					info->dnd_max_spec[offset],
-					raw_data->dnd_data[offset]);
-		pr_info("%s: dnd data view fail: [%d][%d]\n", info->client->name, fx, fy);
-	}
+	snprintf(finfo->cmd_buff, sizeof(finfo->cmd_buff), "%d,%d", min, max);
+
 	if (!info->get_all_data) {
 		set_cmd_result(finfo, finfo->cmd_buff,
 				strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
@@ -2776,9 +2880,7 @@ static void run_dnd_v_gap_read(void *device_data)
 	int x_num = info->cap_info.x_node_num, y_num = info->cap_info.y_node_num;
 	int i, j, offset, val, cur_val, next_val;
 	u16 screen_max = 0x0000;
-	u16 touchkey_max = 0x0000;
-	int fx, fy;
-	bool result = true;
+
 	set_default_result(finfo);
 
 	memset(raw_data->vgap_data, 0x00, TSP_CMD_NODE_NUM);
@@ -2792,7 +2894,7 @@ static void run_dnd_v_gap_read(void *device_data)
 
 			cur_val = raw_data->dnd_data[offset];
 			next_val = raw_data->dnd_data[offset + y_num];
-			if ((i >= x_num - 2) && !next_val) {	/* touchkey node */
+			if (!next_val) {
 				raw_data->vgap_data[offset] = next_val;
 				continue;
 			}
@@ -2806,35 +2908,14 @@ static void run_dnd_v_gap_read(void *device_data)
 
 			raw_data->vgap_data[offset] = val;
 
-			if (i < x_num - 2){
-				if (raw_data->vgap_data[offset] > screen_max)
-					screen_max = raw_data->vgap_data[offset];
-			} else {	/* touchkey node */
-				if (raw_data->vgap_data[offset] > touchkey_max)
-					touchkey_max = raw_data->vgap_data[offset];
-			}
-			if (result && offset < ZT7538_V_GAP_DATA_SIZE &&
-				raw_data->vgap_data[offset] > info->dnd_v_gap_spec[offset]) {
-				result = false;
-				fx = i;
-				fy = j;
-				pr_cont("(E)");
-			}
+			if (raw_data->vgap_data[offset] > screen_max)
+				screen_max = raw_data->vgap_data[offset];
+
 		}
 		pr_cont("\n");
 	}
 
-	dev_info(&client->dev, "DND V Gap screen_max %d touchkey_max %d\n", screen_max, touchkey_max);
-
-	if (result) {
-		sprintf(finfo->cmd_buff, "%s", "OK");
-	} else {
-		offset = (fx * y_num) + fy;
-		sprintf(finfo->cmd_buff, "%d,%d,%d,%d,%d", fx, fy,
-					0, info->dnd_v_gap_spec[offset],
-					raw_data->vgap_data[offset]);
-		pr_info("%s: dnd v gap view fail: [%d][%d]\n", info->client->name, fx, fy);
-	}
+	snprintf(finfo->cmd_buff, sizeof(finfo->cmd_buff), "%d", screen_max);
 
 	set_cmd_result(finfo, finfo->cmd_buff,
 			strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
@@ -2852,9 +2933,6 @@ static void run_dnd_h_gap_read(void *device_data)
 	int x_num = info->cap_info.x_node_num, y_num = info->cap_info.y_node_num;
 	int i, j, offset, val, cur_val, next_val;
 	u16 screen_max = 0x0000;
-	u16 touchkey_max = 0x0000;
-	int fx, fy;
-	bool result = true;
 
 	set_default_result(finfo);
 
@@ -2897,35 +2975,14 @@ static void run_dnd_h_gap_read(void *device_data)
 
 			raw_data->hgap_data[offset] = val;
 
-			if (i < x_num - 1) {
-					if (raw_data->hgap_data[offset] > screen_max)
-						screen_max = raw_data->hgap_data[offset];
-			} else {	/* touchkey node */
-				if (raw_data->hgap_data[offset] > touchkey_max)
-					touchkey_max = raw_data->hgap_data[offset];
-			}
-			if (result && offset < ZT7538_H_GAP_DATA_SIZE &&
-				raw_data->hgap_data[offset] > info->dnd_h_gap_spec[offset]) {
-				result = false;
-				fx = i;
-				fy = j;
-				pr_cont("(E)");
-			}
+			if (raw_data->hgap_data[offset] > screen_max)
+				screen_max = raw_data->hgap_data[offset];
+
 		}
 		pr_cont("\n");
 	}
 
-	dev_info(&client->dev, "DND H Gap screen_max %d, touchkey_max %d\n", screen_max, touchkey_max);
-
-	if(result) {
-		sprintf(finfo->cmd_buff, "%s", "OK");
-	} else {
-		offset = (fx * y_num) + fy;
-		sprintf(finfo->cmd_buff, "%d,%d,%d,%d,%d", fx, fy,
-					0, info->dnd_h_gap_spec[offset],
-					raw_data->hgap_data[offset]);
-		pr_info("%s: dnd h gap view fail: [%d][%d]\n", info->client->name, fx, fy);
-	}
+	snprintf(finfo->cmd_buff, sizeof(finfo->cmd_buff), "%d", screen_max);
 	set_cmd_result(finfo, finfo->cmd_buff,
 			strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
 	finfo->cmd_state = OK;
@@ -2996,353 +3053,6 @@ static void get_dnd_v_gap(void *device_data)
 }
 
 
-static void run_hfdnd_read(void *device_data)
-{
-	struct zt7538_ts_info *info = (struct zt7538_ts_info *)device_data;
-	struct i2c_client *client = info->client;
-	struct tsp_factory_info *finfo = info->factory_info;
-	struct tsp_raw_data *raw_data = info->raw_data;
-	int x_num = info->cap_info.x_node_num, y_num = info->cap_info.y_node_num;
-	int i, j, offset;
-	u16 min = 0xFFFF, max = 0x0000;
-	int fx, fy;
-	bool result = true;
-
-#if ESD_TIMER_INTERVAL
-	esd_timer_stop(misc_info);
-#endif
-	set_default_result(finfo);
-
-	ts_set_touchmode2(TOUCH_DND_MODE);
-	get_raw_data(info, (u8 *)raw_data->hfdnd_data, 2);
-	ts_set_touchmode(TOUCH_POINT_MODE);
-
-	dev_info(&client->dev, "HF DND start\n");
-
-	for (i = 0; i < x_num; i++) {
-		pr_info("%s: hfdnd_data[%2d] :", client->name, i);
-		for (j = 0; j < y_num; j++) {
-			offset = (i * y_num) + j;
-			pr_cont(" %5d", raw_data->hfdnd_data[offset]);
-			if (raw_data->hfdnd_data[offset] < min && raw_data->hfdnd_data[offset] != 0)
-				min = raw_data->hfdnd_data[offset];
-			if (raw_data->hfdnd_data[offset] > max)
-				max = raw_data->hfdnd_data[offset];
-			if (result && offset < ZT7538_DND_DATA_SIZE &&
-				(raw_data->hfdnd_data[offset] > info->hfdnd_max_spec[offset]
-				|| raw_data->hfdnd_data[offset] < info->hfdnd_min_spec[offset])) {
-				result = false;
-				fx = i;
-				fy = j;
-				pr_cont("(E)");
-			}
-		}
-		pr_cont("\n");
-	}
-
-	if(result) {
-		sprintf(finfo->cmd_buff, "%s", "OK");
-	} else {
-		offset = (fx * info->cap_info.y_node_num) + fy;
-		sprintf(finfo->cmd_buff, "%d,%d,%d,%d,%d", fx, fy,
-					info->hfdnd_min_spec[offset],
-					info->hfdnd_max_spec[offset],
-					raw_data->hfdnd_data[offset]);
-		pr_info("%s: hfdnd data view fail: [%d][%d]\n", info->client->name, fx, fy);
-	}
-	if (!info->get_all_data) {
-		set_cmd_result(finfo, finfo->cmd_buff,
-				strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-		finfo->cmd_state = OK;
-	}
-
-	dev_info(&client->dev, "%s: %s(%d)\n", __func__, finfo->cmd_buff,
-		(int)strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-
-#if ESD_TIMER_INTERVAL
-	esd_timer_start(CHECK_ESD_TIMER, misc_info);
-#endif
-	return;
-}
-
-static void get_hfdnd(void *device_data)
-{
-	struct zt7538_ts_info *info = (struct zt7538_ts_info *)device_data;
-	struct i2c_client *client = info->client;
-	struct tsp_factory_info *finfo = info->factory_info;
-	struct tsp_raw_data *raw_data = info->raw_data;
-	unsigned int val;
-	int x_node, y_node;
-	int node_num;
-
-	set_default_result(finfo);
-
-	x_node = finfo->cmd_param[0];
-	y_node = finfo->cmd_param[1];
-
-	if (x_node < 0 || x_node >= info->cap_info.x_node_num ||
-		y_node < 0 || y_node >= info->cap_info.y_node_num) {
-		snprintf(finfo->cmd_buff, sizeof(finfo->cmd_buff), "%s", "abnormal");
-		set_cmd_result(finfo, finfo->cmd_buff,
-		strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-		finfo->cmd_state = FAIL;
-		return;
-	}
-
-	node_num = x_node * info->cap_info.y_node_num + y_node;
-
-	val = raw_data->hfdnd_data[node_num];
-	snprintf(finfo->cmd_buff, sizeof(finfo->cmd_buff), "%u", val);
-	set_cmd_result(finfo, finfo->cmd_buff,
-		strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-	finfo->cmd_state = OK;
-
-	dev_info(&client->dev, "%s: %s(%d)\n", __func__, finfo->cmd_buff,
-		(int)strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-
-	return;
-}
-
-static void get_hfdnd_all_data(void *device_data)
-{
-	struct zt7538_ts_info *info = (struct zt7538_ts_info *)device_data;
-
-	get_all_data(info, run_hfdnd_read, info->raw_data->hfdnd_data, DATA_SIGNED_SHORT);
-}
-
-static void run_hfdnd_v_gap_read(void *device_data)
-{
-	struct zt7538_ts_info *info = (struct zt7538_ts_info *)device_data;
-	struct i2c_client *client = info->client;
-	struct tsp_factory_info *finfo = info->factory_info;
-	struct tsp_raw_data *raw_data = info->raw_data;
-	int x_num = info->cap_info.x_node_num, y_num = info->cap_info.y_node_num;
-	int i, j, offset, val, cur_val, next_val;
-	u16 screen_max = 0x0000;
-	u16 touchkey_max = 0x0000;
-	int fx, fy;
-	bool result = true;
-
-	set_default_result(finfo);
-
-	memset(raw_data->hfvgap_data, 0x00, TSP_CMD_NODE_NUM);
-
-	dev_info(&client->dev, "HFDND V Gap start\n");
-
-	for (i = 0; i < x_num - 1; i++) {
-		pr_info("%s: [%2d] :", client->name, i);
-		for (j = 0; j < y_num; j++) {
-			offset = (i * y_num) + j;
-
-			cur_val = raw_data->hfdnd_data[offset];
-			next_val = raw_data->hfdnd_data[offset + y_num];
-			if ((i >= x_num - 2) && !next_val) {	/* touchkey node */
-				raw_data->hfvgap_data[offset] = next_val;
-				continue;
-			}
-
-			if (next_val > cur_val)
-				val = 100 - ((cur_val * 100) / next_val);
-			else
-				val = 100 - ((next_val * 100) / cur_val);
-
-			pr_cont(" %d", val);
-
-			raw_data->hfvgap_data[offset] = val;
-
-			if (i < x_num - 2){
-				if (raw_data->hfvgap_data[offset] > screen_max)
-					screen_max = raw_data->hfvgap_data[offset];
-			} else {	/* touchkey node */
-				if (raw_data->hfvgap_data[offset] > touchkey_max)
-					touchkey_max = raw_data->hfvgap_data[offset];
-			}
-			if (result && offset < ZT7538_V_GAP_DATA_SIZE &&
-				raw_data->hfvgap_data[offset] > info->hfdnd_v_gap_spec[offset]) {
-				result = false;
-				fx = i;
-				fy = j;
-				pr_cont("(E)");
-			}
-		}
-		pr_cont("\n");
-	}
-
-	dev_info(&client->dev, "HFDND V Gap screen_max %d touchkey_max %d\n", screen_max, touchkey_max);
-
-	if (result) {
-		sprintf(finfo->cmd_buff, "%s", "OK");
-	} else {
-		offset = (fx * y_num) + fy;
-		sprintf(finfo->cmd_buff, "%d,%d,%d,%d,%d", fx, fy,
-					0, info->hfdnd_v_gap_spec[offset],
-					raw_data->hfvgap_data[offset]);
-		pr_info("%s: hfdnd v gap view fail: [%d][%d]\n", info->client->name, fx, fy);
-	}
-	set_cmd_result(finfo, finfo->cmd_buff,
-			strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-	finfo->cmd_state = OK;
-
-	dev_info(&info->client->dev, "%s: %s(%d)\n", __func__,
-			finfo->cmd_buff, (int)strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-
-	return;
-}
-
-static void get_hfdnd_v_gap(void *device_data)
-{
-	struct zt7538_ts_info *info = (struct zt7538_ts_info *)device_data;
-	struct tsp_factory_info *finfo = info->factory_info;
-	struct tsp_raw_data *raw_data = info->raw_data;
-	int x_node, y_node;
-	int node_num;
-	int x_num = info->cap_info.x_node_num, y_num = info->cap_info.y_node_num;
-
-	set_default_result(finfo);
-
-	x_node = finfo->cmd_param[0];
-	y_node = finfo->cmd_param[1];
-
-	if (x_node < 0 || x_node >= x_num - 1 || y_node < 0 || y_node >= y_num) {
-		snprintf(finfo->cmd_buff, sizeof(finfo->cmd_buff), "%s", "NG");
-		set_cmd_result(finfo, finfo->cmd_buff, strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-		finfo->cmd_state = FAIL;
-		return;
-	}
-
-	node_num = (x_node * y_num) + y_node;
-
-	sprintf(finfo->cmd_buff, "%d", raw_data->hfvgap_data[node_num]);
-	set_cmd_result(finfo, finfo->cmd_buff, strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-	finfo->cmd_state = OK;
-
-	dev_info(&info->client->dev, "%s: %s(%d)\n", __func__,
-			finfo->cmd_buff, (int)strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-}
-
-static void run_hfdnd_h_gap_read(void *device_data)
-{
-	struct zt7538_ts_info *info = (struct zt7538_ts_info *)device_data;
-	struct i2c_client *client = info->client;
-	struct tsp_factory_info *finfo = info->factory_info;
-	struct tsp_raw_data *raw_data = info->raw_data;
-	int x_num = info->cap_info.x_node_num, y_num = info->cap_info.y_node_num;
-	int i, j, offset, val, cur_val, next_val;
-	u16 screen_max = 0x0000;
-	u16 touchkey_max = 0x0000;
-	int fx, fy;
-	bool result = true;
-	set_default_result(finfo);
-
-	memset(raw_data->hgap_data, 0x00, TSP_CMD_NODE_NUM);
-
-	dev_info(&client->dev, "HFDND H Gap start\n");
-
-	for (i = 0; i < x_num ; i++) {
-		pr_info("%s: [%2d] :", client->name, i);
-		for (j = 0; j < y_num - 1; j++) {
-			offset = (i * y_num) + j;
-
-			cur_val = raw_data->hfdnd_data[offset];
-			if ((i >= x_num - 1) && !cur_val) {	/* touchkey node */
-				raw_data->hfhgap_data[offset] = cur_val;
-				continue;
-			}
-
-			next_val = raw_data->hfdnd_data[offset + 1];
-			if ((i >= x_num - 1) && !next_val) {	/* touchkey node */
-				raw_data->hfhgap_data[offset] = next_val;
-				for (++j; j < y_num - 1; j++) {
-					offset = (i * y_num) + j;
-
-					next_val = raw_data->hfdnd_data[offset];
-					if (!next_val) {
-						raw_data->hfhgap_data[offset] = next_val;
-						continue;
-					}
-					break;
-				}
-			}
-
-			if (next_val > cur_val)
-				val = 100 - ((cur_val * 100) / next_val);
-			else
-				val = 100 - ((next_val * 100) / cur_val);
-
-			pr_cont(" %d", val);
-
-			raw_data->hfhgap_data[offset] = val;
-
-			if (i < x_num - 1) {
-					if (raw_data->hfhgap_data[offset] > screen_max)
-						screen_max = raw_data->hfhgap_data[offset];
-			} else {	/* touchkey node */
-				if (raw_data->hfhgap_data[offset] > touchkey_max)
-					touchkey_max = raw_data->hfhgap_data[offset];
-			}
-			if (result && offset < ZT7538_H_GAP_DATA_SIZE &&
-				raw_data->hfhgap_data[offset] > info->hfdnd_h_gap_spec[offset]) {
-				result = false;
-				fx = i;
-				fy = j;
-				pr_cont("(E)");
-			}
-		}
-		pr_cont("\n");
-	}
-
-	dev_info(&client->dev, "DND H Gap screen_max %d, touchkey_max %d\n", screen_max, touchkey_max);
-
-	if (result) {
-		sprintf(finfo->cmd_buff, "%s", "OK");
-	} else {
-		offset = (fx * y_num) + fy;
-		sprintf(finfo->cmd_buff, "%d,%d,%d,%d,%d", fx, fy,
-					0, info->hfdnd_h_gap_spec[offset],
-					raw_data->hfhgap_data[offset]);
-		pr_info("%s: hfdnd h gap view fail: [%d][%d]\n", info->client->name, fx, fy);
-	}
-
-	set_cmd_result(finfo, finfo->cmd_buff,
-			strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-	finfo->cmd_state = OK;
-
-	dev_info(&info->client->dev, "%s: %s(%d)\n", __func__,
-			finfo->cmd_buff, (int)strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-
-	return;
-}
-
-static void get_hfdnd_h_gap(void *device_data)
-{
-	struct zt7538_ts_info *info = (struct zt7538_ts_info *)device_data;
-	struct tsp_factory_info *finfo = info->factory_info;
-	struct tsp_raw_data *raw_data = info->raw_data;
-	int x_node, y_node;
-	int node_num;
-	int x_num = info->cap_info.x_node_num, y_num = info->cap_info.y_node_num;
-
-	set_default_result(finfo);
-
-	x_node = finfo->cmd_param[0];
-	y_node = finfo->cmd_param[1];
-
-	if (x_node < 0 || x_node >= x_num || y_node < 0 || y_node >= y_num - 1) {
-		snprintf(finfo->cmd_buff, sizeof(finfo->cmd_buff), "%s", "NG");
-		set_cmd_result(finfo, finfo->cmd_buff, strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-		finfo->cmd_state = FAIL;
-		return;
-	}
-
-	node_num = (x_node * y_num) + y_node;
-
-	sprintf(finfo->cmd_buff, "%d", raw_data->hfhgap_data[node_num]);
-	set_cmd_result(finfo, finfo->cmd_buff, strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-	finfo->cmd_state = OK;
-
-	dev_info(&info->client->dev, "%s: %s(%d)\n", __func__,
-			finfo->cmd_buff, (int)strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-}
 
 static void run_delta_read(void *device_data)
 {
@@ -3451,9 +3161,9 @@ static void dead_zone_enable(void *device_data)
 	set_default_result(finfo);
 
 	if (finfo->cmd_param[0] == 1) {	/* enable */
-		zinitix_bit_clr(m_optional_mode, DEF_OPTIONAL_MODE_EDGE_SELECT);
+		zinitix_bit_clr(m_optional_mode.select_mode.state, DEF_OPTIONAL_MODE_EDGE_SELECT);
 	} else if (finfo->cmd_param[0] == 0) {
-		zinitix_bit_set(m_optional_mode, DEF_OPTIONAL_MODE_EDGE_SELECT);
+		zinitix_bit_set(m_optional_mode.select_mode.state, DEF_OPTIONAL_MODE_EDGE_SELECT);
 	} else {
 		finfo->cmd_state = FAIL;
 		sprintf(finfo->cmd_buff, "%s", "NG");
@@ -3472,23 +3182,66 @@ err:
 	return;
 }
 
+static void spay_enable(void *device_data)
+{
+	struct zt7538_ts_info *info = (struct zt7538_ts_info *)device_data;
+	struct tsp_factory_info *finfo = info->factory_info;
+
+	set_default_result(finfo);
+
+	if (finfo->cmd_param[0] < 0 || finfo->cmd_param[0] > 1) {
+		snprintf(finfo->cmd_buff, sizeof(finfo->cmd_buff), "%s", "NG");
+		finfo->cmd_state = FAIL;
+	} else {
+		if (info->device_enabled) {
+			if (finfo->cmd_param[0]) {
+				info->spay_mode = true;
+			} else {
+				info->spay_mode = false;
+			}
+		}
+		finfo->cmd_state = OK;
+		snprintf(finfo->cmd_buff, sizeof(finfo->cmd_buff), "%s", "OK");
+	}
+
+	set_cmd_result(finfo, finfo->cmd_buff,
+				strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
+	finfo->cmd_is_running = false;
+
+	dev_info(&info->client->dev, "%s: %s(%d)\n", __func__, finfo->cmd_buff,
+				strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
+}
+
 static void clear_cover_mode(void *device_data)
 {
 	struct zt7538_ts_info *info = (struct zt7538_ts_info *)device_data;
 	struct tsp_factory_info *finfo = info->factory_info;
-	int arg = finfo->cmd_param[0];
-
 	set_default_result(finfo);
-	snprintf(finfo->cmd_buff, sizeof(finfo->cmd_buff), "%u",
-							(unsigned int) arg);
 
-	g_cover_state = arg;
-	cover_set(info);
+	if (finfo->cmd_param[0] < 0 || finfo->cmd_param[0] > 3) {
+		snprintf(finfo->cmd_buff, sizeof(finfo->cmd_buff), "%s", "NG");
+		finfo->cmd_state = FAIL;
+	} else {
+		if (finfo->cmd_param[0] > 1) {
+			info->flip_enable = true;
+			info->cover_type = finfo->cmd_param[1];
+		} else {
+			info->flip_enable = false;
+		}
+		if (info->device_enabled) {
+			if (info->flip_enable) {
+				zt7538_set_cover_type(info, true);
+			} else {
+				zt7538_set_cover_type(info, false);
+			}
+		}
+		finfo->cmd_state = OK;
+		snprintf(finfo->cmd_buff, sizeof(finfo->cmd_buff), "%s", "OK");
+	}
+
 	set_cmd_result(finfo, finfo->cmd_buff,
-					strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
-
+				strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
 	finfo->cmd_is_running = false;
-	finfo->cmd_state = OK;
 
 	dev_info(&info->client->dev, "%s: %s(%d)\n", __func__, finfo->cmd_buff,
 				strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
@@ -3584,6 +3337,30 @@ static void run_ref_calibration(void *device_data)
 		(int)strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
 }
 
+static void get_checksum_data(void *device_data)
+{
+	struct zt7538_ts_info *info = (struct zt7538_ts_info *)device_data;
+	struct i2c_client *client = info->client;
+	struct tsp_factory_info *finfo = info->factory_info;
+	u16 checksum;
+
+	set_default_result(finfo);
+
+	read_data(client, ZT75XX_CHECKSUM, (u8 *)&checksum, 2);
+
+	dev_info(&client->dev, "%s %d %x\n", __func__,checksum, checksum);
+
+	snprintf(finfo->cmd_buff, sizeof(finfo->cmd_buff),
+				"0x%X", checksum);
+	set_cmd_result(finfo, finfo->cmd_buff,
+		strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
+	finfo->cmd_state = OK;
+
+	dev_info(&client->dev, "%s: %s(%d)\n", __func__, finfo->cmd_buff,
+		(int)strnlen(finfo->cmd_buff, sizeof(finfo->cmd_buff)));
+
+	return;
+}
 
 static ssize_t store_cmd(struct device *dev, struct device_attribute
 				  *devattr, const char *buf, size_t count)
@@ -3709,14 +3486,32 @@ static ssize_t show_cmd_result(struct device *dev, struct device_attribute *deva
 	return snprintf(buf, sizeof(finfo->cmd_result), "%s\n", finfo->cmd_result);
 }
 
+static ssize_t scrub_position_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct zt7538_ts_info *info = dev_get_drvdata(dev);
+	struct i2c_client *client = info->client;
+	char buff[256] = { 0 };
+
+	dev_info(&client->dev, "%s: scrub_id: %d, X:%d, Y:%d\n", __func__,
+				info->scrub_id, info->scrub_x, info->scrub_y);
+
+	snprintf(buff, sizeof(buff), "%d %d %d", info->scrub_id, info->scrub_x, info->scrub_y);
+
+	info->scrub_id = 0;
+	return snprintf(buf, PAGE_SIZE, "%s", buff);
+}
+
 static DEVICE_ATTR(cmd, S_IWUSR | S_IWGRP, NULL, store_cmd);
 static DEVICE_ATTR(cmd_status, S_IRUGO, show_cmd_status, NULL);
 static DEVICE_ATTR(cmd_result, S_IRUGO, show_cmd_result, NULL);
+static DEVICE_ATTR(scrub_pos, S_IRUGO, scrub_position_show, NULL);
 
 static struct attribute *touchscreen_attributes[] = {
 	&dev_attr_cmd.attr,
 	&dev_attr_cmd_status.attr,
 	&dev_attr_cmd_result.attr,
+	&dev_attr_scrub_pos.attr,
 	NULL,
 };
 
@@ -4504,6 +4299,8 @@ static int zt7538_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	}
 #endif
 
+	init_completion(&info->resume_done);
+	wake_lock_init(&info->wakelock, WAKE_LOCK_SUSPEND, "tsp_wakelock");
 	/* power on */
 	if (!zt7538_power_control(info, POWER_ON_SEQUENCE)) {
 		ret = -EPERM;
@@ -4540,6 +4337,7 @@ static int zt7538_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	set_bit(LED_MISC, info->input_dev->ledbit);
 	set_bit(EV_LED, info->input_dev->evbit);
 #endif
+	set_bit(KEY_BLACK_UI_GESTURE, info->input_dev->keybit);
 
 	for (i = 0; i < MAX_SUPPORTED_BUTTON_NUM; i++)
 		set_bit(BUTTON_MAPPING_KEY[i], info->input_dev->keybit);
@@ -4586,7 +4384,9 @@ static int zt7538_ts_probe(struct i2c_client *client, const struct i2c_device_id
 
 	info->work_state = NOTHING;
 	info->finger_cnt = 0;
+	info->flip_enable = false;
 
+	INIT_DELAYED_WORK(&info->reset_work, zt7538_reset_work);
 #if ESD_TIMER_INTERVAL
 	spin_lock_init(&info->lock);
 	INIT_WORK(&info->tmr_work, ts_tmr_work);
@@ -4647,8 +4447,21 @@ static int zt7538_ts_probe(struct i2c_client *client, const struct i2c_device_id
 		goto err_kthread_create_failed;
 	}
 	info->factory_info->cmd_param[0] = 1;
-	hfdnd_spec_adjust(info);
 	info->factory_info->cmd_state = WAITING;
+#endif
+
+	device_init_wakeup(&client->dev, true);
+
+#ifdef CONFIG_SECURE_TOUCH
+	for (i = 0; i < ARRAY_SIZE(secure_attrs); i++) {
+		ret = sysfs_create_file(&info->input_dev->dev.kobj,
+					&secure_attrs[i].attr);
+		if (ret < 0)
+			dev_err(&info->client->dev,
+					"%s: Failed to create secure_attrs\n", __func__);
+	}
+
+	secure_touch_init(info);
 #endif
 
 #ifdef TSP_MUIC_NOTIFICATION
@@ -4684,6 +4497,7 @@ err_input_unregister_device:
 err_input_register_device:
 	zt7538_power_control(info, POWER_OFF);
 err_power_sequence:
+	wake_lock_destroy(&info->wakelock);
 	input_free_device(info->input_dev);
 err_alloc:
 	devm_kfree(&client->dev, info);
@@ -4744,8 +4558,41 @@ void zt7538_ts_shutdown(struct i2c_client *client)
 	esd_timer_stop(info);
 #endif
 	up(&info->work_lock);
+	device_init_wakeup(&client->dev, false);
+	wake_lock_destroy(&info->wakelock);
 	zt7538_power_control(info, POWER_OFF);
 }
+
+#ifdef CONFIG_PM
+static int zt7538_pm_suspend(struct device *dev)
+{
+	struct zt7538_ts_info *info = dev_get_drvdata(dev);
+
+	if (info->spay_mode) {
+		info->is_lpm_suspend = true;
+		INIT_COMPLETION(info->resume_done);
+	}
+	return 0;
+}
+
+static int zt7538_pm_resume(struct device *dev)
+{
+	struct zt7538_ts_info *info = dev_get_drvdata(dev);
+
+	if (info->spay_mode) {
+		info->is_lpm_suspend = false;
+		complete_all(&info->resume_done);
+	}
+	return 0;
+}
+#endif
+
+#ifdef CONFIG_PM
+static const struct dev_pm_ops zt7538_dev_pm_ops = {
+	.suspend = zt7538_pm_suspend,
+	.resume = zt7538_pm_resume,
+};
+#endif
 
 static struct i2c_device_id zt7538_idtable[] = {
 	{ZT7538_TS_DEVICE, 0},
@@ -4761,6 +4608,9 @@ static struct i2c_driver zt7538_ts_driver = {
 		.owner	= THIS_MODULE,
 		.name	= ZT7538_TS_DEVICE,
 		.of_match_table = tsp_dt_ids,
+#ifdef CONFIG_PM
+		.pm = &zt7538_dev_pm_ops,
+#endif
 	},
 };
 

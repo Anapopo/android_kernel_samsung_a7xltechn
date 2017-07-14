@@ -34,6 +34,7 @@ Copyright (C) 2012, Samsung Electronics. All rights reserved.
 
 struct smartdim_conf{
 	void (*generate_gamma)(struct smartdim_conf *conf, int cd, char *str);
+	void (*generate_hbm_gamma)(struct smartdim_conf *conf, int cd, char *str);
 	void (*init)(struct smartdim_conf *conf);
 	void (*print_aid_log)(struct smartdim_conf *conf);
 	struct SMART_DIM *psmart;
@@ -44,8 +45,8 @@ struct smartdim_conf{
 	int lux_tabsize;
 	unsigned int man_id;
 
-	/* HMT */
-	void (*set_para_for_150cd)(char *para, int size);
+	/* HBM interpolation */
+	char *hbm_payload;
 };
 
 /* Define the gamma */

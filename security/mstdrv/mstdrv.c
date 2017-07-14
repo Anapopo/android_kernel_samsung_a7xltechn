@@ -88,6 +88,7 @@ static int mst_ldo_en = 0;		// MST_LDO_EN pin
 static int mst_pwr_en = 0;		// MST_PWR_EN pin
 static struct class *mst_drv_class;	// mst_drv class
 struct device *mst_drv_dev;		// mst_drv driver handle
+static bool mst_power_on = 0;		// to track current level of mst signal
 static struct qseecom_handle *qhandle;	// qseecom handle for TA
 static DEVICE_ATTR(transmit, 0770, show_mst_drv, store_mst_drv);	// define device attribute
 
@@ -115,10 +116,21 @@ EXPORT_SYMBOL_GPL(mst_drv_dev);
  * @on: on/off value
  */
 static void of_mst_hw_onoff(bool on){
+	if (mst_power_on == on) {
+		printk("[MST] mst-drv : mst_power_onoff : already %d\n", on);
+		return;
+	}
+	mst_power_on = on;
 	if(on) {
 		gpio_set_value(mst_ldo_en, ON);
+		printk("[MST] %s : regulator 3.0 is enable\n", __func__);
+		gpio_set_value(mst_pwr_en, OFF);
+		udelay(300);
+		gpio_set_value(mst_pwr_en, ON);
 	}else{
+		gpio_set_value(mst_pwr_en, OFF);
 		gpio_set_value(mst_ldo_en, OFF);
+		printk("[MST] %s : regulator 3.0 is disabled\n", __func__);
 	}
 }
 /**
@@ -171,11 +183,7 @@ static int transmit_mst_data(int track)
 	printk("[MST] cmd_id = %x, req_len = %d, rsp_len = %d\n", kreq->cmd_id, req_len, rsp_len);
 
 	of_mst_hw_onoff(ON);
-	gpio_set_value(mst_pwr_en, OFF);
-	udelay(300);
-	gpio_set_value(mst_pwr_en, ON);
-	qsee_ret = qseecom_send_command(qhandle, kreq, req_len, krsp, rsp_len);
-	gpio_set_value(mst_pwr_en, OFF);
+	qsee_ret = qseecom_send_command(qhandle, kreq, req_len, krsp, rsp_len);	
 	of_mst_hw_onoff(OFF);
 
 	if (qsee_ret) {

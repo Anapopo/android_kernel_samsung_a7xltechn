@@ -59,7 +59,7 @@ extern bool assistive_light;
 extern bool assistive_light;
 extern int32_t sm5703_fled_notification(struct sm_fled_info *info);
 static int led_prev_mode = 0;
-#if defined(CONFIG_SEC_XCOVER3_PROJECT) || defined(CONFIG_MACH_J3LTE_CHN_CTC) || defined(CONFIG_MACH_J3LTE_CHN_TW)|| defined(CONFIG_MACH_J3LTE_KOR_OPEN)
+#if defined(CONFIG_SEC_XCOVER3_PROJECT) || defined(CONFIG_MACH_J3LTE_CHN_CTC) || defined(CONFIG_MACH_J3LTE_CHN_TW)
 extern int32_t sm5703_fled_set_preflash(struct sm_fled_info *info);
 #endif
 #endif
@@ -357,7 +357,7 @@ static int32_t msm_led_trigger_config(struct msm_led_flash_ctrl_t *fctrl,
 			led_trigger_event(fctrl->torch_trigger, 0);
 		break;
 #endif
-#if defined(CONFIG_FLED_SM5703_EXT_GPIO) && (defined(CONFIG_SEC_XCOVER3_PROJECT) || defined(CONFIG_MACH_J3LTE_CHN_CTC)|| defined(CONFIG_MACH_J3LTE_CHN_TW)|| defined(CONFIG_MACH_J3LTE_KOR_OPEN))
+#if defined(CONFIG_FLED_SM5703_EXT_GPIO) && (defined(CONFIG_SEC_XCOVER3_PROJECT) || defined(CONFIG_MACH_J3LTE_CHN_CTC)|| defined(CONFIG_MACH_J3LTE_CHN_TW))
 	case MSM_CAMERA_LED_PREFLASH:
 		pr_err("MSM_CAMERA_LED_PRELFASH\n");
 		if (assistive_light == true) {

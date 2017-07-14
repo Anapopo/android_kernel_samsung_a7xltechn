@@ -923,7 +923,7 @@ int msm_ois_set_mode_still(struct msm_ois_ctrl_t *a_ctrl)
     ret |= msm_ois_i2c_byte_write(a_ctrl, 0x6021, 0x7B); /*OIS Mode Still*/
     ret |= msm_ois_read_status(a_ctrl);
 
-    ret |= msm_ois_i2c_byte_write(a_ctrl, 0x6025, 0x40); /*revision angle*/
+    ret |= msm_ois_i2c_byte_write(a_ctrl, 0x6025, 0x50); /*revision angle*/
     ret |= msm_ois_read_status(a_ctrl);
 
     ret = msm_ois_i2c_byte_write(a_ctrl, 0x6020, 0x02); /* Servo Off/ OIS On */
@@ -932,7 +932,7 @@ int msm_ois_set_mode_still(struct msm_ois_ctrl_t *a_ctrl)
     return ret;
 }
 
-int msm_ois_set_mode_recording(struct msm_ois_ctrl_t *a_ctrl)
+int msm_ois_set_mode_recording(struct msm_ois_ctrl_t *a_ctrl, bool is_vga)
 {
     int ret;
 
@@ -942,7 +942,11 @@ int msm_ois_set_mode_recording(struct msm_ois_ctrl_t *a_ctrl)
     ret |= msm_ois_i2c_byte_write(a_ctrl, 0x6021, 0x61); /*OIS Mode Still*/
     ret |= msm_ois_read_status(a_ctrl);
 
-    ret |= msm_ois_i2c_byte_write(a_ctrl, 0x6025, 0xE0); /*revision angle*/
+    if (is_vga)
+        ret |= msm_ois_i2c_byte_write(a_ctrl, 0x6025, 0x70); /*revision angle*/
+    else
+        ret |= msm_ois_i2c_byte_write(a_ctrl, 0x6025, 0xE0); /*revision angle*/
+
     ret |= msm_ois_read_status(a_ctrl);
 
     ret = msm_ois_i2c_byte_write(a_ctrl, 0x6020, 0x02); /* Servo Off/ OIS On */
@@ -1003,6 +1007,13 @@ static int32_t msm_ois_set_mode(struct msm_ois_ctrl_t *a_ctrl,
                             uint16_t mode)
 {
     int rc = 0;
+    bool is_vga;
+    uint16_t cur_mode;
+    if ((mode & 0x00FF) == OIS_MODE_ON_VIDEO) {
+        cur_mode = mode;
+        is_vga = (mode >> 8);
+        mode   = OIS_MODE_ON_VIDEO;
+    }
     switch(mode) {
         case OIS_MODE_ON_STILL:
             if (a_ctrl->ois_mode != OIS_MODE_ON_STILL) {
@@ -1016,10 +1027,10 @@ static int32_t msm_ois_set_mode(struct msm_ois_ctrl_t *a_ctrl,
             rc = -EINVAL;
             break;
         case OIS_MODE_ON_VIDEO:
-            if (a_ctrl->ois_mode != OIS_MODE_ON_VIDEO) {
-                CDBG_I("SET :: OIS_MODE_ON_VIDEO\n");
-                rc = msm_ois_set_mode_recording(a_ctrl);
-                a_ctrl->ois_mode = OIS_MODE_ON_VIDEO;
+            if (a_ctrl->ois_mode != cur_mode) {
+                CDBG_I("SET :: OIS_MODE_ON_VIDEO is_vga[%d]\n", is_vga);
+                rc = msm_ois_set_mode_recording(a_ctrl, is_vga);
+                a_ctrl->ois_mode = cur_mode;
             }
             break;
         case OIS_MODE_SINE_X:

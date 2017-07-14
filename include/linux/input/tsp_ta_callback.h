@@ -26,13 +26,10 @@
 #define USE_TSP_TA_CALLBACKS
 #elif defined(CONFIG_SEC_XCOVER3_PROJECT)
 #define USE_TSP_TA_CALLBACKS
-#elif defined(CONFIG_SEC_O7_PROJECT) || defined(CONFIG_SEC_ON7N_PROJECT)
+#elif defined(CONFIG_SEC_O7_PROJECT)
 #define USE_TSP_TA_CALLBACKS
 #elif defined(CONFIG_SEC_J3_PROJECT)
 #define USE_TSP_TA_CALLBACKS
-#elif defined(CONFIG_SEC_J5X_PROJECT)
-#define USE_TSP_TA_CALLBACKS
-
 
 #else	/* default */
 #undef USE_TSP_TA_CALLBACKS

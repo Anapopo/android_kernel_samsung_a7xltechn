@@ -201,7 +201,11 @@ static int mdss_cell_id_read(struct mdss_dsi_ctrl_pdata *ctrl)
 
 static int mdss_hbm_read(struct mdss_dsi_ctrl_pdata *ctrl)
 {
-	char hbm_buffer[20];
+	char hbm_buffer1[6] = {0,};
+	char hbm_buffer2[29] = {0,};
+	char hbm_elvss[2] ={0,};
+
+	char V255R_0, V255R_1, V255G_0, V255G_1, V255B_0, V255B_1;
 	struct samsung_display_driver_data *vdd = check_valid_ctrl(ctrl);
 
 	if (IS_ERR_OR_NULL(vdd)) {
@@ -209,16 +213,64 @@ static int mdss_hbm_read(struct mdss_dsi_ctrl_pdata *ctrl)
 		return false;
 	}
 
-	/* Read mtp (B6h 21th) for elvss*/
-	mdss_samsung_panel_data_read(ctrl,
-		&(vdd->dtsi_data[ctrl->ndx].elvss_rx_cmds[vdd->panel_revision]),
-		hbm_buffer, PANEL_LEVE1_KEY);
-	vdd->display_ststus_dsi[ctrl->ndx].elvss_value = hbm_buffer[0];
+	if (vdd->dtsi_data[ctrl->ndx].hbm_rx_cmds[vdd->panel_revision].cmd_cnt) {
+	/* Read mtp (C8h 51~65th) for hbm gamma */
+		mdss_samsung_panel_data_read(ctrl,
+			&(vdd->dtsi_data[ctrl->ndx].hbm_rx_cmds[vdd->panel_revision]),
+			hbm_buffer1, PANEL_LEVE1_KEY);
 
+		V255R_0 = (hbm_buffer1[0] & BIT(2))>>2;
+		V255R_1 = hbm_buffer1[1];
+		V255G_0 = (hbm_buffer1[0] & BIT(1))>>1;
+		V255G_1 = hbm_buffer1[2];
+		V255B_0 = hbm_buffer1[0] & BIT(0);
+		V255B_1 = hbm_buffer1[3];
+		hbm_buffer1[0] = V255R_0;
+		hbm_buffer1[1] = V255R_1;
+		hbm_buffer1[2] = V255G_0;
+		hbm_buffer1[3] = V255G_1;
+		hbm_buffer1[4] = V255B_0;
+		hbm_buffer1[5] = V255B_1;
+
+		pr_debug("mdss_hbm_read = 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x\n",
+			hbm_buffer1[0], hbm_buffer1[1], hbm_buffer1[2], hbm_buffer1[3], hbm_buffer1[4], hbm_buffer1[5]);
+		memcpy(&vdd->dtsi_data[ctrl->ndx].hbm_gamma_tx_cmds[vdd->panel_revision].cmds[0].payload[1], hbm_buffer1, 6);
+
+	} else {
+		pr_err("%s DSI%d error", __func__, ctrl->ndx);
+		return false;
+	}
+
+	if (vdd->dtsi_data[ctrl->ndx].hbm2_rx_cmds[vdd->panel_revision].cmd_cnt) {
+		/* Read mtp (C8h 51~65th) for hbm gamma */
+		mdss_samsung_panel_data_read(ctrl,
+			&(vdd->dtsi_data[ctrl->ndx].hbm2_rx_cmds[vdd->panel_revision]),
+			hbm_buffer2, PANEL_LEVE1_KEY);
+
+		memcpy(&vdd->dtsi_data[ctrl->ndx].hbm_gamma_tx_cmds[vdd->panel_revision].cmds[0].payload[7], hbm_buffer2, 29);
+	} else {
+		pr_err("%s DSI%d error", __func__, ctrl->ndx);
+		return false;
+	}
+
+	if (vdd->dtsi_data[ctrl->ndx].elvss_rx_cmds[vdd->panel_revision].cmd_cnt) {
+		/* Read mtp (B6h 22~23th) for hbm elvss */
+		mdss_samsung_panel_data_read(ctrl,
+			&(vdd->dtsi_data[ctrl->ndx].elvss_rx_cmds[vdd->panel_revision]),
+			hbm_elvss, PANEL_LEVE1_KEY);
+		vdd->display_ststus_dsi[ctrl->ndx].elvss_value = hbm_elvss[0];
+
+		/*elvss B6 copy 23th's to 22th: it's used only in only interpolation, not in hbm(pure) mode*/
+		memcpy(&vdd->dtsi_data[ctrl->ndx].hbm_etc_tx_cmds[vdd->panel_revision].cmds[2].payload[1], &hbm_elvss[1], 1);
+
+	} else {
+		pr_err("%s DSI%d error", __func__, ctrl->ndx);
+		return false;
+	}
 	return true;
 }
 
-static struct dsi_panel_cmds *mdss_hbm_etc(struct mdss_dsi_ctrl_pdata *ctrl, int *level_key)
+static struct dsi_panel_cmds *mdss_hbm_gamma(struct mdss_dsi_ctrl_pdata *ctrl, int *level_key)
 {
 	struct samsung_display_driver_data *vdd = check_valid_ctrl(ctrl);
 
@@ -227,9 +279,64 @@ static struct dsi_panel_cmds *mdss_hbm_etc(struct mdss_dsi_ctrl_pdata *ctrl, int
 		return NULL;
 	}
 
+	pr_debug("%s vdd->auto_brightness : %d\n", __func__, vdd->auto_brightness);
+
+	if (IS_ERR_OR_NULL(vdd->smart_dimming_dsi[ctrl->ndx]->generate_gamma)) {
+		pr_err("%s generate_gamma is NULL error", __func__);
+		return NULL;
+	} else {
+		vdd->smart_dimming_dsi[ctrl->ndx]->generate_hbm_gamma(
+			vdd->smart_dimming_dsi[ctrl->ndx],
+			vdd->auto_brightness,
+			&vdd->dtsi_data[ctrl->ndx].hbm_gamma_tx_cmds[vdd->panel_revision].cmds[0].payload[1]);
+
+		*level_key = PANEL_LEVE1_KEY;
+		return &vdd->dtsi_data[ctrl->ndx].hbm_gamma_tx_cmds[vdd->panel_revision];
+	}
+}
+
+static struct dsi_panel_cmds *mdss_hbm_etc(struct mdss_dsi_ctrl_pdata *ctrl, int *level_key)
+{
+	struct samsung_display_driver_data *vdd = check_valid_ctrl(ctrl);
+	int B6_2ND_PARA = 0x00;
+
+	if (IS_ERR_OR_NULL(vdd)) {
+		pr_err("%s: Invalid data ctrl : 0x%zx vdd : 0x%zx", __func__, (size_t)ctrl, (size_t)vdd);
+		return NULL;
+	}
+
 	*level_key = PANEL_LEVE1_KEY;
 
-	return &vdd->dtsi_data[ctrl->ndx].hbm_etc_tx_cmds[vdd->panel_revision];
+	if (vdd->auto_brightness == 12){
+		return &vdd->dtsi_data[ctrl->ndx].hbm_pure_etc_tx_cmds[vdd->panel_revision];
+	}else{
+		switch(vdd->auto_brightness){
+		case 6:
+			B6_2ND_PARA = 0x0E;
+			break;
+		case 7:
+			B6_2ND_PARA = 0x0C;
+			break;
+		case 8:
+			B6_2ND_PARA = 0x0A;
+			break;
+		case 9:
+			B6_2ND_PARA = 0x09;
+			break;
+		case 10:
+			B6_2ND_PARA = 0x07;
+			break;
+		case 11:
+			B6_2ND_PARA = 0x06;
+			break;
+		}
+
+		pr_info("%s B6_2ND_PARA = 0x%x, B6_22ND = 0x%x\n", __func__, B6_2ND_PARA,
+			vdd->dtsi_data[ctrl->ndx].hbm_etc_tx_cmds[vdd->panel_revision].cmds[2].payload[1]);
+
+		vdd->dtsi_data[ctrl->ndx].hbm_etc_tx_cmds[vdd->panel_revision].cmds[0].payload[2] = B6_2ND_PARA;
+		return &vdd->dtsi_data[ctrl->ndx].hbm_etc_tx_cmds[vdd->panel_revision];
+	}
 }
 
 static struct dsi_panel_cmds *mdss_hbm_off(struct mdss_dsi_ctrl_pdata *ctrl, int *level_key)
@@ -269,15 +376,15 @@ static char coordinate_data_1[][COORDINATE_DATA_SIZE] = {
 /* sRGB/Adobe RGB Mode */
 static char coordinate_data_2[][COORDINATE_DATA_SIZE] = {
 	{0xff, 0x00, 0xff, 0x00, 0xff, 0x00}, /* dummy */
-	{0xff, 0x00, 0xf5, 0x00, 0xea, 0x00}, /* Tune_1 */
-	{0xff, 0x00, 0xf6, 0x00, 0xee, 0x00}, /* Tune_2 */
-	{0xff, 0x00, 0xf8, 0x00, 0xf2, 0x00}, /* Tune_3 */
-	{0xff, 0x00, 0xf8, 0x00, 0xeb, 0x00}, /* Tune_4 */
-	{0xff, 0x00, 0xf9, 0x00, 0xee, 0x00}, /* Tune_5 */
-	{0xff, 0x00, 0xfa, 0x00, 0xf2, 0x00}, /* Tune_6 */
-	{0xff, 0x00, 0xfa, 0x00, 0xeb, 0x00}, /* Tune_7 */
-	{0xff, 0x00, 0xfc, 0x00, 0xee, 0x00}, /* Tune_8 */
-	{0xff, 0x00, 0xfc, 0x00, 0xf1, 0x00}, /* Tune_9 */
+	{0xff, 0x00, 0xf6, 0x00, 0xec, 0x00}, /* Tune_1 */
+	{0xff, 0x00, 0xf6, 0x00, 0xef, 0x00}, /* Tune_2 */
+	{0xff, 0x00, 0xf8, 0x00, 0xf3, 0x00}, /* Tune_3 */
+	{0xff, 0x00, 0xf8, 0x00, 0xec, 0x00}, /* Tune_4 */
+	{0xff, 0x00, 0xf9, 0x00, 0xef, 0x00}, /* Tune_5 */
+	{0xff, 0x00, 0xfb, 0x00, 0xf2, 0x00}, /* Tune_6 */
+	{0xff, 0x00, 0xfb, 0x00, 0xec, 0x00}, /* Tune_7 */
+	{0xff, 0x00, 0xfc, 0x00, 0xef, 0x00}, /* Tune_8 */
+	{0xff, 0x00, 0xfd, 0x00, 0xf3, 0x00}, /* Tune_9 */
 };
 
 static char (*coordinate_data_multi[MAX_MODE])[COORDINATE_DATA_SIZE] = {
@@ -376,29 +483,30 @@ static int mdss_smart_dimming_init(struct mdss_dsi_ctrl_pdata *ctrl)
 		pr_err("%s DSI%d error", __func__, ctrl->ndx);
 		return false;
 	} else {
-		mdss_samsung_panel_data_read(ctrl,
-			&(vdd->dtsi_data[ctrl->ndx].smart_dimming_mtp_rx_cmds[vdd->panel_revision]),
-			vdd->smart_dimming_dsi[ctrl->ndx]->mtp_buffer, PANEL_LEVE1_KEY);
+		if (vdd->dtsi_data[ctrl->ndx].smart_dimming_mtp_rx_cmds[vdd->panel_revision].cmd_cnt){
+			mdss_samsung_panel_data_read(ctrl,
+				&(vdd->dtsi_data[ctrl->ndx].smart_dimming_mtp_rx_cmds[vdd->panel_revision]),
+				vdd->smart_dimming_dsi[ctrl->ndx]->mtp_buffer, PANEL_LEVE2_KEY);
 
-		/* Initialize smart dimming related things here */
-		/* lux_tab setting for 350cd */
-		vdd->smart_dimming_dsi[ctrl->ndx]->lux_tab = vdd->dtsi_data[ctrl->ndx].candela_map_table[vdd->panel_revision].lux_tab;
-		vdd->smart_dimming_dsi[ctrl->ndx]->lux_tabsize = vdd->dtsi_data[ctrl->ndx].candela_map_table[vdd->panel_revision].lux_tab_size;
-		vdd->smart_dimming_dsi[ctrl->ndx]->man_id = vdd->manufacture_id_dsi[ctrl->ndx];
+			/* Initialize smart dimming related things here */
+			/* lux_tab setting for 350cd */
+			vdd->smart_dimming_dsi[ctrl->ndx]->lux_tab = vdd->dtsi_data[ctrl->ndx].candela_map_table[vdd->panel_revision].lux_tab;
+			vdd->smart_dimming_dsi[ctrl->ndx]->lux_tabsize = vdd->dtsi_data[ctrl->ndx].candela_map_table[vdd->panel_revision].lux_tab_size;
+			vdd->smart_dimming_dsi[ctrl->ndx]->man_id = vdd->manufacture_id_dsi[ctrl->ndx];
+			vdd->smart_dimming_dsi[ctrl->ndx]->hbm_payload = &vdd->dtsi_data[ctrl->ndx].hbm_gamma_tx_cmds[vdd->panel_revision].cmds[0].payload[1];
 
-		/* Just a safety check to ensure smart dimming data is initialised well */
-		vdd->smart_dimming_dsi[ctrl->ndx]->init(vdd->smart_dimming_dsi[ctrl->ndx]);
-
-		vdd->temperature = 20; // default temperature
-
-		vdd->smart_dimming_loaded_dsi[ctrl->ndx] = true;
+			/* Just a safety check to ensure smart dimming data is initialised well */
+			vdd->smart_dimming_dsi[ctrl->ndx]->init(vdd->smart_dimming_dsi[ctrl->ndx]);
+			vdd->temperature = 20; // default temperature
+			vdd->smart_dimming_loaded_dsi[ctrl->ndx] = true;
+		} else {
+			pr_err("%s DSI%d error", __func__, ctrl->ndx);
+			return false;
+		}
 	}
-
 	pr_info("%s DSI%d : --\n",__func__, ctrl->ndx);
-
 	return true;
 }
-
 
 static struct dsi_panel_cmds aid_cmd;
 static struct dsi_panel_cmds *mdss_aid(struct mdss_dsi_ctrl_pdata *ctrl, int *level_key)
@@ -412,17 +520,20 @@ static struct dsi_panel_cmds *mdss_aid(struct mdss_dsi_ctrl_pdata *ctrl, int *le
 		return NULL;
 	}
 
-	cd_index = get_cmd_index(vdd, ctrl->ndx);
+	if (vdd->aid_subdivision_enable) {
+		aid_cmd.cmds = &(vdd->dtsi_data[ctrl->ndx].aid_subdivision_tx_cmds[vdd->panel_revision].cmds[vdd->bl_level]);
+		pr_err("%s : level(%d), aid(%x %x)\n", __func__, vdd->bl_level, aid_cmd.cmds->payload[1], aid_cmd.cmds->payload[2]);
+	} else {
+		cd_index = get_cmd_index(vdd, ctrl->ndx);
+		if (!vdd->dtsi_data[ctrl->ndx].aid_map_table[vdd->panel_revision].size ||
+			cd_index > vdd->dtsi_data[ctrl->ndx].aid_map_table[vdd->panel_revision].size)
+			goto end;
 
-	if (!vdd->dtsi_data[ctrl->ndx].aid_map_table[vdd->panel_revision].size ||
-		cd_index > vdd->dtsi_data[ctrl->ndx].aid_map_table[vdd->panel_revision].size)
-		goto end;
+		cmd_idx = vdd->dtsi_data[ctrl->ndx].aid_map_table[vdd->panel_revision].cmd_idx[cd_index];
+		aid_cmd.cmds = &(vdd->dtsi_data[ctrl->ndx].aid_tx_cmds[vdd->panel_revision].cmds[cmd_idx]);
+	}
 
-	cmd_idx = vdd->dtsi_data[ctrl->ndx].aid_map_table[vdd->panel_revision].cmd_idx[cd_index];
-
-	aid_cmd.cmds = &(vdd->dtsi_data[ctrl->ndx].aid_tx_cmds[vdd->panel_revision].cmds[cmd_idx]);
 	aid_cmd.cmd_cnt = 1;
-
 	*level_key = PANEL_LEVE1_KEY;
 
 	return &aid_cmd;
@@ -488,13 +599,11 @@ static struct dsi_panel_cmds * mdss_acl_precent(struct mdss_dsi_ctrl_pdata *ctrl
 	acl_percent_cmd.cmd_cnt = 1;
 
 	*level_key = PANEL_LEVE1_KEY;
-
 	return &acl_percent_cmd;
 
 end :
 	pr_err("%s error", __func__);
 	return NULL;
-
 }
 
 static struct dsi_panel_cmds elvss_cmd;
@@ -516,15 +625,11 @@ static struct dsi_panel_cmds * mdss_elvss(struct mdss_dsi_ctrl_pdata *ctrl, int 
 		goto end;
 
 	cmd_idx = vdd->dtsi_data[ctrl->ndx].smart_acl_elvss_map_table[vdd->panel_revision].cmd_idx[cd_index];
-
 	elvss_cmd.cmds = &(vdd->dtsi_data[ctrl->ndx].smart_acl_elvss_tx_cmds[vdd->panel_revision].cmds[cmd_idx]);
-
 	elvss_cmd.cmd_cnt = 1;
-
 	*level_key = PANEL_LEVE1_KEY;
 
 	return &elvss_cmd;
-
 end :
 	pr_err("%s error", __func__);
 	return NULL;
@@ -691,6 +796,125 @@ static struct dsi_panel_cmds * mdss_gamma(struct mdss_dsi_ctrl_pdata *ctrl, int 
 	}
 }
 
+static struct dsi_panel_cmds * mdss_gamma_hmt(struct mdss_dsi_ctrl_pdata *ctrl, int *level_key)
+{
+	struct samsung_display_driver_data *vdd = check_valid_ctrl(ctrl);
+
+	if (IS_ERR_OR_NULL(vdd)) {
+		pr_err("%s: Invalid data ctrl : 0x%zx vdd : 0x%zx", __func__, (size_t)ctrl, (size_t)vdd);
+		return NULL;
+	}
+
+	pr_info("%s hmt_bl_level : %d candela : %dCD\n", __func__, vdd->hmt_stat.hmt_bl_level, vdd->hmt_stat.candela_level_hmt);
+
+	if (IS_ERR_OR_NULL(vdd->smart_dimming_dsi_hmt[ctrl->ndx]->generate_gamma)) {
+		pr_err("%s generate_gamma is NULL", __func__);
+		return NULL;
+	} else {
+		vdd->smart_dimming_dsi_hmt[ctrl->ndx]->generate_gamma(
+			vdd->smart_dimming_dsi_hmt[ctrl->ndx],
+			vdd->hmt_stat.candela_level_hmt,
+			&vdd->dtsi_data[ctrl->ndx].hmt_gamma_tx_cmds[vdd->panel_revision].cmds[0].payload[1]);
+
+		*level_key = PANEL_LEVE1_KEY;
+		return &vdd->dtsi_data[ctrl->ndx].hmt_gamma_tx_cmds[vdd->panel_revision];
+	}
+}
+
+static struct dsi_panel_cmds hmt_aid_cmd;
+static struct dsi_panel_cmds *mdss_aid_hmt(struct mdss_dsi_ctrl_pdata *ctrl, int *level_key)
+{
+	struct samsung_display_driver_data *vdd = check_valid_ctrl(ctrl);
+	int cmd_idx = 0;
+
+	if (IS_ERR_OR_NULL(vdd)) {
+		pr_err("%s: Invalid data ctrl : 0x%zx vdd : 0x%zx", __func__, (size_t)ctrl, (size_t)vdd);
+		return NULL;
+	}
+
+	if (!vdd->dtsi_data[ctrl->ndx].hmt_reverse_aid_map_table[vdd->panel_revision].size ||
+		vdd->hmt_stat.cmd_idx_hmt > vdd->dtsi_data[ctrl->ndx].hmt_reverse_aid_map_table[vdd->panel_revision].size)
+		goto end;
+
+	cmd_idx = vdd->dtsi_data[ctrl->ndx].hmt_reverse_aid_map_table[vdd->panel_revision].cmd_idx[vdd->hmt_stat.cmd_idx_hmt];
+
+	hmt_aid_cmd.cmds = &(vdd->dtsi_data[ctrl->ndx].hmt_aid_tx_cmds[vdd->panel_revision].cmds[cmd_idx]);
+	hmt_aid_cmd.cmd_cnt = 1;
+	*level_key = PANEL_LEVE1_KEY;
+	return &hmt_aid_cmd;
+
+end :
+	pr_err("%s error", __func__);
+	return NULL;
+}
+
+static struct dsi_panel_cmds *mdss_elvss_hmt(struct mdss_dsi_ctrl_pdata *ctrl, int *level_key)
+{
+	struct samsung_display_driver_data *vdd = check_valid_ctrl(ctrl);
+
+	if (IS_ERR_OR_NULL(vdd)) {
+		pr_err("%s: Invalid data ctrl : 0x%zx vdd : 0x%zx", __func__, (size_t)ctrl, (size_t)vdd);
+		return NULL;
+	}
+
+	if (vdd->bl_level > 0 && vdd->bl_level < 40) {
+		vdd->dtsi_data[ctrl->ndx].hmt_elvss_tx_cmds[vdd->panel_revision].cmds[0].payload[1] = 0xAC; // 2 ~ 39  // 0x8C;
+	} else {
+		vdd->dtsi_data[ctrl->ndx].hmt_elvss_tx_cmds[vdd->panel_revision].cmds[0].payload[1] = 0xBC; // 41 ~ HBM // 0x9C;
+	}
+
+	if (vdd->bl_level < 0 || vdd->bl_level > 255)
+		vdd->dtsi_data[ctrl->ndx].hmt_elvss_tx_cmds[vdd->panel_revision].cmds[0].payload[1] = 0x00;
+
+	*level_key = PANEL_LEVE1_KEY;
+	return &vdd->dtsi_data[ctrl->ndx].hmt_elvss_tx_cmds[vdd->panel_revision];
+}
+
+static void mdss_make_sdimconf_hmt(struct mdss_dsi_ctrl_pdata *ctrl, struct samsung_display_driver_data *vdd) {
+	/* Set the mtp read buffer pointer and read the NVM value*/
+	mdss_samsung_panel_data_read(ctrl,
+				&(vdd->dtsi_data[ctrl->ndx].smart_dimming_mtp_rx_cmds[vdd->panel_revision]),
+				vdd->smart_dimming_dsi_hmt[ctrl->ndx]->mtp_buffer, PANEL_LEVE1_KEY);
+
+	/* Initialize smart dimming related things here */
+	/* lux_tab setting for 350cd */
+	vdd->smart_dimming_dsi_hmt[ctrl->ndx]->lux_tab = vdd->dtsi_data[ctrl->ndx].hmt_candela_map_table[vdd->panel_revision].lux_tab;
+	vdd->smart_dimming_dsi_hmt[ctrl->ndx]->lux_tabsize = vdd->dtsi_data[ctrl->ndx].hmt_candela_map_table[vdd->panel_revision].lux_tab_size;
+	vdd->smart_dimming_dsi_hmt[ctrl->ndx]->man_id = vdd->manufacture_id_dsi[ctrl->ndx];
+
+	/* Just a safety check to ensure smart dimming data is initialised well */
+	vdd->smart_dimming_dsi_hmt[ctrl->ndx]->init(vdd->smart_dimming_dsi_hmt[ctrl->ndx]);
+	pr_info("[HMT] smart dimming done!\n");
+}
+
+static int mdss_samart_dimming_init_hmt(struct mdss_dsi_ctrl_pdata *ctrl)
+{
+	struct samsung_display_driver_data *vdd = check_valid_ctrl(ctrl);
+	pr_info("%s DSI%d : ++\n",__func__, ctrl->ndx);
+
+	if (IS_ERR_OR_NULL(vdd)) {
+		pr_err("%s: Invalid data ctrl : 0x%zx vdd : 0x%zx", __func__, (size_t)ctrl, (size_t)vdd);
+		return false;
+	}
+
+	vdd->smart_dimming_dsi_hmt[ctrl->ndx] = vdd->panel_func.samsung_smart_get_conf_hmt();
+
+	if (IS_ERR_OR_NULL(vdd->smart_dimming_dsi_hmt[ctrl->ndx])) {
+		pr_err("%s DSI%d error", __func__, ctrl->ndx);
+		return false;
+	} else {
+		vdd->hmt_stat.hmt_on = 0;
+		vdd->hmt_stat.hmt_bl_level = 0;
+		vdd->hmt_stat.hmt_reverse = 0;
+		vdd->hmt_stat.hmt_is_first = 1;
+
+		mdss_make_sdimconf_hmt(ctrl, vdd);
+		vdd->smart_dimming_hmt_loaded_dsi[ctrl->ndx] = true;
+	}
+	pr_info("%s DSI%d : --\n",__func__, ctrl->ndx);
+	return true;
+}
+
 static void dsi_update_mdnie_data(void)
 {
 	/* Update mdnie command */
@@ -758,8 +982,19 @@ static void mdss_panel_init(struct samsung_display_driver_data *vdd)
 	vdd->panel_func.samsung_brightness_gamma = mdss_gamma;
 
 	/* HBM */
-	vdd->panel_func.samsung_hbm_gamma = NULL;
+	vdd->panel_func.samsung_hbm_gamma = mdss_hbm_gamma;;
 	vdd->panel_func.samsung_hbm_etc = mdss_hbm_etc;
+	vdd->auto_brightness_level = 12;
+
+	/* AID Interpolation */
+	vdd->aid_subdivision_enable = true;
+
+	/* HMT */
+	vdd->panel_func.samsung_brightness_gamma_hmt = mdss_gamma_hmt;
+	vdd->panel_func.samsung_brightness_aid_hmt = mdss_aid_hmt;
+	vdd->panel_func.samsung_brightness_elvss_hmt = mdss_elvss_hmt;
+	vdd->panel_func.samsung_smart_dimming_hmt_init = mdss_samart_dimming_init_hmt;
+	vdd->panel_func.samsung_smart_get_conf_hmt = smart_get_conf_S6E3FA3_AMS549JR01_hmt;
 
 	dsi_update_mdnie_data();
 }

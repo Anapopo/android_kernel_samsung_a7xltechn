@@ -31,9 +31,7 @@
 #endif
 
 #if defined(CONFIG_SEC_A8_PROJECT) || defined(CONFIG_SEC_A7X_PROJECT) || \
-    defined(CONFIG_SEC_A5X_PROJECT) || defined(CONFIG_SEC_J7_PROJECT) || \
-    defined(CONFIG_SEC_J5X_PROJECT) || defined(CONFIG_SEC_J5_PROJECT) || \
-    defined(CONFIG_SEC_ON7N_PROJECT)
+    defined(CONFIG_SEC_A5X_PROJECT) || defined(CONFIG_SEC_J7_PROJECT) || defined(CONFIG_SEC_J5X_PROJECT)
 #define EEPROM_QUP_I2C
 #define MAX_READ_SIZE 3824
 #endif
@@ -143,54 +141,6 @@ ERROR:
 	return rc;
 }
 
-
-#if defined(CONFIG_SEC_J5X_PROJECT) 
-struct msm_eeprom_crc_check crc_data[EEPROM_CRC_DATA_BLOCKS_NUM] = 
-{
-	[0] = {	.data_addr = 0xFC,  .data_size = 4,
-		.check_range_start = 0x00,
-		.check_range_end = 0x5F,
-	      },
-	 	
-	[1] = { .data_addr = 0x8FC,  .data_size = 4,
-		.check_range_start = 0x100,
-		.check_range_end = 0x8AF,
-	      },
-		
-	[2] = { .data_addr = 0x9FC,  .data_size = 4,
-		.check_range_start = 0x900,
-		.check_range_end = 0x91F,
-	      },
-		
-	[3] = { .data_addr = 0x11FC,  .data_size = 4,
-		.check_range_start = 0xA00,
-		.check_range_end = 0x10FF,
-	      }
-};
-
-/**
-*  format eeprom data for CRC check
-*/
-static int format_eeprom_data(struct msm_eeprom_ctrl_t *e_ctrl,
-			      struct msm_eeprom_memory_block_t *block)
-{
-	int i = 0;
-	struct msm_eeprom_memory_map_t *emap = block->map;
-	
-	block->num_map = EEPROM_CRC_DATA_BLOCKS_NUM*2;
-
-	for( i=0; i<EEPROM_CRC_DATA_BLOCKS_NUM; i++ )
-	{
-		emap[i*2].mem.valid_size = crc_data[i].check_range_end-crc_data[i].check_range_start +1;
-		emap[i*2].mem.addr = crc_data[i].check_range_start ;
-
-		emap[i*2+1].mem.valid_size = crc_data[i].data_size;
-		emap[i*2+1].mem.addr = crc_data[i].data_addr;
-	}
-
-	return 0;
-}
-#endif
 /**
   * read_eeprom_memory() - read map data into buffer
   * @e_ctrl:	eeprom control struct
@@ -311,14 +261,7 @@ static int read_eeprom_memory(struct msm_eeprom_ctrl_t *e_ctrl,
 #endif
 		}
 	}
-#if defined(CONFIG_SEC_J5X_PROJECT) 
-	if( e_ctrl->subdev_id == 0)		// for rear sensor only
-	{
-		rc = format_eeprom_data(e_ctrl,block);
-		if(rc<0)
-			pr_err("%s: format failed\n", __func__);
-	}
-#endif
+
 	pr_err("%s Exit \n", __func__);
 	return rc;
 }

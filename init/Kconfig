@@ -1054,6 +1054,15 @@ config SCHED_HMP
 	  in their instructions per-cycle capability or the maximum
 	  frequency they can attain.
 
+config SCHED_TASK_BEHAVIOR
+	bool "Scheduler support for Task Behavior based task placement"
+	depends on SCHED_HMP
+	default n
+	help
+	  This feature will let the scheduler optimize task placement on
+	  heterogeneous cpus such that the IO-intensive tasks and background
+	  tasks will always be placed on the LITTLE cluster.
+
 config CHECKPOINT_RESTORE
 	bool "Checkpoint/restore support" if EXPERT
 	default n

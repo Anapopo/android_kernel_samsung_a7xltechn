@@ -86,9 +86,6 @@
 #define FP_DIABLE_SPI_CLOCK				0x10
 #define FP_CPU_SPEEDUP					0x11
 #define FP_SET_SENSOR_TYPE				0x14
-/* Do not use ioctl number 0x15 */
-#define FP_SET_LOCKSCREEN				0x16
-#define FP_SET_WAKE_UP_SIGNAL				0x17
 #endif
 
 #define FP_EEPROM_WREN					0x90
@@ -98,15 +95,15 @@
 #define FP_EEPROM_READ					0x94
 #define FP_EEPROM_WRITE					0x95
 
-/* trigger signal initial routine */
+/* trigger signal initial routine*/
 #define INT_TRIGGER_INIT				0xa4
-/* trigger signal close routine */
+/* trigger signal close routine*/
 #define INT_TRIGGER_CLOSE				0xa5
-/* read trigger status */
+/* read trigger status*/
 #define INT_TRIGGER_READ				0xa6
-/* polling trigger status */
+/* polling trigger status*/
 #define INT_TRIGGER_POLLING				0xa7
-/* polling abort */
+/* polling abort*/
 #define INT_TRIGGER_ABORT				0xa8
 /* Sensor Registers */
 #define FDATA_ET320_ADDR				0x00
@@ -145,12 +142,12 @@ struct etspi_data {
 	struct mutex buf_lock;
 	unsigned users;
 	u8 *buffer;
+
 	unsigned int ocp_en;	/* ocp enable GPIO pin number */
 	unsigned int drdyPin;	/* DRDY GPIO pin number */
 	unsigned int sleepPin;	/* Sleep GPIO pin number */
 	unsigned int ldo_pin;	/* Ldo GPIO pin number */
 	unsigned int ldo_pin2;	/* Ldo2 GPIO pin number */
-	unsigned int min_cpufreq_limit;
 
 	unsigned int spi_cs;	/* spi cs pin <temporary gpio setting> */
 
@@ -173,30 +170,12 @@ struct etspi_data {
 #ifdef FEATURE_SPI_WAKELOCK
 	struct wake_lock fp_spi_lock;
 #endif
-	struct task_struct *t;
-	int user_pid;
-	int signal_id;
 #endif
 	bool tz_mode;
 	int detect_period;
 	int detect_threshold;
 	bool finger_on;
 };
-
-#ifdef ENABLE_SENSORS_FPRINT_SECURE
-/*
- * Used by IOCTL command:
- *         ETSPI_IOCTL_REGISTER_LOCK_SCREEN_WAKE_UP_SIGNAL
- *
- * @user_pid:Process ID to which SPI driver sends signal indicating that LOCK SCREEN
- *			is asserted
- * @signal_id:signal_id
-*/
-struct etspi_ioctl_register_signal {
-	int user_pid;
-	int signal_id;
-};
-#endif
 
 int etspi_io_read_register(struct etspi_data *etspi, u8 *addr, u8 *buf);
 int etspi_io_write_register(struct etspi_data *etspi, u8 *buf);

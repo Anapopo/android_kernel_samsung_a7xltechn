@@ -16,7 +16,7 @@
 #include "msm_isp_axi_util.h"
 #include "msm_camera_io_util.h"
 
-#if defined(CONFIG_SEC_GTES_PROJECT) || defined(CONFIG_SEC_GTEL_PROJECT) || defined(CONFIG_SEC_J1X_PROJECT)
+#if defined(CONFIG_SEC_GTES_PROJECT)
 #define FAST_ISP_STREAM_OFF
 #endif
 
